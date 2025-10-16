@@ -19,6 +19,20 @@ public class MedicineService {
     public List<Medicine> getAllMedicines() {
         return medicineRepository.findAll();
     }
+    public List<Medicine> searchMedicinesByName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return getAllMedicines();
+        }
+        return medicineRepository.findByNameContainingIgnoreCase(name.trim());
+    }
+
+    public List<Medicine> getMedicinesByType(Medicine.MedicineType type) {
+        return medicineRepository.findByType(type);
+    }
+
+    public List<Medicine> getMedicinesBySupplier(Medicine.Supplier supplier) {
+        return medicineRepository.findBySupplier(supplier);
+    }
 
     
 }
