@@ -66,7 +66,7 @@ public class MedicineController {
         return ResponseEntity.ok(medicines);
     }
 
-    // Thêm mới thuốc
+    // Thêm mới thuốccc
     @PostMapping
     public ResponseEntity<?> createMedicine(@RequestBody Medicine medicine) {
         try {
