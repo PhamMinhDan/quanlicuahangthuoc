@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.quanlicuahangthuoc.entity.Medicine;
@@ -29,5 +30,36 @@ public class MedicineController {
     @GetMapping("/test")
     public ResponseEntity<String> testEndpoint() {
         return ResponseEntity.ok("API is working!");
+    }
+
+    // Tìm kiếm theo tên thuốc
+    @GetMapping("/search/name")
+    public ResponseEntity<List<Medicine>> searchByName(@RequestParam(required = false) String name) {
+        List<Medicine> medicines = medicineService.searchByName(name);
+        return ResponseEntity.ok(medicines);
+    }
+
+    // Tìm kiếm theo loại thuốc
+    @GetMapping("/search/type")
+    public ResponseEntity<List<Medicine>> searchByType(@RequestParam(required = false) String type) {
+        List<Medicine> medicines = medicineService.searchByType(type);
+        return ResponseEntity.ok(medicines);
+    }
+
+    // Tìm kiếm theo nhà cung cấp
+    @GetMapping("/search/supplier")
+    public ResponseEntity<List<Medicine>> searchBySupplier(@RequestParam(required = false) String supplier) {
+        List<Medicine> medicines = medicineService.searchBySupplier(supplier);
+        return ResponseEntity.ok(medicines);
+    }
+
+    // Tìm kiếm theo nhiều bộ lọc
+    @GetMapping("/search")
+    public ResponseEntity<List<Medicine>> searchByFilters(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String supplier) {
+        List<Medicine> medicines = medicineService.searchByFilters(name, type, supplier);
+        return ResponseEntity.ok(medicines);
     }
 }
