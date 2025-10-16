@@ -26,5 +26,8 @@ public class MedicineController {
         return ResponseEntity.ok(medicines);
     }
 
-   
+    @GetMapping("/test")
+    public ResponseEntity<String> testEndpoint() {
+        return ResponseEntity.ok("API is working!");
+    }
 }

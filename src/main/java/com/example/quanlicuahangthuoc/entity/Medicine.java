@@ -30,42 +30,33 @@ public class Medicine {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotBlank(message = "Image URL không thể bỏ trống")
     private String image;
 
-    @NotBlank(message = "Tên không thể bỏ trống")
-    @Size(max = 255, message = "Tên không được vượt quá 255 ký tự")
     private String name;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @NotNull(message = "Loại thuốc là bắt buộc")
     private MedicineType type;
 
     @Size(max = 50, message = "Ngày hết hạn không được vượt quá 50 ký tự")
     @Column(name = "expiry_date")
     private String expiryDate;
 
-    @NotNull(message = "Giá là bắt buộc")
-    @DecimalMin(value = "0.0", inclusive = true, message = "Giá phải lớn hơn hoặc bằng 0")
     private Double price;
 
-    @NotNull(message = "Số lượng tồn kho là bắt buộc")
-    @Min(value = 0, message = "Số lượng tồn kho phải lớn hơn hoặc bằng 0")
     @Column(name = "stock_quantity")
     private Integer stockQuantity;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @NotNull(message = "Nhà cung cấp là bắt buộc")
     private Supplier supplier;
 
-    // ✅ Enum loại thuốc (đặt tên không dấu, dùng @JsonProperty nếu cần hiển thị tiếng Việt)
+    //  Enum loại thuốc - khớp với dữ liệu trong database
     public enum MedicineType {
-        GIAM_DAU("Giảm đau"),
-        KHANG_SINH("Kháng sinh"),
-        CHONG_VIEM("Chống viêm"),
-        THUOC_HA_HUYET_AP("Thuốc hạ huyết áp");
+        giam_dau("Giảm đau"),
+        khang_sinh("Kháng sinh"),
+        chong_viem("Chống viêm"),
+        thuoc_ha_huyet_ap("Thuốc hạ huyết áp");
 
         private final String displayName;
 
@@ -78,14 +69,15 @@ public class Medicine {
         }
     }
 
-    // ✅ Enum nhà cung cấp
+
+    // Enum nhà cung cấp - khớp với dữ liệu trong database
     public enum Supplier {
-        PFIZER("Pfizer"),
-        NOVARTIS("Novartis"),
-        JOHNSON_AND_JOHNSON("Johnson & Johnson"),
-        ROCHE("Roche"),
-        MERCK_AND_CO("Merck & Co."),
-        SANOFI("Sanofi");
+        Pfizer("Pfizer"),
+        Novartis("Novartis"),
+        Johnson("Johnson"),
+        Roche("Roche"),
+        Merck("Merck"),
+        Sanofi("Sanofi");
 
         private final String displayName;
 
