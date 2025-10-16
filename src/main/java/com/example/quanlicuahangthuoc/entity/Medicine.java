@@ -1,17 +1,22 @@
 package com.example.quanlicuahangthuoc.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "medicine")
@@ -25,97 +30,71 @@ public class Medicine {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotBlank(message = "Image URL cannot be empty")
-    @Column(name = "image", nullable = false)
+    @NotBlank(message = "Image URL không thể bỏ trống")
     private String image;
 
-    @NotBlank(message = "Name cannot be empty")
-    @Column(name = "name", nullable = false)
+    @NotBlank(message = "Tên không thể bỏ trống")
+    @Size(max = 255, message = "Tên không được vượt quá 255 ký tự")
     private String name;
 
-    @NotBlank(message = "Type cannot be empty")
-    @Column(name = "type", nullable = false)
-    private String type;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @NotNull(message = "Loại thuốc là bắt buộc")
+    private MedicineType type;
 
+    @Size(max = 50, message = "Ngày hết hạn không được vượt quá 50 ký tự")
     @Column(name = "expiry_date")
-    private LocalDate expiryDate;
+    private String expiryDate;
 
-    @NotNull(message = "Price cannot be empty")
-    @DecimalMin(value = "0.0", inclusive = true, message = "Price must be greater than or equal to 0")
-    @Column(name = "price", nullable = false)
-    private BigDecimal price;
+    @NotNull(message = "Giá là bắt buộc")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Giá phải lớn hơn hoặc bằng 0")
+    private Double price;
 
-    @NotNull(message = "Stock quantity cannot be empty")
-    @Min(value = 0, message = "Stock quantity must be greater than or equal to 0")
-    @Column(name = "stock_quantity", nullable = false)
+    @NotNull(message = "Số lượng tồn kho là bắt buộc")
+    @Min(value = 0, message = "Số lượng tồn kho phải lớn hơn hoặc bằng 0")
+    @Column(name = "stock_quantity")
     private Integer stockQuantity;
 
-    @NotBlank(message = "Supplier cannot be empty")
-    @Column(name = "supplier", nullable = false)
-    private String supplier;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @NotNull(message = "Nhà cung cấp là bắt buộc")
+    private Supplier supplier;
 
-    // (Tùy chọn) Thêm getter/setter thủ công nếu Lombok không hoạt động
-    public Integer getId() {
-        return id;
+    // ✅ Enum loại thuốc (đặt tên không dấu, dùng @JsonProperty nếu cần hiển thị tiếng Việt)
+    public enum MedicineType {
+        GIAM_DAU("Giảm đau"),
+        KHANG_SINH("Kháng sinh"),
+        CHONG_VIEM("Chống viêm"),
+        THUOC_HA_HUYET_AP("Thuốc hạ huyết áp");
+
+        private final String displayName;
+
+        MedicineType(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
     }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+    // ✅ Enum nhà cung cấp
+    public enum Supplier {
+        PFIZER("Pfizer"),
+        NOVARTIS("Novartis"),
+        JOHNSON_AND_JOHNSON("Johnson & Johnson"),
+        ROCHE("Roche"),
+        MERCK_AND_CO("Merck & Co."),
+        SANOFI("Sanofi");
 
-    public String getImage() {
-        return image;
-    }
+        private final String displayName;
 
-    public void setImage(String image) {
-        this.image = image;
-    }
+        Supplier(String displayName) {
+            this.displayName = displayName;
+        }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public LocalDate getExpiryDate() {
-        return expiryDate;
-    }
-
-    public void setExpiryDate(LocalDate expiryDate) {
-        this.expiryDate = expiryDate;
-    }
-
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-
-    public Integer getStockQuantity() {
-        return stockQuantity;
-    }
-
-    public void setStockQuantity(Integer stockQuantity) {
-        this.stockQuantity = stockQuantity;
-    }
-
-    public String getSupplier() {
-        return supplier;
-    }
-
-    public void setSupplier(String supplier) {
-        this.supplier = supplier;
+        public String getDisplayName() {
+            return displayName;
+        }
     }
 }
