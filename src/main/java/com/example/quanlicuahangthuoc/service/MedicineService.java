@@ -85,4 +85,32 @@ public class MedicineService {
             supplier
         );
     }
+
+    // Thêm mới thuốc
+    public Medicine createMedicine(Medicine medicine) {
+        // Validate dữ liệu đầu vào
+        if (medicine.getName() == null || medicine.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên thuốc không được để trống");
+        }
+        if (medicine.getType() == null) {
+            throw new IllegalArgumentException("Loại thuốc không được để trống");
+        }
+        if (medicine.getSupplier() == null) {
+            throw new IllegalArgumentException("Nhà cung cấp không được để trống");
+        }
+        if (medicine.getPrice() == null || medicine.getPrice() < 0) {
+            throw new IllegalArgumentException("Giá thuốc phải lớn hơn hoặc bằng 0");
+        }
+        if (medicine.getStockQuantity() == null || medicine.getStockQuantity() < 0) {
+            throw new IllegalArgumentException("Số lượng tồn kho phải lớn hơn hoặc bằng 0");
+        }
+
+        // Set default values nếu chưa có
+        if (medicine.getImage() == null || medicine.getImage().trim().isEmpty()) {
+            medicine.setImage("/uploads/default-medicine.jpg");
+        }
+
+        // Lưu vào database
+        return medicineRepository.save(medicine);
+    }
 }
