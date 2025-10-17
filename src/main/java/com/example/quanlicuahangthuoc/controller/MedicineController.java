@@ -5,11 +5,7 @@ package com.example.quanlicuahangthuoc.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.example.quanlicuahangthuoc.entity.Medicine;
 import com.example.quanlicuahangthuoc.service.MedicineService;
@@ -36,6 +32,15 @@ public class MedicineController {
         try {
             medicineService.deleteMedicine(id);
             return ResponseEntity.ok("Xóa thuốc thành công");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateMedicine(@PathVariable Integer id, @RequestBody Medicine medicine) {
+        try {
+            Medicine updatedMedicine = medicineService.updateMedicine(id, medicine);
+            return ResponseEntity.ok(updatedMedicine);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
