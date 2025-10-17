@@ -35,7 +35,6 @@ public class MedicineService {
         } else if ("id".equalsIgnoreCase(sortBy)) {
             return Sort.by(direction, "id");
         } else {
-            // Mặc định sắp xếp theo ID
             return Sort.by(Sort.Direction.ASC, "id");
         }
     }
