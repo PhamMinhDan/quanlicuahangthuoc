@@ -1,25 +1,28 @@
-// MedicineController.java
 package com.example.quanlicuahangthuoc.controller;
 
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.example.quanlicuahangthuoc.entity.Medicine;
 import com.example.quanlicuahangthuoc.service.MedicineService;
 
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
+
 
 @RestController
 @RequestMapping("/api/medicines")
 @RequiredArgsConstructor
+@Validated  // Thêm annotation này để Spring Boot tự động validate dữ liệu nhập
 public class MedicineController {
 
     private final MedicineService medicineService;
@@ -66,9 +69,9 @@ public class MedicineController {
         return ResponseEntity.ok(medicines);
     }
 
-    // Thêm mới thuốccc
+    // Thêm mới thuốc
     @PostMapping
-    public ResponseEntity<?> createMedicine(@RequestBody Medicine medicine) {
+    public ResponseEntity<?> createMedicine(@Valid @RequestBody Medicine medicine) {  // Thêm @Valid để thực thi validation
         try {
             Medicine createdMedicine = medicineService.createMedicine(medicine);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdMedicine);
