@@ -24,45 +24,32 @@ public class MedicineService {
         return medicineRepository.findAll();
     }
 
-    public Page<Medicine> getAllMedicinesPaginated(int page, int size, String sortBy, String sortDirection) {
-        Sort.Direction direction = "desc".equalsIgnoreCase(sortDirection) ? 
-            Sort.Direction.DESC : Sort.Direction.ASC;
-        
-        Sort sort;
+    private Sort getSort(String sortBy, String sortDirection) {
+        Sort.Direction direction = "desc".equalsIgnoreCase(sortDirection) ?
+                Sort.Direction.DESC : Sort.Direction.ASC;
+
         if ("name".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(direction, "name");
+            return Sort.by(direction, "name");
         } else if ("price".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(direction, "price");
+            return Sort.by(direction, "price");
         } else if ("id".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(direction, "id");
+            return Sort.by(direction, "id");
         } else {
             // Mặc định sắp xếp theo ID
-            sort = Sort.by(Sort.Direction.ASC, "id");
+            return Sort.by(Sort.Direction.ASC, "id");
         }
-        
-        Pageable pageable = PageRequest.of(page, size, sort);
+    }
+
+    public Page<Medicine> getAllMedicinesPaginated(int page, int size, String sortBy, String sortDirection) {
+        Pageable pageable = PageRequest.of(page, size, getSort(sortBy, sortDirection));
         return medicineRepository.findAll(pageable);
     }
 
     public List<Medicine> getAllMedicinesSorted(String sortBy, String sortDirection) {
-        Sort.Direction direction = "desc".equalsIgnoreCase(sortDirection) ? 
-            Sort.Direction.DESC : Sort.Direction.ASC;
-        
-        if ("name".equalsIgnoreCase(sortBy)) {
-            return medicineRepository.findAll(Sort.by(direction, "name"));
-        } else if ("price".equalsIgnoreCase(sortBy)) {
-            return medicineRepository.findAll(Sort.by(direction, "price"));
-        } else if ("id".equalsIgnoreCase(sortBy)) {
-            return medicineRepository.findAll(Sort.by(direction, "id"));
-        } else {
-            // Mặc định sắp xếp theo ID
-            return medicineRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
-        }
+        return medicineRepository.findAll(getSort(sortBy, sortDirection));
     }
 
     public Medicine saveMedicine(Medicine medicine) {
         return medicineRepository.save(medicine);
     }
-
-    
 }
