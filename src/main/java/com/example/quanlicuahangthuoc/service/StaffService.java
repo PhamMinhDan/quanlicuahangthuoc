@@ -1,8 +1,6 @@
 package com.example.quanlicuahangthuoc.service;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,5 +19,38 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class StaffService {
 
-    
+    private final StaffRepository staffRepository;
+
+    // Phân trang với sắp xếp theo name hoặc salary
+    public Page<Staff> getStaffPage(int page, int size, String sortBy, String sortDirection) {
+        Sort.Direction direction = "desc".equalsIgnoreCase(sortDirection) ?
+            Sort.Direction.DESC : Sort.Direction.ASC;
+
+        // Chỉ cho phép sort theo name hoặc salary, mặc định theo id
+        Sort sort;
+        if ("name".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(direction, "name");
+        } else if ("salary".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(direction, "salary");
+        } else {
+            sort = Sort.by(direction, "id");
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return staffRepository.findAll(pageable);
+    }
+
+    // Danh sách không phân trang với sắp xếp theo name hoặc salary
+    public List<Staff> getStaffListSorted(String sortBy, String sortDirection) {
+        Sort.Direction direction = "desc".equalsIgnoreCase(sortDirection) ?
+            Sort.Direction.DESC : Sort.Direction.ASC;
+
+        if ("name".equalsIgnoreCase(sortBy)) {
+            return staffRepository.findAll(Sort.by(direction, "name"));
+        } else if ("salary".equalsIgnoreCase(sortBy)) {
+            return staffRepository.findAll(Sort.by(direction, "salary"));
+        } else {
+            return staffRepository.findAll(Sort.by(direction, "id"));
+        }
+    }
 }

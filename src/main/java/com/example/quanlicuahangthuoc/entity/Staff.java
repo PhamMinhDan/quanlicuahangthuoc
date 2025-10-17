@@ -51,7 +51,7 @@ public class Staff {
     @Column(name = "phone", nullable = false, unique = true)
     private String phone;
 
-    // Enum cho vai trò
+
     public enum Role {
         quan_ly("Quản lý"),
         nhan_vien("Nhân viên");
@@ -67,7 +67,7 @@ public class Staff {
         }
     }
 
-    // Enum cho ca làm việc
+
     public enum WorkShift {
         sang("Ca sáng"),
         chieu("Ca chiều");
@@ -83,7 +83,7 @@ public class Staff {
         }
     }
 
-    // Getter/Setter thủ công (backup nếu Lombok không hoạt động)
+    
     public Integer getId() {
         return id;
     }
