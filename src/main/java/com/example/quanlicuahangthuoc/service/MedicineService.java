@@ -27,4 +27,22 @@ public class MedicineService {
 
         medicineRepository.deleteById(id);
     }
+    public Medicine updateMedicine(Integer id, Medicine updatedMedicine) {
+
+        Medicine existingMedicine = medicineRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Can not find id " + id));
+
+
+        existingMedicine.setImage(updatedMedicine.getImage());
+        existingMedicine.setName(updatedMedicine.getName());
+        existingMedicine.setType(updatedMedicine.getType());
+        existingMedicine.setExpiryDate(updatedMedicine.getExpiryDate());
+        existingMedicine.setPrice(updatedMedicine.getPrice());
+        existingMedicine.setStockQuantity(updatedMedicine.getStockQuantity());
+        existingMedicine.setSupplier(updatedMedicine.getSupplier());
+
+
+        return medicineRepository.save(existingMedicine);
+    }
+
 }
