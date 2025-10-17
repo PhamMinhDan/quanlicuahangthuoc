@@ -1,6 +1,6 @@
 package com.example.quanlicuahangthuoc.controller;
 
-import com.example.quanlicuahangthuoc.dto.MedicineRequestDTO;
+
 import com.example.quanlicuahangthuoc.entity.Medicine;
 import com.example.quanlicuahangthuoc.service.MedicineService;
 import org.springframework.beans.factory.annotation.Autowired;
