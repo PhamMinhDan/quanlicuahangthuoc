@@ -35,7 +35,7 @@ public class MedicineController {
     public ResponseEntity<?> deleteMedicine(@PathVariable Integer id) {
         try {
             medicineService.deleteMedicine(id);
-            return ResponseEntity.ok("Xóa thuốc thành công");
+            return ResponseEntity.ok("Delete successfully");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
