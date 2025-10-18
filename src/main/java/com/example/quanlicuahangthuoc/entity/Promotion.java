@@ -82,7 +82,7 @@ public class Promotion {
         this.validityPeriod = validityPeriod;
     }
     
-    @Override
+  
     public String toString() {
         return "Promotion{" +
                 "id=" + id +
