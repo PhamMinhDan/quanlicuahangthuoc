@@ -140,13 +140,30 @@ public class MedicineService {
         // Lưu vào database
         return medicineRepository.save(medicine);
     }
+    // Xóa thuốc theo id
      public void deleteMedicine(Integer id) {
         Medicine medicine = medicineRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thuốc với id: " + id));
 
         medicineRepository.deleteById(id);
     }
-}
-   
+    // Cập nhật thông tin thuốc
+    public Medicine updateMedicine(Integer id, Medicine updatedMedicine) {
 
+        Medicine existingMedicine = medicineRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Can not find id " + id));
+
+
+        existingMedicine.setImage(updatedMedicine.getImage());
+        existingMedicine.setName(updatedMedicine.getName());
+        existingMedicine.setType(updatedMedicine.getType());
+        existingMedicine.setExpiryDate(updatedMedicine.getExpiryDate());
+        existingMedicine.setPrice(updatedMedicine.getPrice());
+        existingMedicine.setStockQuantity(updatedMedicine.getStockQuantity());
+        existingMedicine.setSupplier(updatedMedicine.getSupplier());
+
+
+        return medicineRepository.save(existingMedicine);
+    }
+}
 

@@ -1,5 +1,10 @@
 package com.example.quanlicuahangthuoc.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 import com.example.quanlicuahangthuoc.entity.Medicine;
 import com.example.quanlicuahangthuoc.service.MedicineService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,6 +89,15 @@ public class MedicineController {
         try {
             medicineService.deleteMedicine(id);
             return ResponseEntity.ok("Delete successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateMedicine(@PathVariable Integer id, @RequestBody Medicine medicine) {
+        try {
+            Medicine updatedMedicine = medicineService.updateMedicine(id, medicine);
+            return ResponseEntity.ok(updatedMedicine);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
