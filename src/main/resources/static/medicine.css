@@ -1,0 +1,198 @@
+:root {
+    --primary-color: #33CCFF; /* Xanh dương nhạt */
+    --secondary-color: #80df6a; /* Xanh Lá Tươi (Teal/Emerald) */
+    --accent-orange: #f58536; /* Cam Cảnh báo */
+    --light-purple-bg: #E6F7FF; /* Nền sidebar active, tông xanh nhạt */
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa; /* Nền xám nhạt */
+}
+
+/* ================== SIDEBAR ================== */
+.sidebar {
+    width: 250px;
+    background-color: #fff;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.sidebar-header {
+    background: linear-gradient(to right, var(--primary-color), #33CCFF); /* Giữ gradient cho sidebar */
+    color: #fff;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-link {
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+    position: relative;
+    color: #343a40; /* Màu text mặc định */
+}
+
+.nav-link.active {
+    background-color: var(--light-purple-bg);
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background-color: var(--primary-color);
+}
+
+.nav-link:hover {
+    background-color: #f1f1f1;
+}
+
+/* ================== SUMMARY CARDS ================== */
+.summary-card {
+    color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+}
+
+.summary-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.summary-card-1 {
+    background: var(--primary-color); /* Loại bỏ gradient, dùng màu xanh dương nhạt */
+}
+
+.summary-card-2 {
+    background: var(--secondary-color); /* Loại bỏ gradient, dùng màu xanh lá */
+}
+
+.summary-card-3 {
+    background: var(--accent-orange); /* Loại bỏ gradient, dùng màu cam */
+}
+
+.summary-card-4 {
+    background: var(--accent-yellow); /* Loại bỏ gradient, dùng màu vàng */
+}
+
+/* ================== FILTERS & TABLE ================== */
+.filter-panel, .table-container {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+}
+
+.table-container {
+    padding: 0;
+    overflow: hidden;
+}
+
+.table thead th {
+    background-color: var(--primary-color);
+    color: #fff;
+    vertical-align: middle;
+}
+
+.table tbody tr:hover {
+    background-color: #f1f1f1;
+    transition: background-color 0.3s ease;
+}
+
+/* Nút Thêm mới */
+#addButton {
+    background-color: #35ad25;
+    border-color: #76eb66;
+    transition: all 0.2s ease;
+}
+
+#addButton:hover {
+    background-color: #0c9c6f;
+    border-color: #0c9c6f;
+}
+
+/* Nút Lọc */
+#filterButton {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+#filterButton:hover {
+    background-color: #2BB8E6; /* Tông đậm hơn một chút cho hover */
+    border-color: #2BB8E6;
+}
+
+/* Nút Xóa Lọc */
+#clearFilters {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+#clearFilters:hover {
+    background-color: #5a6268;
+    border-color: #5a6268;
+}
+
+/* Nút Sửa/Xóa */
+.btn-action-edit {
+    background-color: #1DA1F2;
+    border-color: #1DA1F2;
+}
+
+.btn-action-delete {
+    background-color: #DC3545;
+    border-color: #DC3545;
+}
+
+/* Nút Sắp xếp */
+#sortButton {
+    border-color: #6c757d;
+    color: #495057;
+}
+
+#sortButton:hover {
+    background-color: #f1f1f1;
+    border-color: #5a6268;
+}
+
+.dropdown-menu {
+    min-width: 150px;
+}
+
+.dropdown-item:hover {
+    background-color: var(--light-purple-bg);
+    color: var(--primary-color);
+}
+
+/* Phân trang */
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 2px 5px rgba(51, 204, 255, 0.3); /* Shadow phù hợp với màu xanh dương nhạt */
+}
+
+.pagination .page-link {
+    color: #495057;
+    border-radius: 5px;
+    margin: 0 2px;
+}
+
+.pagination .page-link:focus, .pagination .page-link:hover {
+    box-shadow: 0 0 0 0.25rem rgba(51, 204, 255, 0.25); /* Shadow phù hợp với màu xanh dương nhạt */
+}
