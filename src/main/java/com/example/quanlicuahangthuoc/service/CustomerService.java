@@ -1,15 +1,11 @@
 package com.example.quanlicuahangthuoc.service;
 
-import com.example.quanlicuahangthuoc.entity.Customer;
-import com.example.quanlicuahangthuoc.repository.CustomerRepository;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort;
+import com.example.quanlicuahangthuoc.entity.Customer;
+import com.example.quanlicuahangthuoc.repository.CustomerRepository;
 @Service
 public class CustomerService {
     private final CustomerRepository customerRepository;
@@ -30,11 +26,6 @@ public class CustomerService {
         if (customerRepository.existsByEmail(customer.getEmail())) {
             throw new RuntimeException("Email already existed");
         }
-
-        if (customer.getRewardPoints() == null) {
-            customer.setRewardPoints(0);
-        }
-
-        return customerRepository.save(customer);
+return customerRepository.save(customer);
     }
 }
