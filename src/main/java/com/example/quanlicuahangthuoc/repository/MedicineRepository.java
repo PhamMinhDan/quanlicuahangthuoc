@@ -16,7 +16,6 @@ import com.example.quanlicuahangthuoc.entity.Medicine;
 public interface MedicineRepository extends JpaRepository<Medicine, Integer> {
     
 
-
     List<Medicine> findAll(Sort sort);
     
     // Phân trang với sắp xếp
