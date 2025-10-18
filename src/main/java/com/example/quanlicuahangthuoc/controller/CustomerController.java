@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.quanlicuahangthuoc.entity.Customer;
@@ -20,11 +21,11 @@ public class CustomerController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Customer>> getAllCustomers() {
-        List<Customer> customers = customerService.getAllCustomers();
+    public ResponseEntity<List<Customer>> getAllCustomers(
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false, name = "sortDirection") String sortDirection) {
+        List<Customer> customers = customerService.getAllCustomers(sortBy, sortDirection);
         return ResponseEntity.ok(customers);
     }
 
-    
-    
 }
