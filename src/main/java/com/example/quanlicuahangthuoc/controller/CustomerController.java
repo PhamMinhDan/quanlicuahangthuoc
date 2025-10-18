@@ -61,4 +61,23 @@ public class CustomerController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    @GetMapping("/paging")
+    public ResponseEntity<Page<Customer>> getAllCustomersWithPaging(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        Page<Customer> customers = customerService.getAllCustomersWithPagingAndSort(page, size, sortBy, direction);
+        return ResponseEntity.ok(customers);
+    }
+    @GetMapping("/search/paging")
+    public ResponseEntity<Page<Customer>> searchWithPaging(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        Page<Customer> customers = customerService.searchWithPagingAndSort(keyword, page, size, sortBy, direction);
+        return ResponseEntity.ok(customers);
+    }
 }
