@@ -157,8 +157,8 @@
                                     <td th:text="${medicine.type.displayName}"></td>
                                     <td th:text="${#temporals.format(medicine.expiryDate, 'dd/MM/yyyy')}"></td>
                                     <td th:text="${#numbers.formatDecimal(medicine.price, 0, 2, 'COMMA') + ' VNĐ'}"></td>
-                                    <td th:text="${medicine.stockQuantity}"></td>
-                                    <td th:text="${medicine.supplier.displayName}"></td>
+                                    <td class="text-center" th:text="${medicine.stockQuantity}"></td>
+                                    <td class="text-center" th:text="${medicine.supplier.displayName}"></td>
                                     <td>
                                         <div class="d-flex gap-2">
                                             <button class="btn btn-action-edit btn-sm text-white" th:onclick="'openEditModal(' + ${medicine.id} + ')'"><i class="bi bi-pencil"></i></button>
