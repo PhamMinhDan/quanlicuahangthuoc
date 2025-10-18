@@ -132,17 +132,67 @@ public class MedicineController {
         return ResponseEntity.ok(medicines);
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<?> createMedicine(@Valid @RequestBody Medicine medicine) {  // Thêm @Valid để thực thi validation
-        try {
-            Medicine createdMedicine = medicineService.createMedicine(medicine);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdMedicine);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Lỗi: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
-        }
+   @PostMapping("/add")
+public String createMedicine(
+        @Valid @ModelAttribute Medicine medicine,
+        BindingResult bindingResult,
+        @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "10") int size,
+        @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
+        @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+        @RequestParam(value = "searchName", required = false) String searchName,
+        @RequestParam(value = "searchType", required = false) String searchType,
+        @RequestParam(value = "searchSupplier", required = false) String searchSupplier,
+        Model model) {
+    // Kiểm tra lỗi validation
+    if (bindingResult.hasErrors()) {
+        String errorMessage = bindingResult.getAllErrors().stream()
+                .map(error -> error.getDefaultMessage())
+                .reduce((e1, e2) -> e1 + "; " + e2)
+                .orElse("Lỗi nhập liệu");
+        model.addAttribute("error", errorMessage);
+        model.addAttribute("medicine", medicine);
+        model.addAttribute("showAddModal", true);
+        return getMedicinesPage(page, size, sortBy, sortDirection, searchName, searchType, searchSupplier, model);
     }
+
+    try {
+        // Xử lý upload ảnh
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String imagePath = fileUploadConfig.storeFile(imageFile);
+            medicine.setImage(imagePath != null ? imagePath : "/images/default-medicine.jpg");
+        } else {
+            medicine.setImage("/images/default-medicine.jpg");
+        }
+
+        // Lưu vào database
+        Medicine createdMedicine = medicineService.createMedicine(medicine);
+        model.addAttribute("message", "Thêm thuốc thành công: " + createdMedicine.getName());
+        return "redirect:/api/medicines/view-medicine?page=" + page +
+               "&size=" + size +
+               "&sortBy=" + sortBy +
+               "&sortDirection=" + sortDirection +
+               "&searchName=" + (searchName != null ? searchName : "") +
+               "&searchType=" + (searchType != null ? searchType : "") +
+               "&searchSupplier=" + (searchSupplier != null ? searchSupplier : "");
+    } catch (IllegalArgumentException e) {
+        model.addAttribute("error", "Lỗi: " + e.getMessage());
+        model.addAttribute("medicine", medicine);
+        model.addAttribute("showAddModal", true);
+        return getMedicinesPage(page, size, sortBy, sortDirection, searchName, searchType, searchSupplier, model);
+    } catch (IOException e) {
+        model.addAttribute("error", "Lỗi upload file: " + e.getMessage());
+        model.addAttribute("medicine", medicine);
+        model.addAttribute("showAddModal", true);
+        return getMedicinesPage(page, size, sortBy, sortDirection, searchName, searchType, searchSupplier, model);
+    } catch (Exception e) {
+        model.addAttribute("error", "Lỗi server: " + e.getMessage());
+        model.addAttribute("medicine", medicine);
+        model.addAttribute("showAddModal", true);
+        return getMedicinesPage(page, size, sortBy, sortDirection, searchName, searchType, searchSupplier, model);
+    }
+}
     
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteMedicine(@PathVariable Integer id) {
