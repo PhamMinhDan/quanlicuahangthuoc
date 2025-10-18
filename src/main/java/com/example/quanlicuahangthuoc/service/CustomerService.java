@@ -24,11 +24,16 @@ public class CustomerService {
         if (sortBy == null || sortBy.isBlank()) {
             sortBy = "name";
         }
+        // normalize common aliases
+        if ("reward_points".equalsIgnoreCase(sortBy) || "rewardpoints".equalsIgnoreCase(sortBy)
+                || "rewardPoints".equals(sortBy) || "points".equalsIgnoreCase(sortBy)) {
+            sortBy = "rewardPoints";
+        }
         Sort.Direction direction = Sort.Direction.ASC;
         if ("desc".equalsIgnoreCase(sortDir)) {
             direction = Sort.Direction.DESC;
         }
-        // If caller requests sorting by the last token of the name (e.g. last name),
+    // If caller requests sorting by the last token of the name (e.g. last name),
         // perform in-memory sorting because it's not a mapped column.
         if ("lastName".equalsIgnoreCase(sortBy) || "last_name".equalsIgnoreCase(sortBy)) {
             List<Customer> all = customerRepository.findAll();
@@ -43,6 +48,13 @@ public class CustomerService {
             }
             all.sort(cmp);
             return all;
+        }
+
+        // Whitelist allowed DB-side sortable fields to avoid runtime errors from invalid props
+        java.util.Set<String> allowed = java.util.Set.of("id", "name", "email", "phone", "rewardPoints", "customerType", "reward_points");
+        if (!allowed.contains(sortBy)) {
+            // fallback to name if unknown
+            sortBy = "name";
         }
 
         Sort sort = Sort.by(direction, sortBy);
