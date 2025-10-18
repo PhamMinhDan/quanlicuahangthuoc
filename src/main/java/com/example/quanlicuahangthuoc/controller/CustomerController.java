@@ -52,5 +52,13 @@ public class CustomerController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteCustomer(@PathVariable Integer id) {
+        try {
+            customerService.deleteCustomer(id);
+            return ResponseEntity.ok("Delete successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

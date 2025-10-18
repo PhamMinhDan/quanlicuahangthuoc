@@ -54,6 +54,10 @@ public class CustomerService {
 
         return customerRepository.save(customer);
     }
+    public void deleteCustomer(Integer id) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cannot find customer id: " + id));
 
-
+        customerRepository.deleteById(id);
+    }
 }
