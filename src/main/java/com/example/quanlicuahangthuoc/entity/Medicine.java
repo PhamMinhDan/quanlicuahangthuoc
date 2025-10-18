@@ -1,13 +1,6 @@
 package com.example.quanlicuahangthuoc.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,10 +11,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "medicine")
 @Getter
-@Setter 
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Medicine {
@@ -44,7 +39,7 @@ public class Medicine {
     @NotNull(message = "Ngày hết hạn không được để trống")
     @Future(message = "Ngày hết hạn phải là thời gian trong tương lai")
     @Column(name = "expiry_date", nullable = false)
-    private java.time.LocalDate expiryDate;
+    private LocalDate expiryDate;
 
     @NotNull(message = "Giá thuốc không được để trống")
     @Positive(message = "Giá thuốc phải lớn hơn 0")
@@ -61,12 +56,75 @@ public class Medicine {
     @Column(nullable = false)
     private Supplier supplier;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public MedicineType getType() {
+        return type;
+    }
+
+    public void setType(MedicineType type) {
+        this.type = type;
+    }
+
+    public LocalDate getExpiryDate() {
+        return expiryDate;
+    }
+
+    public void setExpiryDate(LocalDate expiryDate) {
+        this.expiryDate = expiryDate;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public Integer getStockQuantity() {
+        return stockQuantity;
+    }
+
+    public void setStockQuantity(Integer stockQuantity) {
+        this.stockQuantity = stockQuantity;
+    }
+
+    public Supplier getSupplier() {
+        return supplier;
+    }
+
+    public void setSupplier(Supplier supplier) {
+        this.supplier = supplier;
+    }
 
     public enum MedicineType {
-        giam_dau("Giảm đau"),
-        khang_sinh("Kháng sinh"),
-        chong_viem("Chống viêm"),
-        thuoc_ha_huyet_ap("Thuốc hạ huyết áp");
+        GIAM_DAU("Giảm đau"),
+        KHANG_SINH("Kháng sinh"),
+        CHONG_VIEM("Chống viêm"),
+        THUOC_HA_HUYET_AP("Thuốc hạ huyết áp");
 
         private final String displayName;
 
@@ -79,15 +137,13 @@ public class Medicine {
         }
     }
 
-
-    
     public enum Supplier {
-        Pfizer("Pfizer"),
-        Novartis("Novartis"),
-        Johnson("Johnson"),
-        Roche("Roche"),
-        Merck("Merck"),
-        Sanofi("Sanofi");
+        PFIZER("Pfizer"),     // Constant name: PFIZER
+        NOVARTIS("Novartis"), // Constant name: NOVARTIS
+        JOHNSON("Johnson"),   // Constant name: JOHNSON
+        ROCHE("Roche"),
+        MERCK("Merck"),
+        SANOFI("Sanofi");
 
         private final String displayName;
 
