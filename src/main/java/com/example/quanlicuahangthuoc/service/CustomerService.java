@@ -37,4 +37,23 @@ public class CustomerService {
 
         return customerRepository.save(customer);
     }
+    public Customer updateCustomer(Integer id, Customer customerDetails) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Can not find customer id: " + id));
+
+        if (!customer.getEmail().equals(customerDetails.getEmail())
+                && customerRepository.existsByEmail(customerDetails.getEmail())) {
+            throw new RuntimeException("Email already exist");
+        }
+
+        customer.setName(customerDetails.getName());
+        customer.setPhone(customerDetails.getPhone());
+        customer.setEmail(customerDetails.getEmail());
+        customer.setCustomerType(customerDetails.getCustomerType());
+        customer.setRewardPoints(customerDetails.getRewardPoints());
+
+        return customerRepository.save(customer);
+    }
+
+
 }
