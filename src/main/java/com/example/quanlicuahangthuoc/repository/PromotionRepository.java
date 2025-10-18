@@ -13,31 +13,4 @@ import java.util.List;
 public interface PromotionRepository extends JpaRepository<Promotion, Integer> {
     
 
-    List<Promotion> findAll(Sort sort);
-    
-
-    Page<Promotion> findAll(Pageable pageable);
-    
-
-    List<Promotion> findAllByOrderByNameAsc();
-
-    List<Promotion> findAllByOrderByNameDesc();
-    
-
-    List<Promotion> findAllByOrderByValidityPeriodAsc();
-    
-
-    List<Promotion> findAllByOrderByValidityPeriodDesc();
-    
-
-    Page<Promotion> findAllByOrderByNameAsc(Pageable pageable);
-    
-
-    Page<Promotion> findAllByOrderByNameDesc(Pageable pageable);
-    
-
-    Page<Promotion> findAllByOrderByValidityPeriodAsc(Pageable pageable);
-    
-
-    Page<Promotion> findAllByOrderByValidityPeriodDesc(Pageable pageable);
 }
