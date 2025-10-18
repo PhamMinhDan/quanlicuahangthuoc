@@ -134,7 +134,7 @@ public class MedicineService {
 
         // Set default values nếu chưa có
         if (medicine.getImage() == null || medicine.getImage().trim().isEmpty()) {
-            medicine.setImage("/uploads/default-medicine.jpg");
+            medicine.setImage("default-medicine");
         }
 
         // Lưu vào database

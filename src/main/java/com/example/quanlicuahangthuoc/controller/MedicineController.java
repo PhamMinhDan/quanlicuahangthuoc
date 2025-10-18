@@ -1,22 +1,24 @@
 package com.example.quanlicuahangthuoc.controller;
 
-import java.util.List;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import com.example.quanlicuahangthuoc.config.FileUploadConfig;
 import com.example.quanlicuahangthuoc.entity.Medicine;
 import com.example.quanlicuahangthuoc.service.MedicineService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.Valid;
+
+import java.io.IOException;
 import java.util.List;
 
-@RestController
+@Controller
 @RequestMapping("/api/medicines")
 @Validated
 public class MedicineController {
@@ -24,13 +26,76 @@ public class MedicineController {
     @Autowired
     private MedicineService medicineService;
 
+    @Autowired
+    private FileUploadConfig fileUploadConfig;
+
+    @GetMapping("/view-medicine")
+    public String getMedicinesPage(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "searchName", required = false) String searchName,
+            @RequestParam(value = "searchType", required = false) String searchType,
+            @RequestParam(value = "searchSupplier", required = false) String searchSupplier,
+            Model model) {
+        List<Medicine> medicines;
+        if (searchName != null || searchType != null || searchSupplier != null) {
+            medicines = medicineService.searchByFilters(searchName, searchType, searchSupplier);
+            if ("name".equalsIgnoreCase(sortBy) || "price".equalsIgnoreCase(sortBy)) {
+                medicines.sort((m1, m2) -> {
+                    int direction = "desc".equalsIgnoreCase(sortDirection) ? -1 : 1;
+                    if ("name".equalsIgnoreCase(sortBy)) {
+                        return direction * m1.getName().compareToIgnoreCase(m2.getName());
+                    } else {
+                        return direction * Double.compare(m1.getPrice(), m2.getPrice());
+                    }
+                });
+            }
+            int totalItems = medicines.size();
+            int totalPages = (int) Math.ceil((double) totalItems / size);
+            int start = page * size;
+            int end = Math.min(start + size, totalItems);
+            medicines = medicines.subList(start >= totalItems ? totalItems : start, end);
+            model.addAttribute("medicines", medicines);
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", totalPages);
+            model.addAttribute("totalItems", totalItems);
+            model.addAttribute("pageSize", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+        } else {
+            Page<Medicine> medicinePage = medicineService.getAllMedicinesPaginated(page, size, sortBy, sortDirection);
+            medicines = medicinePage.getContent();
+            model.addAttribute("medicines", medicines);
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", medicinePage.getTotalPages());
+            model.addAttribute("totalItems", medicinePage.getTotalElements());
+            model.addAttribute("pageSize", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+        }
+        model.addAttribute("totalMedicines", medicineService.getAllMedicines().size());
+        model.addAttribute("totalSuppliers", medicineService.getAllMedicines().stream()
+                .map(medicine -> medicine.getSupplier().name())
+                .distinct()
+                .count());
+        model.addAttribute("totalStock", medicineService.getAllMedicines().stream()
+                .mapToInt(Medicine::getStockQuantity)
+                .sum());
+        model.addAttribute("activeNav", "medicines");
+        model.addAttribute("searchName", searchName);
+        model.addAttribute("searchType", searchType);
+        model.addAttribute("searchSupplier", searchSupplier);
+        return "medicine";
+    }
+
     @GetMapping("/list")
     public ResponseEntity<?> getAllMedicines(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
             @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
-
         if (page >= 0 && size > 0) {
             Page<Medicine> medicinePage = medicineService.getAllMedicinesPaginated(page, size, sortBy, sortDirection);
             return ResponseEntity.ok(medicinePage);
@@ -38,11 +103,6 @@ public class MedicineController {
             List<Medicine> medicines = medicineService.getAllMedicinesSorted(sortBy, sortDirection);
             return ResponseEntity.ok(medicines);
         }
-    }
-
-    @GetMapping("/test")
-    public ResponseEntity<String> testEndpoint() {
-        return ResponseEntity.ok("API is working!");
     }
 
     @GetMapping("/search/name")
@@ -73,7 +133,7 @@ public class MedicineController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> createMedicine(@Valid @RequestBody Medicine medicine) {
+    public ResponseEntity<?> createMedicine(@Valid @RequestBody Medicine medicine) {  // Thêm @Valid để thực thi validation
         try {
             Medicine createdMedicine = medicineService.createMedicine(medicine);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdMedicine);
@@ -83,7 +143,7 @@ public class MedicineController {
             return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
         }
     }
-
+    
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteMedicine(@PathVariable Integer id) {
         try {
@@ -93,8 +153,9 @@ public class MedicineController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateMedicine(@PathVariable Integer id, @RequestBody Medicine medicine) {
+    public ResponseEntity<?> updateMedicine(@PathVariable Integer id, @Valid @RequestBody Medicine medicine) {
         try {
             Medicine updatedMedicine = medicineService.updateMedicine(id, medicine);
             return ResponseEntity.ok(updatedMedicine);
