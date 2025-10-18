@@ -28,6 +28,23 @@ public class CustomerService {
         if ("desc".equalsIgnoreCase(sortDir)) {
             direction = Sort.Direction.DESC;
         }
+        // If caller requests sorting by the last token of the name (e.g. last name),
+        // perform in-memory sorting because it's not a mapped column.
+        if ("lastName".equalsIgnoreCase(sortBy) || "last_name".equalsIgnoreCase(sortBy)) {
+            List<Customer> all = customerRepository.findAll();
+            java.util.Comparator<Customer> cmp = java.util.Comparator.comparing(c -> {
+                String n = c.getName();
+                if (n == null) return "";
+                String[] parts = n.trim().split("\\s+");
+                return parts.length == 0 ? "" : parts[parts.length - 1];
+            }, String.CASE_INSENSITIVE_ORDER);
+            if (direction == Sort.Direction.DESC) {
+                cmp = cmp.reversed();
+            }
+            all.sort(cmp);
+            return all;
+        }
+
         Sort sort = Sort.by(direction, sortBy);
         return customerRepository.findAll(sort);
     }
