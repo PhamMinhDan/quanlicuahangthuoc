@@ -1,25 +1,22 @@
 package com.example.quanlicuahangthuoc.service;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.example.quanlicuahangthuoc.entity.Staff;
 import com.example.quanlicuahangthuoc.repository.StaffRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import lombok.RequiredArgsConstructor;
+import java.util.NoSuchElementException;
 
 @Service
-@RequiredArgsConstructor
-@Transactional
 public class StaffService {
 
-    
+    @Autowired
+    private StaffRepository staffRepository;
+
+    public void deleteStaff(Integer id) {
+        if (!staffRepository.existsById(id)) {
+            throw new NoSuchElementException("Không tìm thấy nhân viên với ID: " + id + " để xóa.");
+        }
+
+        staffRepository.deleteById(id);
+    }
 }

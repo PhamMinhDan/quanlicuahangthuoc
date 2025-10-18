@@ -1,23 +1,28 @@
 package com.example.quanlicuahangthuoc.controller;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.data.domain.Page;
+import com.example.quanlicuahangthuoc.service.StaffService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.quanlicuahangthuoc.entity.Staff;
-import com.example.quanlicuahangthuoc.service.StaffService;
-
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import java.util.NoSuchElementException;
 
 @RestController
-@RequestMapping("/api/staff")
-@RequiredArgsConstructor
+@RequestMapping("/api/staffs")
 public class StaffController {
 
+    @Autowired
+    private StaffService staffService;
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteStaff(@PathVariable Integer id) {
+        try {
+            staffService.deleteStaff(id);
+            return ResponseEntity.noContent().build();
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi xóa nhân viên: " + e.getMessage());
+        }
+    }
 }
