@@ -15,5 +15,14 @@ import com.example.quanlicuahangthuoc.entity.Staff;
 @Repository
 public interface StaffRepository extends JpaRepository<Staff, Integer> {
     
+    // Tìm kiếm nhân viên theo tên (không phân biệt hoa thường)
+    @Query("SELECT s FROM Staff s WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    Page<Staff> findByNameContainingIgnoreCase(@Param("name") String name, Pageable pageable);
     
+    // Tìm kiếm nhân viên theo chức vụ
+    Page<Staff> findByRole(Staff.Role role, Pageable pageable);
+    
+    // Tìm kiếm nhân viên theo cả tên và chức vụ
+    @Query("SELECT s FROM Staff s WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :name, '%')) AND s.role = :role")
+    Page<Staff> findByNameContainingIgnoreCaseAndRole(@Param("name") String name, @Param("role") Staff.Role role, Pageable pageable);
 }
