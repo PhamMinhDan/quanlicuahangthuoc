@@ -1,22 +1,22 @@
 package com.example.quanlicuahangthuoc.entity;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "medicine")
 @Getter
-@Setter // Đảm bảo @Setter được áp dụng
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Medicine {
@@ -25,36 +25,37 @@ public class Medicine {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotBlank(message = "Image URL cannot be empty")
-    @Column(name = "image", nullable = false)
     private String image;
 
-    @NotBlank(message = "Name cannot be empty")
-    @Column(name = "name", nullable = false)
+    @NotBlank(message = "Tên thuốc không được để trống")
+    @Column(nullable = false)
     private String name;
 
-    @NotBlank(message = "Type cannot be empty")
-    @Column(name = "type", nullable = false)
-    private String type;
+    @NotNull(message = "Loại thuốc không được để trống")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MedicineType type;
 
-    @Column(name = "expiry_date")
+    @NotNull(message = "Ngày hết hạn không được để trống")
+    @Future(message = "Ngày hết hạn phải là thời gian trong tương lai")
+    @Column(name = "expiry_date", nullable = false)
     private LocalDate expiryDate;
 
-    @NotNull(message = "Price cannot be empty")
-    @DecimalMin(value = "0.0", inclusive = true, message = "Price must be greater than or equal to 0")
-    @Column(name = "price", nullable = false)
-    private BigDecimal price;
+    @NotNull(message = "Giá thuốc không được để trống")
+    @Positive(message = "Giá thuốc phải lớn hơn 0")
+    @Column(nullable = false)
+    private Double price;
 
-    @NotNull(message = "Stock quantity cannot be empty")
-    @Min(value = 0, message = "Stock quantity must be greater than or equal to 0")
+    @NotNull(message = "Số lượng tồn kho không được để trống")
+    @PositiveOrZero(message = "Số lượng tồn kho phải lớn hơn hoặc bằng 0")
     @Column(name = "stock_quantity", nullable = false)
     private Integer stockQuantity;
 
-    @NotBlank(message = "Supplier cannot be empty")
-    @Column(name = "supplier", nullable = false)
-    private String supplier;
+    @NotNull(message = "Nhà cung cấp không được để trống")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Supplier supplier;
 
-    // (Tùy chọn) Thêm getter/setter thủ công nếu Lombok không hoạt động
     public Integer getId() {
         return id;
     }
@@ -79,11 +80,11 @@ public class Medicine {
         this.name = name;
     }
 
-    public String getType() {
+    public MedicineType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(MedicineType type) {
         this.type = type;
     }
 
@@ -95,11 +96,11 @@ public class Medicine {
         this.expiryDate = expiryDate;
     }
 
-    public BigDecimal getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(BigDecimal price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 
@@ -111,11 +112,47 @@ public class Medicine {
         this.stockQuantity = stockQuantity;
     }
 
-    public String getSupplier() {
+    public Supplier getSupplier() {
         return supplier;
     }
 
-    public void setSupplier(String supplier) {
+    public void setSupplier(Supplier supplier) {
         this.supplier = supplier;
+    }
+
+    public enum MedicineType {
+        giam_dau("Giảm đau"),
+        khang_sinh("Kháng sinh"),
+        chong_viem("Chống viêm"),
+        thuoc_ha_huyet_ap("Thuốc hạ huyết áp");
+
+        private final String displayName;
+
+        MedicineType(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+
+    public enum Supplier {
+        Pfizer("Pfizer"),     // Constant name: PFIZER
+        Novartis("Novartis"), // Constant name: NOVARTIS
+        Johnson("Johnson"),   // Constant name: JOHNSON
+        Roche("Roche"),
+        Merck("Merck"),
+        Sanofi("Sanofi");
+
+        private final String displayName;
+
+        Supplier(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
     }
 }
