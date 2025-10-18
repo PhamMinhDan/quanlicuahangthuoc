@@ -25,6 +25,10 @@ public class CustomerService {
     public Customer createCustomer(Customer customer) {
         if (customerRepository.existsByEmail(customer.getEmail())) {
             throw new RuntimeException("Email already existed");
+        }else {
+            if (customer.getRewardPoints() == null) {
+                customer.setRewardPoints(0);
+            }
         }
 return customerRepository.save(customer);
     }
