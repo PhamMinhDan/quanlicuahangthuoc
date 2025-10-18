@@ -22,14 +22,5 @@ public class CustomerService {
         return customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cannot find customer id: " + id));
     }
-    public Customer createCustomer(Customer customer) {
-        if (customerRepository.existsByEmail(customer.getEmail())) {
-            throw new RuntimeException("Email already existed");
-        }else {
-            if (customer.getRewardPoints() == null) {
-                customer.setRewardPoints(0);
-            }
-        }
-return customerRepository.save(customer);
-    }
+    
 }
