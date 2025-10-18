@@ -121,10 +121,10 @@ public class Medicine {
     }
 
     public enum MedicineType {
-        GIAM_DAU("Giảm đau"),
-        KHANG_SINH("Kháng sinh"),
-        CHONG_VIEM("Chống viêm"),
-        THUOC_HA_HUYET_AP("Thuốc hạ huyết áp");
+        giam_dau("Giảm đau"),
+        khang_sinh("Kháng sinh"),
+        chong_viem("Chống viêm"),
+        thuoc_ha_huyet_ap("Thuốc hạ huyết áp");
 
         private final String displayName;
 
@@ -138,12 +138,12 @@ public class Medicine {
     }
 
     public enum Supplier {
-        PFIZER("Pfizer"),     // Constant name: PFIZER
-        NOVARTIS("Novartis"), // Constant name: NOVARTIS
-        JOHNSON("Johnson"),   // Constant name: JOHNSON
-        ROCHE("Roche"),
-        MERCK("Merck"),
-        SANOFI("Sanofi");
+        Pfizer("Pfizer"),     // Constant name: PFIZER
+        Novartis("Novartis"), // Constant name: NOVARTIS
+        Johnson("Johnson"),   // Constant name: JOHNSON
+        Roche("Roche"),
+        Merck("Merck"),
+        Sanofi("Sanofi");
 
         private final String displayName;
 

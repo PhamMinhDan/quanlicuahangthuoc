@@ -78,4 +78,14 @@ public class MedicineController {
             return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
         }
     }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteMedicine(@PathVariable Integer id) {
+        try {
+            medicineService.deleteMedicine(id);
+            return ResponseEntity.ok("Delete successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

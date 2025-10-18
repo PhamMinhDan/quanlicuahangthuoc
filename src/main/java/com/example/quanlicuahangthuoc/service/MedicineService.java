@@ -1,4 +1,3 @@
-// MedicineService.java
 package com.example.quanlicuahangthuoc.service;
 
 import java.util.List;
@@ -13,8 +12,6 @@ import org.springframework.stereotype.Service;
 import com.example.quanlicuahangthuoc.entity.Medicine;
 import com.example.quanlicuahangthuoc.repository.MedicineRepository;
 
-import lombok.RequiredArgsConstructor;
-
 @Service
 
 public class MedicineService {
@@ -24,6 +21,7 @@ public class MedicineService {
     public List<Medicine> getAllMedicines() {
         return medicineRepository.findAll();
     }
+
 
     private Sort getSort(String sortBy, String sortDirection) {
         Sort.Direction direction = "desc".equalsIgnoreCase(sortDirection) ?
@@ -142,4 +140,13 @@ public class MedicineService {
         // Lưu vào database
         return medicineRepository.save(medicine);
     }
+     public void deleteMedicine(Integer id) {
+        Medicine medicine = medicineRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy thuốc với id: " + id));
+
+        medicineRepository.deleteById(id);
+    }
 }
+   
+
+
