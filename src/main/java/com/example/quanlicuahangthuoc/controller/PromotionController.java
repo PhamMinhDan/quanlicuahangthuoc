@@ -127,5 +127,15 @@ public class PromotionController {
             return ResponseEntity.internalServerError().body("Lỗi khi thêm khuyến mãi: " + e.getMessage());
         }
     }
-
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updatePromotion(@PathVariable Integer id, @RequestBody Promotion promotion) {
+        try {
+            Promotion updatedPromotion = promotionService.updatePromotion(id, promotion);
+            return ResponseEntity.ok(updatedPromotion);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi khi cập nhật khuyến mãi: " + e.getMessage());
+        }
+    }
 }

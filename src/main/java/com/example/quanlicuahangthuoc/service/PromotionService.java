@@ -115,7 +115,31 @@ public class PromotionService {
 
         return promotionRepository.save(promotion);
     }
+    public Promotion updatePromotion(Integer id, Promotion updatedPromotion) {
+        // Tìm khuyến mãi cần sửa
+        Promotion existingPromotion = promotionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khuyến mãi với ID: " + id));
 
+        // Kiểm tra tên hợp lệ
+        if (updatedPromotion.getName() == null || updatedPromotion.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên khuyến mãi không được để trống");
+        }
+
+        // Kiểm tra phần trăm giảm giá hợp lệ
+        Double discount = updatedPromotion.getDiscountPercent();
+        if (discount == null || discount < 0 || discount > 100) {
+            throw new IllegalArgumentException("Phần trăm giảm giá phải nằm trong khoảng 0 - 100");
+        }
+
+        // Cập nhật dữ liệu
+        existingPromotion.setName(updatedPromotion.getName());
+        existingPromotion.setType(updatedPromotion.getType());
+        existingPromotion.setDiscountPercent(updatedPromotion.getDiscountPercent());
+        existingPromotion.setValidityPeriod(updatedPromotion.getValidityPeriod());
+
+        // Lưu và trả về đối tượng đã cập nhật
+        return promotionRepository.save(existingPromotion);
+    }
 }
 
 
