@@ -1,5 +1,6 @@
 package com.example.quanlicuahangthuoc.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,5 +98,23 @@ public class StaffService {
             throw new IllegalStateException("Số điện thoại " + staff.getPhone() + " đã tồn tại.");
         }
         return staffRepository.save(staff);
+    }
+    public long getTotalStaff() {
+        return staffRepository.count();
+    }
+
+    public BigDecimal getTotalSalary() {
+        List<Staff> staffList = staffRepository.findAll();
+        return staffList.stream()
+                .map(Staff::getSalary)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public long getTotalMorningShift() {
+        return staffRepository.countByWorkShift(Staff.WorkShift.sang);
+    }
+
+    public long getTotalManagers() {
+        return staffRepository.countByRole(Staff.Role.quan_ly);
     }
 }

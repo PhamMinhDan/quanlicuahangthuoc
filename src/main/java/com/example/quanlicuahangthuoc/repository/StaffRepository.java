@@ -28,5 +28,6 @@ public interface StaffRepository extends JpaRepository<Staff, Integer> {
 
     Optional<Staff> findByEmail(String email);
     Optional<Staff> findByPhone(String phone);
-
+  long countByWorkShift(Staff.WorkShift workShift);
+  long countByRole(Staff.Role role);
 }
