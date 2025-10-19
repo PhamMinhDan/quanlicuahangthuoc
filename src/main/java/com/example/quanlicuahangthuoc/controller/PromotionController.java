@@ -116,4 +116,16 @@ public class PromotionController {
         Page<Promotion> promotions = promotionService.getPromotionsPaginatedSortedByValidityPeriodDesc(page, size);
         return ResponseEntity.ok(promotions);
     }
+    @PostMapping("/add")
+    public ResponseEntity<?> addPromotion(@RequestBody Promotion promotion) {
+        try {
+            Promotion newPromotion = promotionService.addPromotion(promotion);
+            return ResponseEntity.ok(newPromotion);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi khi thêm khuyến mãi: " + e.getMessage());
+        }
+    }
+
 }
