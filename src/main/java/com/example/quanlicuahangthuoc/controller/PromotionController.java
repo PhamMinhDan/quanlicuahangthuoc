@@ -138,4 +138,13 @@ public class PromotionController {
             return ResponseEntity.internalServerError().body("Lỗi khi cập nhật khuyến mãi: " + e.getMessage());
         }
     }
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> deletePromotion(@PathVariable Integer id) {
+        boolean deleted = promotionService.deletePromotion(id);
+        if (deleted) {
+            return ResponseEntity.ok("Đã xóa khuyến mãi có ID: " + id);
+        } else {
+            return ResponseEntity.badRequest().body("Không tìm thấy khuyến mãi có ID: " + id);
+        }
+    }
 }

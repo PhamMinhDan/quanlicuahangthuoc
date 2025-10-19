@@ -140,6 +140,14 @@ public class PromotionService {
         // Lưu và trả về đối tượng đã cập nhật
         return promotionRepository.save(existingPromotion);
     }
+    public boolean deletePromotion(Integer id) {
+        if (!promotionRepository.existsById(id)) {
+            return false; // Không tìm thấy
+        }
+        promotionRepository.deleteById(id);
+        return true;
+    }
+
 }
 
 
