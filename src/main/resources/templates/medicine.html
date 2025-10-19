@@ -10,24 +10,7 @@
 </head>
 <body>
     <div class="d-flex">
-        <div class="sidebar flex-shrink-0 p-0">
-            <div class="sidebar-header">
-                <i class="bi bi-menu" style="font-size: 24px;"></i>
-                <div>
-                    <div>QUẢN LÍ CỬA</div>
-                    <div>HÀNG THUỐC</div>
-                </div>
-            </div>
-            <nav class="nav flex-column">
-                <a class="nav-link" th:classappend="${activeNav == 'home'} ? 'active'" href="#" data-nav="home"><i class="bi bi-house"></i> Trang chủ</a>
-                <a class="nav-link" th:classappend="${activeNav == 'medicines'} ? 'active'" th:href="@{/api/medicines/view-medicine}"><i class="bi bi-archive-fill"></i> Quản lí thuốc</a>
-                <a class="nav-link" th:classappend="${activeNav == 'customers'} ? 'active'" href="#" data-nav="customers"><i class="bi bi-people"></i> Quản lí khách hàng</a>
-                <a class="nav-link" th:classappend="${activeNav == 'staff'} ? 'active'" href="#" data-nav="staff"><i class="bi bi-person"></i> Quản lí nhân viên</a>
-                <a class="nav-link" th:classappend="${activeNav == 'promotions'} ? 'active'" href="#" data-nav="promotions"><i class="bi bi-tag"></i> Khuyến mãi</a>
-                <a class="nav-link" th:classappend="${activeNav == 'orders'} ? 'active'" href="#" data-nav="orders"><i class="bi bi-receipt"></i> Quản lí đơn hàng</a>
-                <a class="nav-link" th:classappend="${activeNav == 'payment'} ? 'active'" href="#" data-nav="payment"><i class="bi bi-credit-card"></i> Thanh toán</a>
-            </nav>
-        </div>
+         <div th:replace="~{sidebar :: sidebar}"></div>
 
         <div class="flex-grow-1 bg-light p-4">
             <div class="container-fluid">

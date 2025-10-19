@@ -1,34 +1,73 @@
-package com.example.quanlicuahangthuoc.controller; // Hoặc package phù hợp
-
-import java.util.List;
-import org.springframework.data.domain.Page;
-import com.example.quanlicuahangthuoc.service.StaffService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+package com.example.quanlicuahangthuoc.controller;
 
 import com.example.quanlicuahangthuoc.entity.Staff;
 import com.example.quanlicuahangthuoc.service.StaffService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
-import java.util.List;
 import java.util.NoSuchElementException;
 
-@RestController
+@Controller
 @RequestMapping("/api/staff")
 @Validated
 public class StaffController {
+
     @Autowired
-    private  StaffService staffService;
+    private StaffService staffService;
+
+    @GetMapping("/view-staff")
+    public String viewStaff(
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "role", required = false) Staff.Role role,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            Model model) {
+        try {
+            Page<Staff> staffPage;
+            if (name != null && !name.isEmpty() && role != null) {
+                staffPage = staffService.searchStaffByNameAndRole(name, role, page, size, sortBy, sortDirection);
+            } else if (name != null && !name.isEmpty()) {
+                staffPage = staffService.searchStaffByName(name, page, size, sortBy, sortDirection);
+            } else if (role != null) {
+                staffPage = staffService.getStaffByRole(role, page, size, sortBy, sortDirection);
+            } else {
+                staffPage = staffService.getStaffPage(page, size, sortBy, sortDirection);
+            }
+
+            // Thêm dữ liệu cho summary cards
+            model.addAttribute("totalStaff", staffService.getTotalStaff());
+model.addAttribute("totalStaff", staffService.getTotalStaff());
+model.addAttribute("totalManagers", staffService.getTotalManagers());
+
+            // Thêm dữ liệu cho view
+            model.addAttribute("staffs", staffPage.getContent());
+            model.addAttribute("currentPage", staffPage.getNumber());
+            model.addAttribute("totalPages", staffPage.getTotalPages());
+            model.addAttribute("pageSize", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("name", name);
+            model.addAttribute("role", role != null ? role.name() : null);
+            model.addAttribute("activeNav", "staff");
+
+            return "staff"; // Resolve sang staff.html
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi khi tải danh sách nhân viên: " + e.getMessage());
+            return "staff";
+        }
+    }
 
     @GetMapping("/list")
+    @ResponseBody
     public ResponseEntity<Page<Staff>> getStaffList(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
@@ -41,8 +80,9 @@ public class StaffController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-     // Tìm kiếm nhân viên theo tên
+
     @GetMapping("/search")
+    @ResponseBody
     public ResponseEntity<Page<Staff>> searchStaffByName(
             @RequestParam String name,
             @RequestParam(defaultValue = "0") int page,
@@ -57,8 +97,8 @@ public class StaffController {
         }
     }
 
-    // Lọc nhân viên theo chức vụ
     @GetMapping("/role/{role}")
+    @ResponseBody
     public ResponseEntity<Page<Staff>> getStaffByRole(
             @PathVariable Staff.Role role,
             @RequestParam(defaultValue = "0") int page,
@@ -73,8 +113,8 @@ public class StaffController {
         }
     }
 
-    // Tìm kiếm nhân viên theo cả tên và chức vụ
     @GetMapping("/search/role-name")
+    @ResponseBody
     public ResponseEntity<Page<Staff>> searchStaffByNameAndRole(
             @RequestParam String name,
             @RequestParam Staff.Role role,
@@ -88,8 +128,10 @@ public class StaffController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-    }    
+    }
+
     @PostMapping("/add")
+     @ResponseBody
     public ResponseEntity<?> addStaff(@Valid @RequestBody Staff staff) {
         try {
             Staff newStaff = staffService.addStaff(staff);
@@ -100,18 +142,9 @@ public class StaffController {
             return new ResponseEntity<>("Lỗi trong quá trình thêm nhân viên: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR); // 500 Internal Server Error
         }
     }
-    @DeleteMapping("delete/{id}")
-    public ResponseEntity<?> deleteStaff(@PathVariable Integer id) {
-        try {
-            staffService.deleteStaff(id);
-            return ResponseEntity.noContent().build();
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi xóa nhân viên: " + e.getMessage());
-        }
-    }
-     @PutMapping("/update/{id}")
+
+    @PutMapping("/update/{id}")
+    @ResponseBody
     public ResponseEntity<?> updateStaff(@PathVariable Integer id, @Valid @RequestBody Staff staff) {
         try {
             staff.setId(id);
@@ -125,5 +158,17 @@ public class StaffController {
             return new ResponseEntity<>("Lỗi khi cập nhật nhân viên: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-   
+
+    @DeleteMapping("/delete/{id}")
+    @ResponseBody
+    public ResponseEntity<?> deleteStaff(@PathVariable Integer id) {
+        try {
+            staffService.deleteStaff(id);
+            return ResponseEntity.noContent().build();
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi xóa nhân viên: " + e.getMessage());
+        }
+    }
 }
