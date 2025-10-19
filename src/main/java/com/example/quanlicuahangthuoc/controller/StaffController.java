@@ -1,4 +1,4 @@
-package com.example.quanlicuahangthuoc.controller;
+package com.example.quanlicuahangthuoc.controller; // Hoặc package phù hợp
 
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -111,4 +111,19 @@ public class StaffController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi xóa nhân viên: " + e.getMessage());
         }
     }
+     @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateStaff(@PathVariable Integer id, @Valid @RequestBody Staff staff) {
+        try {
+            staff.setId(id);
+            Staff updatedStaff = staffService.updateStaff(staff);
+            return new ResponseEntity<>(updatedStaff, HttpStatus.OK);
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (IllegalStateException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Lỗi khi cập nhật nhân viên: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+   
 }

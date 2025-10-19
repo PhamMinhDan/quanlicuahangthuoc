@@ -84,4 +84,18 @@ public class StaffService {
 
         staffRepository.deleteById(id);
     }
+    public Staff updateStaff(Staff staff) {
+        if (!staffRepository.existsById(staff.getId())) {
+            throw new NoSuchElementException("Không tìm thấy nhân viên với ID: " + staff.getId());
+        }
+        if (staffRepository.findByEmail(staff.getEmail()).isPresent() && 
+            !staffRepository.findByEmail(staff.getEmail()).get().getId().equals(staff.getId())) {
+            throw new IllegalStateException("Email " + staff.getEmail() + " đã tồn tại.");
+        }
+        if (staffRepository.findByPhone(staff.getPhone()).isPresent() && 
+            !staffRepository.findByPhone(staff.getPhone()).get().getId().equals(staff.getId())) {
+            throw new IllegalStateException("Số điện thoại " + staff.getPhone() + " đã tồn tại.");
+        }
+        return staffRepository.save(staff);
+    }
 }
