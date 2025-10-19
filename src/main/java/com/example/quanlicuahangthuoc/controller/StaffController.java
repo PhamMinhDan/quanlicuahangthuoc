@@ -1,9 +1,9 @@
 package com.example.quanlicuahangthuoc.controller;
 
-
 import java.util.List;
-
 import org.springframework.data.domain.Page;
+import com.example.quanlicuahangthuoc.service.StaffService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
 import java.util.List;
-
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/staff")
@@ -98,6 +98,17 @@ public class StaffController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
         } catch (Exception e) {
             return new ResponseEntity<>("Lỗi trong quá trình thêm nhân viên: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR); // 500 Internal Server Error
+        }
+    }
+    @DeleteMapping("delete/{id}")
+    public ResponseEntity<?> deleteStaff(@PathVariable Integer id) {
+        try {
+            staffService.deleteStaff(id);
+            return ResponseEntity.noContent().build();
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi xóa nhân viên: " + e.getMessage());
         }
     }
 }
