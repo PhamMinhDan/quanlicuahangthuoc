@@ -10,16 +10,23 @@ import org.springframework.web.bind.annotation.*;
 
 import com.example.quanlicuahangthuoc.entity.Staff;
 import com.example.quanlicuahangthuoc.service.StaffService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/staff")
-@RequiredArgsConstructor
+@Validated
 public class StaffController {
-
-    private final StaffService staffService;
-
+    @Autowired
+    private  StaffService staffService;
 
     @GetMapping("/list")
     public ResponseEntity<Page<Staff>> getStaffList(
@@ -80,6 +87,17 @@ public class StaffController {
             return ResponseEntity.ok(staffPage);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }    
+    @PostMapping("/add")
+    public ResponseEntity<?> addStaff(@Valid @RequestBody Staff staff) {
+        try {
+            Staff newStaff = staffService.addStaff(staff);
+            return new ResponseEntity<>(newStaff, HttpStatus.CREATED);
+        } catch (IllegalStateException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Lỗi trong quá trình thêm nhân viên: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR); // 500 Internal Server Error
         }
     }
 }

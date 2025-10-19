@@ -12,12 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.quanlicuahangthuoc.entity.Staff;
 import com.example.quanlicuahangthuoc.repository.StaffRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
 
 @Service
-@RequiredArgsConstructor
-@Transactional
 public class StaffService {
 
     @Autowired
@@ -65,5 +66,17 @@ public class StaffService {
             Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
         return staffRepository.findByNameContainingIgnoreCaseAndRole(name, role, pageable);
+    }
+    public Staff addStaff(Staff staff) {
+        // **Thêm logic kiểm tra nghiệp vụ ở đây** (ví dụ: email hoặc sđt đã tồn tại)
+        if (staffRepository.findByEmail(staff.getEmail()).isPresent()) {
+            throw new IllegalStateException("Email " + staff.getEmail() + " đã tồn tại.");
+        }
+        if (staffRepository.findByPhone(staff.getPhone()).isPresent()) {
+            throw new IllegalStateException("Số điện thoại " + staff.getPhone() + " đã tồn tại.");
+        }
+
+        // Lưu nhân viên vào cơ sở dữ liệu
+        return staffRepository.save(staff);
     }
 }
