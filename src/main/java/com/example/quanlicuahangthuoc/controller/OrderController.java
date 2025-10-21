@@ -50,9 +50,18 @@ public class OrderController {
             String orderDate,
             String status,
             Integer page,
-            Integer size) {
+            Integer size,
+            String sortBy,
+            String sortDir) {
         int p = (page == null || page < 0) ? 0 : page;
         int s = (size == null || size <= 0) ? 10 : size;
+        String sortField = "orderDate";
+        if (sortBy != null && !sortBy.isBlank()) {
+            if (sortBy.equalsIgnoreCase("date")) sortField = "orderDate";
+            else if (sortBy.equalsIgnoreCase("total") || sortBy.equalsIgnoreCase("totalAmount") || sortBy.equalsIgnoreCase("amount")) sortField = "totalAmount";
+        }
+        org.springframework.data.domain.Sort.Direction direction = org.springframework.data.domain.Sort.Direction.ASC;
+        if (sortDir != null && sortDir.equalsIgnoreCase("desc")) direction = org.springframework.data.domain.Sort.Direction.DESC;
         java.time.LocalDate date = null;
         if (orderDate != null && !orderDate.isBlank()) {
             try {
@@ -69,7 +78,8 @@ public class OrderController {
                 return ResponseEntity.badRequest().body("Invalid status. Allowed values: da_thanh_toan, chua_thanh_toan, da_huy");
             }
         }
-        var pageResult = orderService.searchOrders(customerId, date, st, p, s);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(p, s, org.springframework.data.domain.Sort.by(direction, sortField));
+        var pageResult = orderService.searchOrders(customerId, date, st, pageable);
         return ResponseEntity.ok(pageResult);
     }
     
