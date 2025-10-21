@@ -44,4 +44,33 @@ public class OrderController {
         return ResponseEntity.notFound().build();
     }
     
+    @GetMapping("/search")
+    public ResponseEntity<?> searchOrders(
+            Integer customerId,
+            String orderDate,
+            String status,
+            Integer page,
+            Integer size) {
+        int p = (page == null || page < 0) ? 0 : page;
+        int s = (size == null || size <= 0) ? 10 : size;
+        java.time.LocalDate date = null;
+        if (orderDate != null && !orderDate.isBlank()) {
+            try {
+                date = java.time.LocalDate.parse(orderDate);
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body("Invalid date format. Use yyyy-MM-dd");
+            }
+        }
+        Order.OrderStatus st = null;
+        if (status != null && !status.isBlank()) {
+            try {
+                st = Order.OrderStatus.valueOf(status);
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body("Invalid status. Allowed values: da_thanh_toan, chua_thanh_toan, da_huy");
+            }
+        }
+        var pageResult = orderService.searchOrders(customerId, date, st, p, s);
+        return ResponseEntity.ok(pageResult);
+    }
+    
 }

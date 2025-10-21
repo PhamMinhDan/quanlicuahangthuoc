@@ -47,4 +47,9 @@ public class OrderService {
         Pageable pageable = PageRequest.of(page, size);
         return orderRepository.findByOrderId(id, pageable);
     }
+
+    public Page<Order> searchOrders(Integer customerId, java.time.LocalDate orderDate, Order.OrderStatus status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return orderRepository.searchOrders(customerId, orderDate, status, pageable);
+    }
 }
