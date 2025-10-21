@@ -23,4 +23,7 @@ public class OrderService {
         Pageable pageable = PageRequest.of(page, size);
         return orderRepository.findAll(pageable);
     }
+    public Order addOrder(Order order) {
+        return orderRepository.save(order);
+    }
 }
