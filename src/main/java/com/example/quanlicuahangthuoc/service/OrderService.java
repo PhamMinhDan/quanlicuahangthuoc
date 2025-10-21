@@ -30,4 +30,14 @@ public class OrderService {
     public Order addOrder(Order order) {
         return orderRepository.save(order);
     }
+    public Order updateOrder(Integer id, Order order) {
+        return orderRepository.findById(id).map(existingOrder -> {
+            existingOrder.setOrderDate(order.getOrderDate());
+            existingOrder.setCustomer(order.getCustomer());
+            existingOrder.setStaff(order.getStaff());
+            existingOrder.setPromotion(order.getPromotion());
+            existingOrder.setTotalAmount(order.getTotalAmount());
+            return orderRepository.save(existingOrder);
+        }).orElse(null);
+    }
 }
