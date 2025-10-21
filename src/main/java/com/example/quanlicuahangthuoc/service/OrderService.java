@@ -40,4 +40,11 @@ public class OrderService {
             return orderRepository.save(existingOrder);
         }).orElse(null);
     }
+    public List<Order> getOrdersById(Integer id) {
+        return orderRepository.findByOrderId(id);
+    }
+    public Page<Order> getOrdersByIdPaginated(Integer id, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return orderRepository.findByOrderId(id, pageable);
+    }
 }

@@ -12,6 +12,6 @@ import com.example.quanlicuahangthuoc.entity.Order;
 public interface OrderRepository extends JpaRepository<Order, Integer> {
     List<Order> findAll();
     Page<Order> findAll(Pageable pageable);
-    
-
+    List<Order> findByOrderId(Integer id);
+    Page<Order> findByOrderId(Integer id, Pageable pageable);
 }
