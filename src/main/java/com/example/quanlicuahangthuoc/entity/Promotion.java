@@ -1,5 +1,6 @@
 package com.example.quanlicuahangthuoc.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -9,6 +10,7 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "promotion")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Promotion {
 
     @Id
