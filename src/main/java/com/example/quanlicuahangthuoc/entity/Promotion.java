@@ -1,11 +1,22 @@
 package com.example.quanlicuahangthuoc.entity;
 
-import jakarta.persistence.*;
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import java.time.LocalDate;
 
 @Entity
 @Table(name = "promotion")
@@ -32,6 +43,9 @@ public class Promotion {
     @NotNull(message = "Expired date must not be null")
     @Column(name = "expired_date", nullable = false)
     private LocalDate expiredDate;
+
+    @OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<Order> orders = new HashSet<>();
 
     // Constructors
     public Promotion() {}
@@ -82,6 +96,24 @@ public class Promotion {
 
     public void setExpiredDate(LocalDate expiredDate) {
         this.expiredDate = expiredDate;
+    }
+
+    public Set<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(Set<Order> orders) {
+        this.orders = orders;
+    }
+
+    public void addOrder(Order order) {
+        orders.add(order);
+        order.setPromotion(this);
+    }
+
+    public void removeOrder(Order order) {
+        orders.remove(order);
+        order.setPromotion(null);
     }
 
     @Override
