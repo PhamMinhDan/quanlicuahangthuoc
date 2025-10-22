@@ -63,11 +63,20 @@ public class Customer {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<Order> orders = new HashSet<>();
 
-    public enum CustomerType {
-        vang_lai,
-        than_thiet
+     public enum CustomerType {
+    vang_lai("Vãng lai"),
+    than_thiet("Thân thiết");
+
+    private final String displayName;
+
+    CustomerType(String displayName) {
+        this.displayName = displayName;
     }
 
+    public String getDisplayName() {
+        return displayName;
+    }
+}
     // Getter/Setter thủ công
     public Integer getId() {
         return id;

@@ -17,7 +17,7 @@ public class OrderController {
    @Autowired
     private OrderService orderService;
     
-    @GetMapping
+    @GetMapping("/list")
     public ResponseEntity<List<Order>> getAllOrders() {
         List<Order> orderList = orderService.getAllOrders();
         return ResponseEntity.ok(orderList);

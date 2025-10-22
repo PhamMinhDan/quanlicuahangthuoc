@@ -17,25 +17,25 @@
                 </div>
             </div>
             <nav class="nav flex-column">
-                <a class="nav-link" th:classappend="${activeNav == 'home'} ? 'active'" th:href="@{/}" data-nav="home">
+                <a class="nav-link" th:classappend="${activeNav == 'home'} ? 'active'" th:href="@{/}">
                     <i class="bi bi-house"></i> Trang chủ
                 </a>
                 <a class="nav-link" th:classappend="${activeNav == 'medicines'} ? 'active'" th:href="@{/api/medicines/view-medicine}">
                     <i class="bi bi-archive-fill"></i> Quản lí thuốc
                 </a>
-                <a class="nav-link" th:classappend="${activeNav == 'customers'} ? 'active'" th:href="@{#}" data-nav="customers">
+                <a class="nav-link" th:classappend="${activeNav == 'customers'} ? 'active'" th:href="@{/api/customers/view-customers}">
                     <i class="bi bi-people"></i> Quản lí khách hàng
                 </a>
                 <a class="nav-link" th:classappend="${activeNav == 'staff'} ? 'active'" th:href="@{/api/staff/view-staff}">
                     <i class="bi bi-person"></i> Quản lí nhân viên
                 </a>
-                <a class="nav-link" th:classappend="${activeNav == 'promotions'} ? 'active'" th:href="@{#}" data-nav="promotions">
+                <a class="nav-link" th:classappend="${activeNav == 'promotions'} ? 'active'" href="#" onclick="return false;">
                     <i class="bi bi-tag"></i> Khuyến mãi
                 </a>
-                <a class="nav-link" th:classappend="${activeNav == 'orders'} ? 'active'" th:href="@{#}" data-nav="orders">
+                <a class="nav-link" th:classappend="${activeNav == 'orders'} ? 'active'" href="#" onclick="return false;">
                     <i class="bi bi-receipt"></i> Quản lí đơn hàng
                 </a>
-                <a class="nav-link" th:classappend="${activeNav == 'payment'} ? 'active'" th:href="@{#}" data-nav="payment">
+                <a class="nav-link" th:classappend="${activeNav == 'payment'} ? 'active'" href="#" onclick="return false;">
                     <i class="bi bi-credit-card"></i> Thanh toán
                 </a>
             </nav>
