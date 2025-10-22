@@ -10,7 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
+
 @Service
 public class PromotionService {
 
@@ -25,6 +25,12 @@ public class PromotionService {
     // READ - Lấy tất cả khuyến mãi
     public List<Promotion> getAllPromotions() {
         return promotionRepository.findAll();
+    }
+    
+    public List<Promotion> getAllPromotionsSorted(String sortBy, String sortOrder) {
+        Sort.Direction direction = "desc".equalsIgnoreCase(sortOrder) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, sortBy);
+        return promotionRepository.findAll(sort);
     }
    
     // READ - Lấy khuyến mãi với phân trang

@@ -5,6 +5,8 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.FutureOrPresent;
+import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
 
 @Entity
@@ -30,7 +32,9 @@ public class Promotion {
     private Double discountPercent;
 
     @NotNull(message = "Expired date must not be null")
-    @Column(name = "expired_date", nullable = false)
+    @FutureOrPresent(message = "Expired date must be today or in the future")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Column(name = "validity_period", nullable = false)
     private LocalDate expiredDate;
 
     // Constructors

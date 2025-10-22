@@ -4,14 +4,10 @@ import com.example.quanlicuahangthuoc.entity.Promotion;
 import com.example.quanlicuahangthuoc.service.PromotionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import java.util.Optional;
-import org.springframework.data.domain.Page;
-
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -26,51 +22,60 @@ public class PromotionController {
     
     @GetMapping
     public String listPromotions(
-            @RequestParam(required = false) Integer page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
             @RequestParam(defaultValue = "asc") String sortOrder,
             Model model) {
         
-        if (page != null) {
-     
-            Page<Promotion> promotionPage;
-            if (sortBy != null) {
-                promotionPage = promotionService.getAllPromotionsPaginatedAndSorted(page, size, sortBy, sortOrder);
-            } else {
-                promotionPage = promotionService.getAllPromotionsPaginated(page, size);
-            }
-            
-            model.addAttribute("promotions", promotionPage.getContent());
-            model.addAttribute("currentPage", page);
-            model.addAttribute("totalPages", promotionPage.getTotalPages());
-            model.addAttribute("totalItems", promotionPage.getTotalElements());
-            model.addAttribute("pageSize", size);
+        List<Promotion> allPromotions;
+        
+        Page<Promotion> promotionPage;
+        if (sortBy != null && !sortBy.isEmpty()) {
+            promotionPage = promotionService.getAllPromotionsPaginatedAndSorted(page, size, sortBy, sortOrder);
         } else {
-       
-            model.addAttribute("promotions", promotionService.getAllPromotions());
+            promotionPage = promotionService.getAllPromotionsPaginated(page, size);
         }
         
+        allPromotions = promotionPage.getContent();
+        model.addAttribute("promotions", allPromotions);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", promotionPage.getTotalPages());
+        model.addAttribute("totalItems", promotionPage.getTotalElements());
+        model.addAttribute("pageSize", size);
+        
+        List<Promotion> allPromotionsForStats = promotionService.getAllPromotions();
+        long activeCount = allPromotionsForStats.stream()
+                .filter(p -> p.getExpiredDate() != null && p.getExpiredDate().isAfter(java.time.LocalDate.now()))
+                .count();
+        long expiredCount = allPromotionsForStats.stream()
+                .filter(p -> p.getExpiredDate() != null && (p.getExpiredDate().isBefore(java.time.LocalDate.now()) || p.getExpiredDate().isEqual(java.time.LocalDate.now())))
+                .count();
+        
+        model.addAttribute("totalPromotions", allPromotionsForStats.size());
+        model.addAttribute("activePromotions", activeCount);
+        model.addAttribute("expiredPromotions", expiredCount);
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("sortOrder", sortOrder);
+        model.addAttribute("activeNav", "promotions");
         
         return "promotion/list";
     }
     
-  
-//    @GetMapping("/{id}")
-//     public String viewPromotion(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
-//         Optional<Promotion> promotion = promotionService.getPromotionById(id);
-        
-//         if (promotion.isPresent()) {
-//             model.addAttribute("promotion", promotion.get());
-//             return "promotion/view";
-//         } else {
-//             redirectAttributes.addFlashAttribute("error", "Không tìm thấy khuyến mãi!");
-//             return "redirect:/promotions";
-//         }
-//     }
 
+    @GetMapping("/{id}")
+    public String viewPromotion(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Promotion promotion = promotionService.getPromotionById(id);
+            model.addAttribute("promotion", promotion);
+            model.addAttribute("activeNav", "promotions");
+            return "promotion/view";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/promotions";
+        }
+    }
+    
     @GetMapping("/delete/{id}")
     public String deletePromotion(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         boolean deleted = promotionService.deletePromotion(id);
@@ -86,6 +91,7 @@ public class PromotionController {
         try {
             Promotion promotion = promotionService.getPromotionById(id);
             model.addAttribute("promotion", promotion);
+            model.addAttribute("activeNav", "promotions");
             return "promotion/edit";
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -120,6 +126,7 @@ public class PromotionController {
     @GetMapping("/new")
     public String showAddForm(Model model) {
         model.addAttribute("promotion", new Promotion());
+        model.addAttribute("activeNav", "promotions");
         return "promotion/add";
     }
     
@@ -146,28 +153,83 @@ public class PromotionController {
             return "promotion/add";
         }
     }
-
-    public String getAllPromotions(Model model) {
-        List<Promotion> promotions = promotionService.getAllPromotions();
+    
+    @GetMapping("/search")
+    public String search(
+            @RequestParam(required = false, defaultValue = "") String searchName,
+            @RequestParam(required = false, defaultValue = "") String searchType,
+            Model model) {
+        
+        List<Promotion> promotions;
+        boolean hasName = searchName != null && !searchName.trim().isEmpty();
+        boolean hasType = searchType != null && !searchType.trim().isEmpty();
+        
+        if (!hasName && !hasType) {
+            promotions = promotionService.getAllPromotions();
+        } else if (hasName && hasType) {
+            promotions = promotionService.searchByNameAndType(searchName.trim(), searchType.trim());
+        } else if (hasName) {
+            promotions = promotionService.searchByName(searchName.trim());
+        } else {
+            promotions = promotionService.searchByType(searchType.trim());
+        }
+        
+        long activeCount = promotions.stream()
+                .filter(p -> p.getExpiredDate() != null && p.getExpiredDate().isAfter(java.time.LocalDate.now()))
+                .count();
+        long expiredCount = promotions.stream()
+                .filter(p -> p.getExpiredDate() != null && (p.getExpiredDate().isBefore(java.time.LocalDate.now()) || p.getExpiredDate().isEqual(java.time.LocalDate.now())))
+                .count();
+        
         model.addAttribute("promotions", promotions);
+        model.addAttribute("totalPromotions", promotions.size());
+        model.addAttribute("activePromotions", activeCount);
+        model.addAttribute("expiredPromotions", expiredCount);
+        model.addAttribute("searchName", searchName);
+        model.addAttribute("searchType", searchType);
+        model.addAttribute("activeNav", "promotions");
         return "promotion/list";
     }
     
     @GetMapping("/search/name")
     public String searchByName(@RequestParam String name, Model model) {
         List<Promotion> promotions = promotionService.searchByName(name);
+        
+        long activeCount = promotions.stream()
+                .filter(p -> p.getExpiredDate() != null && p.getExpiredDate().isAfter(java.time.LocalDate.now()))
+                .count();
+        long expiredCount = promotions.stream()
+                .filter(p -> p.getExpiredDate() != null && (p.getExpiredDate().isBefore(java.time.LocalDate.now()) || p.getExpiredDate().isEqual(java.time.LocalDate.now())))
+                .count();
+        
         model.addAttribute("promotions", promotions);
+        model.addAttribute("totalPromotions", promotions.size());
+        model.addAttribute("activePromotions", activeCount);
+        model.addAttribute("expiredPromotions", expiredCount);
         model.addAttribute("searchType", "name");
         model.addAttribute("searchValue", name);
+        model.addAttribute("activeNav", "promotions");
         return "promotion/list";
     }
     
     @GetMapping("/search/type")
     public String searchByType(@RequestParam String type, Model model) {
         List<Promotion> promotions = promotionService.searchByType(type);
+        
+        long activeCount = promotions.stream()
+                .filter(p -> p.getExpiredDate() != null && p.getExpiredDate().isAfter(java.time.LocalDate.now()))
+                .count();
+        long expiredCount = promotions.stream()
+                .filter(p -> p.getExpiredDate() != null && (p.getExpiredDate().isBefore(java.time.LocalDate.now()) || p.getExpiredDate().isEqual(java.time.LocalDate.now())))
+                .count();
+        
         model.addAttribute("promotions", promotions);
+        model.addAttribute("totalPromotions", promotions.size());
+        model.addAttribute("activePromotions", activeCount);
+        model.addAttribute("expiredPromotions", expiredCount);
         model.addAttribute("searchType", "type");
         model.addAttribute("searchValue", type);
+        model.addAttribute("activeNav", "promotions");
         return "promotion/list";
     }
     
@@ -181,6 +243,7 @@ public class PromotionController {
         model.addAttribute("searchType", "name-and-type");
         model.addAttribute("searchName", name);
         model.addAttribute("searchTypeValue", type);
+        model.addAttribute("activeNav", "promotions");
         return "promotion/list";
     }
     
@@ -194,6 +257,7 @@ public class PromotionController {
         model.addAttribute("searchType", "name-or-type");
         model.addAttribute("searchName", name);
         model.addAttribute("searchTypeValue", type);
+        model.addAttribute("activeNav", "promotions");
         return "promotion/list";
     }
 }
