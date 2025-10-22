@@ -22,12 +22,7 @@ public class OrderController {
    @Autowired
     private OrderService orderService;
     
-    @GetMapping
-    public String getAllOrders(Model model) {
-        List<Order> orderList = orderService.getAllOrders();
-        model.addAttribute("orders", orderList);
-        return "orders/list"; // tên file HTML trong templates
-    }
+    
     
     @GetMapping("/create")
     public String createOrderForm(Model model) {
