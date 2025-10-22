@@ -13,6 +13,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -68,6 +69,16 @@ public class PromotionController {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy khuyến mãi!");
             return "redirect:/promotions";
         }
+    }
+    @GetMapping("/delete/{id}")
+    public String deletePromotion(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+        boolean deleted = promotionService.deletePromotion(id);
+        if (deleted) {
+            redirectAttributes.addFlashAttribute("message", "Đã xóa khuyến mãi có ID: " + id);
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy khuyến mãi có ID: " + id);
+        }
+        return "redirect:/promotions";
     }
 
     @GetMapping("/new")

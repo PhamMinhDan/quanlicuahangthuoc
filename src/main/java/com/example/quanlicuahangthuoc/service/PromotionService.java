@@ -11,13 +11,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-
 @Service
 public class PromotionService {
 
     @Autowired
     private PromotionRepository promotionRepository;
-    
     // CREATE - Tạo khuyến mãi mới
     public Promotion createPromotion(Promotion promotion) {
         return promotionRepository.save(promotion);
@@ -57,15 +55,6 @@ public class PromotionService {
             return promotionRepository.save(promotion);
         }
         return null;
-    }
-    
-    // DELETE - Xóa khuyến mãi
-    public boolean deletePromotion(Integer id) {
-        if (promotionRepository.existsById(id)) {
-            promotionRepository.deleteById(id);
-            return true;
-        }
-        return false;
     }
     
     // SEARCH - Tìm kiếm khuyến mãi theo tên
@@ -111,6 +100,14 @@ public class PromotionService {
     // Tìm kiếm theo tên hoặc loại
     public List<Promotion> searchByNameOrType(String name, String type) {
         return promotionRepository.findByNameContainingOrType(name, type);
+    }
+
+    public boolean deletePromotion(Integer id) {
+        if (!promotionRepository.existsById(id)) {
+            return false;
+        }
+        promotionRepository.deleteById(id);
+        return true;
     }
 }
 

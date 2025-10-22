@@ -43,7 +43,7 @@ public class Promotion {
         this.expiredDate = expiredDate;
     }
 
-
+    // Getters and Setters
     public Integer getId() {
         return id;
     }
