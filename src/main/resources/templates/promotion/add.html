@@ -37,7 +37,11 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="type" class="form-label">Loại khuyến mãi <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="type" th:field="*{type}" placeholder="Ví dụ: Giảm giá mùa lễ" required>
+                                        <select class="form-select" id="type" th:field="*{type}" required>
+                                            <option value="">-- Chọn loại khuyến mãi --</option>
+                                            <option value="giam_gia_pha_tram">Giảm giá phần trăm</option>
+                                            <option value="giam_gia_co_dinh">Giảm giá cố định</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -53,7 +57,8 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="expiredDate" class="form-label">Ngày hết hạn <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" id="expiredDate" th:field="*{expiredDate}" required>
+                                        <input type="date" class="form-control" id="expiredDate" th:field="*{expiredDate}" th:min="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" required>
+                                        <small class="text-muted">Ngày hết hạn phải từ hôm nay trở đi</small>
                                     </div>
                                 </div>
                             </div>

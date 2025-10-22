@@ -144,7 +144,8 @@
                                     <td class="text-center" th:text="${promotion.discountPercent + '%'}"></td>
                                     <td th:text="${#temporals.format(promotion.expiredDate, 'dd/MM/yyyy')}"></td>
                                     <td>
-                                        <span class="badge bg-success">Còn hạn</span>
+                                        <span th:if="${promotion.expiredDate != null and promotion.expiredDate.isAfter(#temporals.createToday())}" class="badge bg-success">Còn hạn</span>
+                                        <span th:if="${promotion.expiredDate != null and (promotion.expiredDate.isBefore(#temporals.createToday()) or promotion.expiredDate.isEqual(#temporals.createToday()))}" class="badge bg-danger">Hết hạn</span>
                                     </td>
                                     <td>
                                         <div class="d-flex gap-2">

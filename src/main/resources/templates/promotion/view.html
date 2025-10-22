@@ -69,7 +69,11 @@
                             <div class="col-md-6">
                                 <div class="mb-4">
                                     <label class="form-label text-muted">Ngày hết hạn</label>
-                                    <p class="h5" th:text="${#temporals.format(promotion.expiredDate, 'dd/MM/yyyy')}"></p>
+                                    <p class="h5">
+                                        <span th:text="${#temporals.format(promotion.expiredDate, 'dd/MM/yyyy')}"></span>
+                                        <span th:if="${promotion.expiredDate != null and promotion.expiredDate.isAfter(#temporals.createToday())}" class="badge bg-success ms-2">Còn hạn</span>
+                                        <span th:if="${promotion.expiredDate != null and (promotion.expiredDate.isBefore(#temporals.createToday()) or promotion.expiredDate.isEqual(#temporals.createToday()))}" class="badge bg-danger ms-2">Hết hạn</span>
+                                    </p>
                                 </div>
                             </div>
                         </div>
