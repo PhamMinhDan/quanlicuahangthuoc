@@ -19,26 +19,43 @@ public class OrderDetailController {
     @Autowired
     private OrderDetailService orderDetailService;
 
-    // Hiển thị trang danh sách order details
+    // Hiển thị trang danh sách order details (HTML)
     @GetMapping("/view-order-details")
     public String getOrderDetailsPage(
             @RequestParam(value = "orderId", required = false) Integer orderId,
             @RequestParam(value = "medicineName", required = false) String medicineName,
             @RequestParam(value = "customerName", required = false) String customerName,
+            @RequestParam(value = "sortBy", required = false, defaultValue = "id") String sortBy,
+            @RequestParam(value = "direction", required = false, defaultValue = "asc") String direction,
             Model model) {
 
         List<OrderDetail> orderDetails;
 
-        // Nếu có tìm kiếm, dùng search
         if (orderId != null || (medicineName != null && !medicineName.isEmpty())
                 || (customerName != null && !customerName.isEmpty())) {
             orderDetails = orderDetailService.searchOrderDetails(orderId, medicineName, customerName);
         } else {
-            // Nếu không có tìm kiếm, lấy tất cả
             orderDetails = orderDetailService.getAllOrderDetails();
         }
 
-        // Tính toán các thống kê
+        // Sắp xếp
+        Comparator<OrderDetail> comparator;
+        switch (sortBy) {
+            case "orderId":
+                comparator = Comparator.comparing(od -> od.getOrder().getId());
+                break;
+            case "totalPrice":
+                comparator = Comparator.comparing(OrderDetail::getTotalPrice);
+                break;
+            default:
+                comparator = Comparator.comparing(OrderDetail::getId);
+        }
+        if ("desc".equalsIgnoreCase(direction)) {
+            comparator = comparator.reversed();
+        }
+        orderDetails.sort(comparator);
+
+        // Thống kê
         BigDecimal totalRevenue = orderDetailService.getTotalRevenue();
         Integer totalProductsSold = orderDetailService.getTotalProductsSold();
         int totalOrders = (int) orderDetails.stream()
@@ -46,99 +63,54 @@ public class OrderDetailController {
                 .distinct()
                 .count();
 
-        // Thêm vào model
         model.addAttribute("orderDetails", orderDetails);
         model.addAttribute("totalRevenue", totalRevenue);
         model.addAttribute("totalProductsSold", totalProductsSold);
         model.addAttribute("totalOrders", totalOrders);
         model.addAttribute("totalItems", orderDetails.size());
 
-        // Thêm các tham số search vào model để giữ lại trong form
+        // Giữ lại các tham số tìm kiếm và sắp xếp
         model.addAttribute("orderId", orderId);
         model.addAttribute("medicineName", medicineName);
         model.addAttribute("customerName", customerName);
-
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("direction", direction);
         model.addAttribute("activeNav", "order-details");
 
         return "order-detail";
     }
 
-    // REST API - Lấy tất cả order details (trả về Map để tránh circular reference)
-    @GetMapping("/list")
+    // API JSON hỗ trợ sắp xếp để test bằng Postman
+    @GetMapping("/list-sorted")
     @ResponseBody
-    public ResponseEntity<List<Map<String, Object>>> getAllOrderDetails() {
+    public ResponseEntity<List<Map<String, Object>>> getSortedOrderDetails(
+            @RequestParam(value = "sortBy", required = false, defaultValue = "id") String sortBy,
+            @RequestParam(value = "direction", required = false, defaultValue = "asc") String direction) {
+
         List<OrderDetail> orderDetails = orderDetailService.getAllOrderDetails();
 
-        List<Map<String, Object>> response = orderDetails.stream().map(od -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", od.getId());
-            map.put("orderId", od.getOrder() != null ? od.getOrder().getId() : null);
-            map.put("customerName", od.getOrder() != null && od.getOrder().getCustomer() != null
-                    ? od.getOrder().getCustomer().getName() : null);
-            map.put("medicineId", od.getMedicine() != null ? od.getMedicine().getId() : null);
-            map.put("medicineName", od.getMedicine() != null ? od.getMedicine().getName() : null);
-            map.put("quantity", od.getQuantity());
-            map.put("unitPrice", od.getUnitPrice());
-            map.put("totalPrice", od.getTotalPrice());
-            return map;
-        }).collect(Collectors.toList());
-
-        return ResponseEntity.ok(response);
-    }
-
-    // REST API - Lấy order detail theo ID (trả về Map)
-    @GetMapping("/{id}")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> getOrderDetailById(@PathVariable Integer id) {
-        return orderDetailService.getOrderDetailById(id)
-                .map(od -> {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("id", od.getId());
-                    map.put("orderId", od.getOrder() != null ? od.getOrder().getId() : null);
-                    map.put("customerName", od.getOrder() != null && od.getOrder().getCustomer() != null
-                            ? od.getOrder().getCustomer().getName() : null);
-                    map.put("medicineId", od.getMedicine() != null ? od.getMedicine().getId() : null);
-                    map.put("medicineName", od.getMedicine() != null ? od.getMedicine().getName() : null);
-                    map.put("quantity", od.getQuantity());
-                    map.put("unitPrice", od.getUnitPrice());
-                    map.put("totalPrice", od.getTotalPrice());
-                    return ResponseEntity.ok(map);
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    // REST API - Lấy order details theo order ID (trả về Map)
-    @GetMapping("/by-order/{orderId}")
-    @ResponseBody
-    public ResponseEntity<List<Map<String, Object>>> getOrderDetailsByOrderId(@PathVariable Integer orderId) {
-        List<OrderDetail> orderDetails = orderDetailService.getOrderDetailsByOrderId(orderId);
-
-        List<Map<String, Object>> response = orderDetails.stream().map(od -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", od.getId());
-            map.put("orderId", od.getOrder() != null ? od.getOrder().getId() : null);
-            map.put("customerName", od.getOrder() != null && od.getOrder().getCustomer() != null
-                    ? od.getOrder().getCustomer().getName() : null);
-            map.put("medicineId", od.getMedicine() != null ? od.getMedicine().getId() : null);
-            map.put("medicineName", od.getMedicine() != null ? od.getMedicine().getName() : null);
-            map.put("quantity", od.getQuantity());
-            map.put("unitPrice", od.getUnitPrice());
-            map.put("totalPrice", od.getTotalPrice());
-            return map;
-        }).collect(Collectors.toList());
-
-        return ResponseEntity.ok(response);
-    }
-
-    // TEST endpoint - Đếm số lượng records
-    @GetMapping("/count")
-    @ResponseBody
-    public ResponseEntity<String> countOrderDetails() {
-        try {
-            long count = orderDetailService.getAllOrderDetails().size();
-            return ResponseEntity.ok("Tổng số OrderDetail: " + count);
-        } catch (Exception e) {
-            return ResponseEntity.ok("Lỗi: " + e.getMessage());
+        Comparator<OrderDetail> comparator;
+        switch (sortBy) {
+            case "orderId":
+                comparator = Comparator.comparing(od -> od.getOrder().getId());
+                break;
+            case "totalPrice":
+                comparator = Comparator.comparing(OrderDetail::getTotalPrice);
+                break;
+            default:
+                comparator = Comparator.comparing(OrderDetail::getId);
         }
+
+        if ("desc".equalsIgnoreCase(direction)) {
+            comparator = comparator.reversed();
+        }
+
+        orderDetails.sort(comparator);
+
+        List<Map<String, Object>> response = orderDetails.stream()
+                .map(orderDetailService::convertToMap)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
     }
 }
