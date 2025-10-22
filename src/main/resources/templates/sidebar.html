@@ -29,8 +29,8 @@
                 <a class="nav-link" th:classappend="${activeNav == 'staff'} ? 'active'" th:href="@{/api/staff/view-staff}">
                     <i class="bi bi-person"></i> Quản lí nhân viên
                 </a>
-                <a class="nav-link" th:classappend="${activeNav == 'promotions'} ? 'active'" href="#" onclick="return false;">
-                    <i class="bi bi-tag"></i> Khuyến mãi
+                <a class="nav-link" th:classappend="${activeNav == 'promotions'} ? 'active'" th:href="@{/promotions}">
+                    <i class="bi bi-gift"></i> Quản lí khuyến mãi
                 </a>
                 <a class="nav-link" th:classappend="${activeNav == 'orders'} ? 'active'" href="#" onclick="return false;">
                     <i class="bi bi-receipt"></i> Quản lí đơn hàng

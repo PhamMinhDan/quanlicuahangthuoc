@@ -10,7 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
+
 @Service
 public class PromotionService {
 
@@ -25,6 +25,12 @@ public class PromotionService {
     // READ - Lấy tất cả khuyến mãi
     public List<Promotion> getAllPromotions() {
         return promotionRepository.findAll();
+    }
+    
+    public List<Promotion> getAllPromotionsSorted(String sortBy, String sortOrder) {
+        Sort.Direction direction = "desc".equalsIgnoreCase(sortOrder) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, sortBy);
+        return promotionRepository.findAll(sort);
     }
    
     // READ - Lấy khuyến mãi với phân trang
@@ -98,9 +104,7 @@ public class PromotionService {
         return promotionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khuyến mãi với ID: " + id));
     }
-     public Optional<Promotion> getPromotionById(Integer id) {
-        return promotionRepository.findById(id);
-    }
+    
     public Promotion updatePromotion(Integer id, Promotion updatedPromotion) {
         Promotion existingPromotion = promotionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khuyến mãi với ID: " + id));
