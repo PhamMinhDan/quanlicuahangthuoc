@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -80,9 +81,21 @@ public class CustomerController {
         }
     }
 
+
     @PostMapping("/add")
     @ResponseBody
-    public ResponseEntity<?> createCustomer(@Valid @RequestBody Customer customer) {
+    public ResponseEntity<?> createCustomer(@Valid @RequestBody Customer customer, BindingResult result) {
+        if (result.hasErrors()) {
+            StringBuilder errors = new StringBuilder();
+            result.getFieldErrors().forEach(error -> {
+                errors.append(error.getField())
+                        .append(": ")
+                        .append(error.getDefaultMessage())
+                        .append("; ");
+            });
+            return ResponseEntity.badRequest().body(errors.toString());
+        }
+
         try {
             Customer createdCustomer = customerService.createCustomer(customer);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdCustomer);
@@ -90,6 +103,7 @@ public class CustomerController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
 
     @PutMapping("/update/{id}")
     @ResponseBody
