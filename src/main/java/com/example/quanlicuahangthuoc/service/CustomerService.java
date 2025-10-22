@@ -26,4 +26,20 @@ public class CustomerService {
         return customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cannot find customer id: " + id));
     }
+    public Page<Customer> getAllCustomersWithPagingAndSort(int page, int size, String sortBy, String direction) {
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+        return customerRepository.findAll(pageable);
+    }
+
+    public Page<Customer> searchWithPagingAndSort(String keyword, int page, int size, String sortBy, String direction) {
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return customerRepository.findAll(pageable);
+        }
+
+        return customerRepository.searchByNameOrPhoneWithPaging(keyword.trim(), pageable);
+    }
 }
