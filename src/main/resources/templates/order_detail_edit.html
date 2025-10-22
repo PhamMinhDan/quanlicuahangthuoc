@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sửa Chi Tiết Đơn Hàng</title>
+</head>
+<body>
+<h2>Sửa Chi Tiết Đơn Hàng #[[${orderDetail.id}]]</h2>
+
+<form th:action="@{/order-details/update/{id}(id=${orderDetail.id})}" th:object="${orderDetail}" method="post">
+
+    <p>
+        <label>Số lượng:</label>
+        <input type="number" th:field="*{quantity}" />
+        <span th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}" style="color: red;"></span>
+    </p>
+
+    <p>
+        <label>Đơn giá:</label>
+        <input type="number" step="0.01" th:field="*{unitPrice}" />
+        <span th:if="${#fields.hasErrors('unitPrice')}" th:errors="*{unitPrice}" style="color: red;"></span>
+    </p>
+
+    <button type="submit">Cập nhật</button>
+    <a th:href="@{/orders/{id}(id=${orderDetail.order.id})}">Hủy</a>
+</form>
+</body>
+</html>

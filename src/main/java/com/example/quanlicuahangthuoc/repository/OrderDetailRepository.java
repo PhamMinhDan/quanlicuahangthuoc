@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface OrderDetailRepository extends JpaRepository<OrderDetail, Integer> {
-    
+    // Kế thừa các phương thức CRUD cơ bản (findById, save, delete...)
 }
