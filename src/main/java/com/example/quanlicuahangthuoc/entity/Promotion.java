@@ -33,7 +33,6 @@ public class Promotion {
     @Column(name = "expired_date", nullable = false)
     private LocalDate expiredDate;
 
-    // Constructors
     public Promotion() {}
 
     public Promotion(String name, String type, Double discountPercent, LocalDate expiredDate) {
@@ -43,7 +42,6 @@ public class Promotion {
         this.expiredDate = expiredDate;
     }
 
-    // Getters and Setters
     public Integer getId() {
         return id;
     }
