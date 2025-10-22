@@ -42,4 +42,26 @@ public class PaymentService {
             return null;
         }
     }
+    /**
+     * Lấy danh sách thanh toán có sắp xếp.
+     * @param sortField  Trường cần sắp xếp (ví dụ: "paymentDate" hoặc "amount")
+     * @param sortDir    Chiều sắp xếp ("asc" hoặc "desc")
+     */
+    @Transactional
+    public List<Payment> getAllPaymentsSorted(String sortField, String sortDir) {
+        try {
+            // Tạo đối tượng Sort theo trường và chiều được chọn
+            org.springframework.data.domain.Sort sort =
+                    sortDir.equalsIgnoreCase("asc")
+                            ? org.springframework.data.domain.Sort.by(sortField).ascending()
+                            : org.springframework.data.domain.Sort.by(sortField).descending();
+
+            // Giả sử repository có sẵn phương thức findAll(Sort sort)
+            return paymentRepository.findAll(sort);
+        } catch (Exception e) {
+            System.err.println("Error sorting payments: " + e.getMessage());
+            return List.of();
+        }
+    }
+
 }
