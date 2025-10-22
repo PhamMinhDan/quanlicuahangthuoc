@@ -9,21 +9,17 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import java.util.Optional;
 import org.springframework.data.domain.Page;
-
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
 @Controller
 @RequestMapping("/promotions")
 public class PromotionController {
-    
+
     @Autowired
     private PromotionService promotionService;
-    
+
     @GetMapping
     public String listPromotions(
             @RequestParam(required = false) Integer page,
@@ -31,46 +27,49 @@ public class PromotionController {
             @RequestParam(required = false) String sortBy,
             @RequestParam(defaultValue = "asc") String sortOrder,
             Model model) {
-        
+
         if (page != null) {
-     
+            // Spring Data Pageable sử dụng index 0, nên cần trừ 1
+            int pageNumber = page > 0 ? page - 1 : 0;
+
             Page<Promotion> promotionPage;
-            if (sortBy != null) {
-                promotionPage = promotionService.getAllPromotionsPaginatedAndSorted(page, size, sortBy, sortOrder);
+            if (sortBy != null && !sortBy.trim().isEmpty()) {
+                promotionPage = promotionService.getAllPromotionsPaginatedAndSorted(pageNumber, size, sortBy, sortOrder);
             } else {
-                promotionPage = promotionService.getAllPromotionsPaginated(page, size);
+                promotionPage = promotionService.getAllPromotionsPaginated(pageNumber, size);
             }
-            
+
             model.addAttribute("promotions", promotionPage.getContent());
+            // Trả về số trang hiển thị cho người dùng (bắt đầu từ 1)
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", promotionPage.getTotalPages());
             model.addAttribute("totalItems", promotionPage.getTotalElements());
             model.addAttribute("pageSize", size);
         } else {
-       
+            // Hiển thị tất cả khi không có tham số phân trang
             model.addAttribute("promotions", promotionService.getAllPromotions());
         }
-        
+
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("sortOrder", sortOrder);
-        
+
         return "promotion/list";
     }
-    
-  
-   @GetMapping("/{id}")
+
+
+    // ĐÃ SỬA: Đồng bộ với Service (sử dụng try-catch để bắt lỗi không tìm thấy)
+    @GetMapping("/{id}")
     public String viewPromotion(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
-        Optional<Promotion> promotion = promotionService.getPromotionById(id);
-        
-        if (promotion.isPresent()) {
-            model.addAttribute("promotion", promotion.get());
+        try {
+            Promotion promotion = promotionService.getPromotionById(id);
+            model.addAttribute("promotion", promotion);
             return "promotion/view";
-        } else {
-            redirectAttributes.addFlashAttribute("error", "Không tìm thấy khuyến mãi!");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/promotions";
         }
     }
-    
+
     @GetMapping("/delete/{id}")
     public String deletePromotion(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         boolean deleted = promotionService.deletePromotion(id);
@@ -81,6 +80,7 @@ public class PromotionController {
         }
         return "redirect:/promotions";
     }
+
     @GetMapping("/edit/{id}")
     public String showEditForm(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
         try {
@@ -92,19 +92,19 @@ public class PromotionController {
             return "redirect:/promotions";
         }
     }
-    
-     @PostMapping("/update/{id}")
+
+    @PostMapping("/update/{id}")
     public String updatePromotion(
             @PathVariable Integer id,
             @Valid @ModelAttribute("promotion") Promotion promotion,
             BindingResult result,
             RedirectAttributes redirectAttributes,
             Model model) {
-        
+
         if (result.hasErrors()) {
             return "promotion/edit";
         }
-        
+
         try {
             promotionService.updatePromotion(id, promotion);
             redirectAttributes.addFlashAttribute("message", "Cập nhật khuyến mãi thành công!");
@@ -122,18 +122,18 @@ public class PromotionController {
         model.addAttribute("promotion", new Promotion());
         return "promotion/add";
     }
-    
+
     @PostMapping
     public String addPromotion(
             @Valid @ModelAttribute("promotion") Promotion promotion,
             BindingResult result,
             RedirectAttributes redirectAttributes,
             Model model) {
-        
+
         if (result.hasErrors()) {
             return "promotion/add";
         }
-        
+
         try {
             promotionService.addPromotion(promotion);
             redirectAttributes.addFlashAttribute("message", "Thêm khuyến mãi thành công!");
@@ -147,12 +147,8 @@ public class PromotionController {
         }
     }
 
-    public String getAllPromotions(Model model) {
-        List<Promotion> promotions = promotionService.getAllPromotions();
-        model.addAttribute("promotions", promotions);
-        return "promotion/list";
-    }
-    
+    // ĐÃ XÓA PHƯƠNG THỨC TRÙNG LẶP: public String getAllPromotions(Model model) { ... }
+
     @GetMapping("/search/name")
     public String searchByName(@RequestParam String name, Model model) {
         List<Promotion> promotions = promotionService.searchByName(name);
@@ -161,7 +157,7 @@ public class PromotionController {
         model.addAttribute("searchValue", name);
         return "promotion/list";
     }
-    
+
     @GetMapping("/search/type")
     public String searchByType(@RequestParam String type, Model model) {
         List<Promotion> promotions = promotionService.searchByType(type);
@@ -170,10 +166,10 @@ public class PromotionController {
         model.addAttribute("searchValue", type);
         return "promotion/list";
     }
-    
+
     @GetMapping("/search/name-and-type")
     public String searchByNameAndType(
-            @RequestParam String name, 
+            @RequestParam String name,
             @RequestParam String type,
             Model model) {
         List<Promotion> promotions = promotionService.searchByNameAndType(name, type);
@@ -183,10 +179,10 @@ public class PromotionController {
         model.addAttribute("searchTypeValue", type);
         return "promotion/list";
     }
-    
+
     @GetMapping("/search/name-or-type")
     public String searchByNameOrType(
-            @RequestParam String name, 
+            @RequestParam String name,
             @RequestParam String type,
             Model model) {
         List<Promotion> promotions = promotionService.searchByNameOrType(name, type);
