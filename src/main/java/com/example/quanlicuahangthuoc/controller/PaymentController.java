@@ -1,10 +1,9 @@
 package com.example.quanlicuahangthuoc.controller;
 
 import com.example.quanlicuahangthuoc.entity.Payment;
-import com.example.quanlicuahangthuoc.service.PaymentService;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.example.quanlicuahangthuoc.repository.PaymentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,4 +12,13 @@ import java.util.List;
 @RequestMapping("/api/payments")
 public class PaymentController {
 
+    @Autowired
+    private PaymentRepository paymentRepository;
+
+    // ✅ Bọc trong transaction để tránh lỗi LazyInitializationException
+    @Transactional
+    @GetMapping
+    public List<Payment> getAllPayments() {
+        return paymentRepository.findAll();
+    }
 }

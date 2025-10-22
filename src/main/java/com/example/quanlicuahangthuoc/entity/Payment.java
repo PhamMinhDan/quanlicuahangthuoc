@@ -1,7 +1,6 @@
 package com.example.quanlicuahangthuoc.entity;
 
-
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -14,6 +13,7 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Payment {
 
     @Id
@@ -23,6 +23,7 @@ public class Payment {
     @NotNull(message = "Order ID cannot be null")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Order order;
 
     @NotNull(message = "Payment method cannot be null")
@@ -44,8 +45,8 @@ public class Payment {
     private LocalDate paymentDate;
 
     public enum PaymentMethod {
-        cash("Tiền mặt"),
-        bank_transfer("Chuyển khoản");
+        tien_mat("Tiền mặt"),
+        chuyen_khoan("Chuyển khoản");
         private final String displayName;
 
         PaymentMethod(String displayName) {
@@ -63,55 +64,6 @@ public class Payment {
         this.paymentMethod = paymentMethod;
         this.amount = amount;
         this.change = change;
-        this.paymentDate = paymentDate;
-    }
-
-    // Manual getters and setters
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Order getOrder() {
-        return order;
-    }
-
-    public void setOrder(Order order) {
-        this.order = order;
-    }
-
-    public PaymentMethod getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(PaymentMethod paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public BigDecimal getChange() {
-        return change;
-    }
-
-    public void setChange(BigDecimal change) {
-        this.change = change;
-    }
-
-    public LocalDate getPaymentDate() {
-        return paymentDate;
-    }
-
-    public void setPaymentDate(LocalDate paymentDate) {
         this.paymentDate = paymentDate;
     }
 
