@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 import jakarta.transaction.Transactional;
 import java.util.List;
 
@@ -77,6 +78,23 @@ public class PaymentService {
         } catch (Exception e) {
             System.err.println("Error saving payment: " + e.getMessage());
         }
+    }
+    @Transactional
+    public void updatePayment(Integer id, Payment updatedPayment) {
+        Payment existingPayment = paymentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thanh toán với ID: " + id));
+
+        existingPayment.setAmount(updatedPayment.getAmount());
+        existingPayment.setPaymentDate(updatedPayment.getPaymentDate());
+
+        if (updatedPayment.getOrder() != null) {
+            existingPayment.setOrder(updatedPayment.getOrder());
+        }
+        if (updatedPayment.getOrder() != null) {
+            existingPayment.setOrder(updatedPayment.getOrder());
+        }
+
+        paymentRepository.save(existingPayment);
     }
 
 }

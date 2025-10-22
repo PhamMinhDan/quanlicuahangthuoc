@@ -73,5 +73,19 @@ public class PaymentController {
         paymentService.savePayment(payment);
         return "redirect:/payments"; // Sau khi thêm, quay lại danh sách
     }
+    // Hiển thị form chỉnh sửa thanh toán
+    @GetMapping("/edit/{id}")
+    public String showEditPaymentForm(@PathVariable Integer id, Model model) {
+        Payment payment = paymentService.getPaymentById(id);
+        model.addAttribute("payment", payment);
+        return "payment/edit"; // Trỏ tới file templates/payment/edit.html
+    }
+
+    // Xử lý khi người dùng nhấn “Lưu”
+    @PostMapping("/update/{id}")
+    public String updatePayment(@PathVariable Integer id, @ModelAttribute("payment") Payment payment) {
+        paymentService.updatePayment(id, payment);
+        return "redirect:/payments";
+    }
 
 }
