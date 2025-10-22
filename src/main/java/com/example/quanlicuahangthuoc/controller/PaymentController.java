@@ -3,6 +3,7 @@ package com.example.quanlicuahangthuoc.controller;
 import com.example.quanlicuahangthuoc.entity.Payment;
 import com.example.quanlicuahangthuoc.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -47,4 +48,18 @@ public class PaymentController {
 
         return "payment/list";
     }
+    @GetMapping("/page")
+    public String listPaymentsPaged(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size,
+            Model model) {
+
+        Page<Payment> paymentPage = paymentService.getPaymentsPaged(page, size);
+        model.addAttribute("payments", paymentPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", paymentPage.getTotalPages());
+        return "payment/list";
+    }
+
+
 }
