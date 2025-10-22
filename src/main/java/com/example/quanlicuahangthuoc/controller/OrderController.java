@@ -18,9 +18,15 @@ public class OrderController {
     private OrderService orderService;
     
     @GetMapping
-    public String getAllOrders(Model model) {
-        List<Order> orderList = orderService.getAllOrders();
-        model.addAttribute("orders", orderList);
-        return "orders/list"; // tên file HTML trong templates
-    }
+public String getAllOrders(Model model, 
+    @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    Page<Order> orderPage = orderService.getAllOrders(pageable);
+    model.addAttribute("orders", orderPage.getContent());
+    model.addAttribute("currentPage", orderPage.getNumber());
+    model.addAttribute("totalPages", orderPage.getTotalPages());
+    model.addAttribute("totalItems", orderPage.getTotalElements());
+    return "orders/list";
+}
 }
