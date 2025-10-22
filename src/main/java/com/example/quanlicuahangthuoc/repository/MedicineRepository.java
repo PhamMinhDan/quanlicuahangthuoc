@@ -17,24 +17,36 @@ public interface MedicineRepository extends JpaRepository<Medicine, Integer> {
     // Phân trang với sắp xếp
     Page<Medicine> findAll(Pageable pageable);
 
-    // Tìm kiếm theo tên thuốc (không phân biệt hoa thường)
-    List<Medicine> findByNameContainingIgnoreCase(String name);
+    // Tìm kiếm theo tên thuốc (không phân biệt hoa thường) với phân trang
+    Page<Medicine> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     // Tìm kiếm theo tên thuốc chính xác để kiểm tra trùng lặp
     Optional<Medicine> findByName(String name);
 
-    // Tìm kiếm theo loại thuốc
-    List<Medicine> findByType(Medicine.MedicineType type);
+    // Tìm kiếm theo loại thuốc với phân trang
+    Page<Medicine> findByType(Medicine.MedicineType type, Pageable pageable);
 
-    // Tìm kiếm theo nhà cung cấp
-    List<Medicine> findBySupplier(Medicine.Supplier supplier);
+    // Tìm kiếm theo nhà cung cấp với phân trang
+    Page<Medicine> findBySupplier(Medicine.Supplier supplier, Pageable pageable);
 
-    // Tìm kiếm theo nhiều điều kiện
+    // Tìm kiếm theo nhiều điều kiện với phân trang và sắp xếp
     @Query("SELECT m FROM Medicine m WHERE " +
-           "(:name IS NULL OR LOWER(m.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
-           "(:type IS NULL OR m.type = :type) AND " +
-           "(:supplier IS NULL OR m.supplier = :supplier)")
-    List<Medicine> findByFilters(@Param("name") String name,
+            "(:name IS NULL OR LOWER(m.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
+            "(:type IS NULL OR m.type = :type) AND " +
+            "(:supplier IS NULL OR m.supplier = :supplier)")
+    Page<Medicine> findByFilters(@Param("name") String name,
                                  @Param("type") Medicine.MedicineType type,
-                                 @Param("supplier") Medicine.Supplier supplier);
+                                 @Param("supplier") Medicine.Supplier supplier,
+                                 Pageable pageable);
+
+    // Thêm phương thức đếm tổng số thuốc
+    long count();
+
+    // Thêm truy vấn để đếm số nhà cung cấp khác nhau
+    @Query("SELECT COUNT(DISTINCT m.supplier) FROM Medicine m")
+    long countDistinctSuppliers();
+
+    // Thêm truy vấn để tính tổng stockQuantity
+    @Query("SELECT COALESCE(SUM(m.stockQuantity), 0) FROM Medicine m")
+    Integer sumStockQuantity();
 }

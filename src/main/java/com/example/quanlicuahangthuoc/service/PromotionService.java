@@ -98,9 +98,7 @@ public class PromotionService {
         return promotionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khuyến mãi với ID: " + id));
     }
-     public Optional<Promotion> getPromotionById(Integer id) {
-        return promotionRepository.findById(id);
-    }
+    
     public Promotion updatePromotion(Integer id, Promotion updatedPromotion) {
         Promotion existingPromotion = promotionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khuyến mãi với ID: " + id));

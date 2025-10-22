@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.NoSuchElementException;
 
 @Controller
-@RequestMapping("/api/customers")
+@RequestMapping("/customers")
 public class CustomerController {
 
     private final CustomerService customerService;
@@ -92,13 +92,7 @@ public class CustomerController {
         try {
             customerService.createCustomer(customer);
             model.addAttribute("message", "Thêm khách hàng thành công");
-            return "redirect:/customers/list?page=" + page +
-                   "&size=" + size +
-                   "&sortBy=" + sortBy +
-                   "&sortDirection=" + sortDirection +
-                   (keyword != null ? "&keyword=" + keyword : "") +
-                   (phone != null ? "&phone=" + phone : "") +
-                   (customerType != null ? "&customerType=" + customerType : "");
+            return "redirect:/customers/view-customers";
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", "Lỗi: " + e.getMessage());
             model.addAttribute("customer", customer);
@@ -170,13 +164,7 @@ public class CustomerController {
         try {
             customerService.updateCustomer(id, customer);
             model.addAttribute("message", "Cập nhật khách hàng thành công");
-            return "redirect:/customers/list?page=" + page +
-                   "&size=" + size +
-                   "&sortBy=" + sortBy +
-                   "&sortDirection=" + sortDirection +
-                   (keyword != null ? "&keyword=" + keyword : "") +
-                   (phone != null ? "&phone=" + phone : "") +
-                   (customerType != null ? "&customerType=" + customerType : "");
+            return "redirect:/customers/view-customers";
         } catch (NoSuchElementException e) {
             model.addAttribute("error", "Khách hàng không tồn tại: " + e.getMessage());
             model.addAttribute("customer", customer);
@@ -223,12 +211,6 @@ public class CustomerController {
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi server: " + e.getMessage());
         }
-        return "redirect:/customers/list?page=" + page +
-               "&size=" + size +
-               "&sortBy=" + sortBy +
-               "&sortDirection=" + sortDirection +
-               (keyword != null ? "&keyword=" + keyword : "") +
-               (phone != null ? "&phone=" + phone : "") +
-               (customerType != null ? "&customerType=" + customerType : "");
+        return "redirect:/customers/view-customers";
     }
 }

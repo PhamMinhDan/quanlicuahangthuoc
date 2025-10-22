@@ -47,8 +47,15 @@ public class CustomerService {
         if (customerRepository.findByPhone(customer.getPhone()).isPresent()) {
             throw new IllegalArgumentException("Số điện thoại đã tồn tại: " + customer.getPhone());
         }
-        if (customer.getRewardPoints() == null) {
-            customer.setRewardPoints(0);
+        // Loại bỏ dấu phẩy hoặc ký tự không mong muốn khỏi số điện thoại
+        String cleanedPhone = customer.getPhone().replaceAll("[^0-9]", ""); // Chỉ giữ số
+        if (cleanedPhone.length() > 11 || cleanedPhone.length() < 9) {
+            throw new IllegalArgumentException("Số điện thoại phải từ 9 đến 11 chữ số");
+        }
+        customer.setPhone(cleanedPhone);
+        // Đặt giá trị mặc định cho customerType nếu null
+        if (customer.getCustomerType() == null) {
+            customer.setCustomerType(Customer.CustomerType.vang_lai); // Mặc định là "Vãng lai"
         }
         customerRepository.save(customer);
     }
@@ -57,29 +64,30 @@ public class CustomerService {
     public void updateCustomer(Integer id, Customer customerDetails) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Không tìm thấy khách hàng với ID: " + id));
-        
-        if (customerDetails.getName() == null || customerDetails.getName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên khách hàng không được để trống");
-        }
-        if (customerDetails.getPhone() == null || customerDetails.getPhone().trim().isEmpty()) {
-            throw new IllegalArgumentException("Số điện thoại không được để trống");
-        }
-        if (customerDetails.getEmail() == null || customerDetails.getEmail().trim().isEmpty()) {
-            throw new IllegalArgumentException("Email không được để trống");
-        }
-        if (!customer.getEmail().equals(customerDetails.getEmail()) && 
-            customerRepository.existsByEmail(customerDetails.getEmail())) {
+        if (!customer.getEmail().equals(customerDetails.getEmail()) &&
+                customerRepository.existsByEmail(customerDetails.getEmail())) {
             throw new IllegalArgumentException("Email đã tồn tại: " + customerDetails.getEmail());
         }
-        if (!customer.getPhone().equals(customerDetails.getPhone()) && 
-            customerRepository.findByPhone(customerDetails.getPhone()).isPresent()) {
+        if (!customer.getPhone().equals(customerDetails.getPhone()) &&
+                customerRepository.findByPhone(customerDetails.getPhone()).isPresent()) {
             throw new IllegalArgumentException("Số điện thoại đã tồn tại: " + customerDetails.getPhone());
         }
 
         customer.setName(customerDetails.getName());
-        customer.setPhone(customerDetails.getPhone());
+        // Loại bỏ dấu phẩy hoặc ký tự không mong muốn khỏi số điện thoại
+        String cleanedPhone = customerDetails.getPhone().replaceAll("[^0-9]", ""); // Chỉ giữ số
+        if (cleanedPhone.length() > 11 || cleanedPhone.length() < 9) {
+            throw new IllegalArgumentException("Số điện thoại phải từ 9 đến 11 chữ số");
+        }
+        customer.setPhone(cleanedPhone);
         customer.setEmail(customerDetails.getEmail());
-        customer.setCustomerType(customerDetails.getCustomerType());
+        // Đặt giá trị mặc định cho customerType nếu null
+        if (customerDetails.getCustomerType() == null) {
+            customer.setCustomerType(Customer.CustomerType.vang_lai); // Mặc định là "Vãng lai"
+        } else {
+            customer.setCustomerType(customerDetails.getCustomerType());
+        }
+        // Giữ nguyên rewardPoints từ customerDetails, không reset về 0
         customer.setRewardPoints(customerDetails.getRewardPoints());
         customerRepository.save(customer);
     }

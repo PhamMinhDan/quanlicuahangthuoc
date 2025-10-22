@@ -19,10 +19,10 @@ public class StaffController {
     @Autowired
     private StaffService staffService;
 
-    @GetMapping("/list")
+    @GetMapping("/view-staff")
     public String viewStaff(
             @RequestParam(value = "name", required = false) String name,
-            @RequestParam(value = "role", required = false) Staff.Role role,
+            @RequestParam(value = "role", required = false) String role,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
@@ -30,12 +30,12 @@ public class StaffController {
             Model model) {
         try {
             Page<Staff> staffPage;
-            if (name != null && !name.isEmpty() && role != null) {
-                staffPage = staffService.searchStaffByNameAndRole(name, role, page, size, sortBy, sortDirection);
-            } else if (name != null && !name.isEmpty()) {
+            if (name != null && !name.trim().isEmpty() && role != null && !role.trim().isEmpty()) {
+                staffPage = staffService.searchStaffByNameAndRole(name, Staff.Role.valueOf(role), page, size, sortBy, sortDirection);
+            } else if (name != null && !name.trim().isEmpty()) {
                 staffPage = staffService.searchStaffByName(name, page, size, sortBy, sortDirection);
-            } else if (role != null) {
-                staffPage = staffService.getStaffByRole(role, page, size, sortBy, sortDirection);
+            } else if (role != null && !role.trim().isEmpty()) {
+                staffPage = staffService.getStaffByRole(Staff.Role.valueOf(role), page, size, sortBy, sortDirection);
             } else {
                 staffPage = staffService.getStaffPage(page, size, sortBy, sortDirection);
             }
@@ -49,9 +49,8 @@ public class StaffController {
             model.addAttribute("sortBy", sortBy);
             model.addAttribute("sortDirection", sortDirection);
             model.addAttribute("name", name);
-            model.addAttribute("role", role != null ? role.name() : null);
+            model.addAttribute("role", role);
             model.addAttribute("activeNav", "staff");
-
             return "staff";
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi khi tải danh sách nhân viên: " + e.getMessage());
@@ -67,7 +66,7 @@ public class StaffController {
     }
 
     @PostMapping("/add")
-    public String addStaff(
+    public String createStaff(
             @Valid @ModelAttribute Staff staff,
             BindingResult bindingResult,
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -78,33 +77,33 @@ public class StaffController {
             @RequestParam(value = "role", required = false) String role,
             Model model) {
         if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getAllErrors().stream()
+            model.addAttribute("error", bindingResult.getAllErrors().stream()
                     .map(error -> error.getDefaultMessage())
                     .reduce((e1, e2) -> e1 + "; " + e2)
-                    .orElse("Lỗi nhập liệu");
-            model.addAttribute("error", errorMessage);
+                    .orElse("Lỗi nhập liệu"));
             model.addAttribute("staff", staff);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("name", name);
+            model.addAttribute("role", role);
             model.addAttribute("activeNav", "staff");
             return "staff-form";
         }
-
         try {
             staffService.addStaff(staff);
             model.addAttribute("message", "Thêm nhân viên thành công");
-            return "redirect:/api/staff/list?page=" + page +
-                   "&size=" + size +
-                   "&sortBy=" + sortBy +
-                   "&sortDirection=" + sortDirection +
-                   (name != null ? "&name=" + name : "") +
-                   (role != null ? "&role=" + role : "");
+            return "redirect:/api/staff/view-staff";
         } catch (IllegalStateException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("staff", staff);
-            model.addAttribute("activeNav", "staff");
-            return "staff-form";
-        } catch (Exception e) {
-            model.addAttribute("error", "Lỗi server: " + e.getMessage());
-            model.addAttribute("staff", staff);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("name", name);
+            model.addAttribute("role", role);
             model.addAttribute("activeNav", "staff");
             return "staff-form";
         }
@@ -133,7 +132,7 @@ public class StaffController {
             return "staff-form";
         } catch (NoSuchElementException e) {
             model.addAttribute("error", "Nhân viên không tồn tại: " + e.getMessage());
-            return viewStaff(name, role != null ? Staff.Role.valueOf(role) : null, page, size, sortBy, sortDirection, model);
+            return viewStaff(name, role, page, size, sortBy, sortDirection, model);
         }
     }
 
@@ -150,11 +149,10 @@ public class StaffController {
             @RequestParam(value = "role", required = false) String role,
             Model model) {
         if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getAllErrors().stream()
+            model.addAttribute("error", bindingResult.getAllErrors().stream()
                     .map(error -> error.getDefaultMessage())
                     .reduce((e1, e2) -> e1 + "; " + e2)
-                    .orElse("Lỗi nhập liệu");
-            model.addAttribute("error", errorMessage);
+                    .orElse("Lỗi nhập liệu"));
             model.addAttribute("staff", staff);
             model.addAttribute("page", page);
             model.addAttribute("size", size);
@@ -165,41 +163,13 @@ public class StaffController {
             model.addAttribute("activeNav", "staff");
             return "staff-form";
         }
-
         try {
-            staff.setId(id);
+            staff.setId(id); // Đảm bảo ID được gán
             staffService.updateStaff(staff);
             model.addAttribute("message", "Cập nhật nhân viên thành công");
-            return "redirect:/api/staff/list?page=" + page +
-                   "&size=" + size +
-                   "&sortBy=" + sortBy +
-                   "&sortDirection=" + sortDirection +
-                   (name != null ? "&name=" + name : "") +
-                   (role != null ? "&role=" + role : "");
-        } catch (NoSuchElementException e) {
-            model.addAttribute("error", "Nhân viên không tồn tại: " + e.getMessage());
-            model.addAttribute("staff", staff);
-            model.addAttribute("page", page);
-            model.addAttribute("size", size);
-            model.addAttribute("sortBy", sortBy);
-            model.addAttribute("sortDirection", sortDirection);
-            model.addAttribute("name", name);
-            model.addAttribute("role", role);
-            model.addAttribute("activeNav", "staff");
-            return "staff-form";
-        } catch (IllegalStateException e) {
+            return "redirect:/api/staff/view-staff";
+        } catch (IllegalStateException | NoSuchElementException e) {
             model.addAttribute("error", e.getMessage());
-            model.addAttribute("staff", staff);
-            model.addAttribute("page", page);
-            model.addAttribute("size", size);
-            model.addAttribute("sortBy", sortBy);
-            model.addAttribute("sortDirection", sortDirection);
-            model.addAttribute("name", name);
-            model.addAttribute("role", role);
-            model.addAttribute("activeNav", "staff");
-            return "staff-form";
-        } catch (Exception e) {
-            model.addAttribute("error", "Lỗi server: " + e.getMessage());
             model.addAttribute("staff", staff);
             model.addAttribute("page", page);
             model.addAttribute("size", size);
@@ -230,11 +200,6 @@ public class StaffController {
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi server: " + e.getMessage());
         }
-        return "redirect:/api/staff/list?page=" + page +
-               "&size=" + size +
-               "&sortBy=" + sortBy +
-               "&sortDirection=" + sortDirection +
-               (name != null ? "&name=" + name : "") +
-               (role != null ? "&role=" + role : "");
+        return "redirect:/api/staff/view-staff";
     }
 }

@@ -58,19 +58,19 @@ public class PromotionController {
     }
     
   
-   @GetMapping("/{id}")
-    public String viewPromotion(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
-        Optional<Promotion> promotion = promotionService.getPromotionById(id);
+//    @GetMapping("/{id}")
+//     public String viewPromotion(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
+//         Optional<Promotion> promotion = promotionService.getPromotionById(id);
         
-        if (promotion.isPresent()) {
-            model.addAttribute("promotion", promotion.get());
-            return "promotion/view";
-        } else {
-            redirectAttributes.addFlashAttribute("error", "Không tìm thấy khuyến mãi!");
-            return "redirect:/promotions";
-        }
-    }
-    
+//         if (promotion.isPresent()) {
+//             model.addAttribute("promotion", promotion.get());
+//             return "promotion/view";
+//         } else {
+//             redirectAttributes.addFlashAttribute("error", "Không tìm thấy khuyến mãi!");
+//             return "redirect:/promotions";
+//         }
+//     }
+
     @GetMapping("/delete/{id}")
     public String deletePromotion(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         boolean deleted = promotionService.deletePromotion(id);

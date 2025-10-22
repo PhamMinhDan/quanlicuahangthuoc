@@ -20,10 +20,10 @@
                 <a class="nav-link" th:classappend="${activeNav == 'home'} ? 'active'" th:href="@{/}">
                     <i class="bi bi-house"></i> Trang chủ
                 </a>
-                <a class="nav-link" th:classappend="${activeNav == 'medicines'} ? 'active'" th:href="@{/api/medicines/view-medicine}">
+                <a class="nav-link" th:classappend="${activeNav == 'medicines'} ? 'active'" th:href="@{medicines/view-medicine}">
                     <i class="bi bi-archive-fill"></i> Quản lí thuốc
                 </a>
-                <a class="nav-link" th:classappend="${activeNav == 'customers'} ? 'active'" th:href="@{/api/customers/view-customers}">
+                <a class="nav-link" th:classappend="${activeNav == 'customers'} ? 'active'" th:href="@{/customers/view-customers}">
                     <i class="bi bi-people"></i> Quản lí khách hàng
                 </a>
                 <a class="nav-link" th:classappend="${activeNav == 'staff'} ? 'active'" th:href="@{/api/staff/view-staff}">
