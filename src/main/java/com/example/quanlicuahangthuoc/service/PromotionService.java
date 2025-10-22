@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @Service
 public class PromotionService {
-    
+
     @Autowired
     private PromotionRepository promotionRepository;
     
@@ -78,4 +78,24 @@ public class PromotionService {
     public boolean existsById(Integer id) {
         return promotionRepository.existsById(id);
     }
+
+    public Promotion addPromotion(Promotion promotion) {
+        if (promotion.getName() == null || promotion.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên khuyến mãi không được để trống");
+        }
+        
+        if (promotion.getDiscountPercent() == null) {
+            throw new IllegalArgumentException("Phần trăm giảm giá không được để trống");
+        }
+        
+        if (promotion.getDiscountPercent() < 0 || promotion.getDiscountPercent() > 100) {
+            throw new IllegalArgumentException("Phần trăm giảm giá phải nằm trong khoảng 0 - 100");
+        }
+        
+        return promotionRepository.save(promotion);
+    }
 }
+
+
+
+
