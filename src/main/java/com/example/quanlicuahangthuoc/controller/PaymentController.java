@@ -60,6 +60,18 @@ public class PaymentController {
         model.addAttribute("totalPages", paymentPage.getTotalPages());
         return "payment/list";
     }
+    // Hiển thị form thêm thanh toán mới
+    @GetMapping("/new")
+    public String showAddPaymentForm(Model model) {
+        model.addAttribute("payment", new Payment());
+        return "payment/add"; // trỏ đến file payment/add.html
+    }
 
+    // Xử lý khi người dùng submit form
+    @PostMapping("/save")
+    public String savePayment(@ModelAttribute("payment") Payment payment) {
+        paymentService.savePayment(payment);
+        return "redirect:/payments"; // Sau khi thêm, quay lại danh sách
+    }
 
 }

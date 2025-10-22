@@ -70,6 +70,13 @@ public class PaymentService {
         Pageable pageable = PageRequest.of(pageNo - 1, pageSize);
         return paymentRepository.findAll(pageable);
     }
-
+    @Transactional
+    public void savePayment(Payment payment) {
+        try {
+            paymentRepository.save(payment);
+        } catch (Exception e) {
+            System.err.println("Error saving payment: " + e.getMessage());
+        }
+    }
 
 }
