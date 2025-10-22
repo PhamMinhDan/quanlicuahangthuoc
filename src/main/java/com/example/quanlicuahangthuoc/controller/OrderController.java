@@ -28,12 +28,12 @@ public class OrderController {
         List<Order> orderList = orderService.getAllOrders();
         return ResponseEntity.ok(orderList);
     }
-    @PostMapping
+    @PostMapping("/add")
     public ResponseEntity<Order> createOrder(@RequestBody Order order) {
         Order createdOrder = orderService.addOrder(order);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
     }
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteOrder(@PathVariable Integer id) {
         boolean deleted = orderService.deleteOrder(id);
         if (deleted) {

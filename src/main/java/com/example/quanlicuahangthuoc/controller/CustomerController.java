@@ -4,17 +4,17 @@ import com.example.quanlicuahangthuoc.entity.Customer;
 import com.example.quanlicuahangthuoc.service.CustomerService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.NoSuchElementException;
 
 @Controller
 @RequestMapping("/api/customers")
 public class CustomerController {
+
     private final CustomerService customerService;
 
     public CustomerController(CustomerService customerService) {
@@ -52,7 +52,6 @@ public class CustomerController {
             model.addAttribute("customerType", customerType);
             model.addAttribute("totalCustomers", customerService.getTotalCustomers());
             model.addAttribute("activeNav", "customers");
-
             return "customers";
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi khi tải danh sách khách hàng: " + e.getMessage());
@@ -60,81 +59,176 @@ public class CustomerController {
         }
     }
 
-@GetMapping("/list")
-    @ResponseBody
-    public ResponseEntity<List<Customer>> getAllCustomers(
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false, name = "sortDirection") String sortDirection) {
-        List<Customer> customers = customerService.getAllCustomers(sortBy, sortDirection);
-        return ResponseEntity.ok(customers);
-    }
-
-    @GetMapping("/search/{id}")
-    @ResponseBody
-    public ResponseEntity<Customer> getCustomerById(@PathVariable Integer id) {
-        try {
-            Customer customer = customerService.getCustomerById(id);
-            return ResponseEntity.ok(customer);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping("/add")
+    public String showAddCustomerForm(Model model) {
+        model.addAttribute("customer", new Customer());
+        model.addAttribute("activeNav", "customers");
+        return "customer-form";
     }
 
     @PostMapping("/add")
-    @ResponseBody
-    public ResponseEntity<?> createCustomer(@Valid @RequestBody Customer customer) {
+    public String createCustomer(
+            @Valid @ModelAttribute Customer customer,
+            BindingResult bindingResult,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "customerType", required = false) String customerType,
+            Model model) {
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .reduce((e1, e2) -> e1 + "; " + e2)
+                    .orElse("Lỗi nhập liệu");
+            model.addAttribute("error", errorMessage);
+            model.addAttribute("customer", customer);
+            model.addAttribute("activeNav", "customers");
+            return "customer-form";
+        }
+
         try {
-            Customer createdCustomer = customerService.createCustomer(customer);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdCustomer);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            customerService.createCustomer(customer);
+            model.addAttribute("message", "Thêm khách hàng thành công");
+            return "redirect:/customers/list?page=" + page +
+                   "&size=" + size +
+                   "&sortBy=" + sortBy +
+                   "&sortDirection=" + sortDirection +
+                   (keyword != null ? "&keyword=" + keyword : "") +
+                   (phone != null ? "&phone=" + phone : "") +
+                   (customerType != null ? "&customerType=" + customerType : "");
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("error", "Lỗi: " + e.getMessage());
+            model.addAttribute("customer", customer);
+            model.addAttribute("activeNav", "customers");
+            return "customer-form";
         }
     }
 
-    @PutMapping("/update/{id}")
-    @ResponseBody
-    public ResponseEntity<?> updateCustomer(@PathVariable Integer id, @Valid @RequestBody Customer customer) {
+    @GetMapping("/edit/{id}")
+    public String showEditCustomerForm(
+            @PathVariable Integer id,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "customerType", required = false) String customerType,
+            Model model) {
         try {
-            Customer updatedCustomer = customerService.updateCustomer(id, customer);
-            return ResponseEntity.ok(updatedCustomer);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            Customer customer = customerService.getCustomerById(id);
+            model.addAttribute("customer", customer);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("phone", phone);
+            model.addAttribute("customerType", customerType);
+            model.addAttribute("activeNav", "customers");
+            return "customer-form";
+        } catch (NoSuchElementException e) {
+            model.addAttribute("error", "Khách hàng không tồn tại: " + e.getMessage());
+            return viewCustomers(keyword, phone, customerType, page, size, sortBy, sortDirection, model);
         }
     }
 
-    @DeleteMapping("/delete/{id}")
-    @ResponseBody
-    public ResponseEntity<?> deleteCustomer(@PathVariable Integer id) {
+    @PostMapping("/update/{id}")
+    public String updateCustomer(
+            @PathVariable Integer id,
+            @Valid @ModelAttribute Customer customer,
+            BindingResult bindingResult,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "customerType", required = false) String customerType,
+            Model model) {
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .reduce((e1, e2) -> e1 + "; " + e2)
+                    .orElse("Lỗi nhập liệu");
+            model.addAttribute("error", errorMessage);
+            model.addAttribute("customer", customer);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("phone", phone);
+            model.addAttribute("customerType", customerType);
+            model.addAttribute("activeNav", "customers");
+            return "customer-form";
+        }
+
+        try {
+            customerService.updateCustomer(id, customer);
+            model.addAttribute("message", "Cập nhật khách hàng thành công");
+            return "redirect:/customers/list?page=" + page +
+                   "&size=" + size +
+                   "&sortBy=" + sortBy +
+                   "&sortDirection=" + sortDirection +
+                   (keyword != null ? "&keyword=" + keyword : "") +
+                   (phone != null ? "&phone=" + phone : "") +
+                   (customerType != null ? "&customerType=" + customerType : "");
+        } catch (NoSuchElementException e) {
+            model.addAttribute("error", "Khách hàng không tồn tại: " + e.getMessage());
+            model.addAttribute("customer", customer);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("phone", phone);
+            model.addAttribute("customerType", customerType);
+            model.addAttribute("activeNav", "customers");
+            return "customer-form";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("error", "Lỗi: " + e.getMessage());
+            model.addAttribute("customer", customer);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("phone", phone);
+            model.addAttribute("customerType", customerType);
+            model.addAttribute("activeNav", "customers");
+            return "customer-form";
+        }
+    }
+
+    @PostMapping("/delete/{id}")
+    public String deleteCustomer(
+            @PathVariable Integer id,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "customerType", required = false) String customerType,
+            Model model) {
         try {
             customerService.deleteCustomer(id);
-            return ResponseEntity.ok("Delete successfully");
+            model.addAttribute("message", "Xóa khách hàng thành công");
+        } catch (NoSuchElementException e) {
+            model.addAttribute("error", "Khách hàng không tồn tại: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            model.addAttribute("error", "Lỗi server: " + e.getMessage());
         }
-    }
-
-    @GetMapping("/paging")
-    @ResponseBody
-    public ResponseEntity<Page<Customer>> getAllCustomersWithPaging(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction) {
-        Page<Customer> customers = customerService.getAllCustomersWithPagingAndSort(page, size, sortBy, direction);
-        return ResponseEntity.ok(customers);
-    }
-
-    @GetMapping("/search/paging")
-    @ResponseBody
-    public ResponseEntity<Page<Customer>> searchWithPaging(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String phone,
-            @RequestParam(required = false) String customerType,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction) {
-        Page<Customer> customers = customerService.searchWithPagingAndSort(keyword, phone, customerType, page, size, sortBy, direction);
-        return ResponseEntity.ok(customers);
+        return "redirect:/customers/list?page=" + page +
+               "&size=" + size +
+               "&sortBy=" + sortBy +
+               "&sortDirection=" + sortDirection +
+               (keyword != null ? "&keyword=" + keyword : "") +
+               (phone != null ? "&phone=" + phone : "") +
+               (customerType != null ? "&customerType=" + customerType : "");
     }
 }

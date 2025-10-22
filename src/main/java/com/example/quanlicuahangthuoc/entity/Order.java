@@ -35,24 +35,25 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @JsonBackReference
+    @JsonBackReference(value = "customer-order")
     @NotNull(message = "Customer ID cannot be null")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
-    @JsonBackReference
+    @JsonBackReference(value = "staff-order")
     @NotNull(message = "Staff ID cannot be null")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "staff_id")
     private Staff staff;
 
-    @JsonBackReference
+    @JsonBackReference(value = "promotion-order")
     @NotNull(message = "Promotion ID cannot be null")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "promo_id")
     private Promotion promotion;
 
+    // Các trường còn lại không thay đổi
     @NotNull(message = "Order date cannot be null")
     @Column(name = "order_date", nullable = false)
     private LocalDate orderDate;

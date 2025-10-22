@@ -1,379 +1,452 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QUẢN LÍ CỬA HÀNG THUỐC</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/medicine.css}">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QUẢN LÝ CỬA HÀNG THUỐC</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" th:href="@{/medicine.css}" />
+  </head>
+  <body>
     <div class="d-flex">
-         <div th:replace="~{sidebar :: sidebar}"></div>
+      <div th:replace="~{sidebar :: sidebar}"></div>
 
-        <div class="flex-grow-1 bg-light p-4">
-            <div class="container-fluid">
-                <div class="row g-4 mb-4 justify-content-center">
-                    <div class="col-md-4">
-                        <div class="summary-card summary-card-1">
-                            <div class="position-relative z-10 text-center">
-                                <div class="text-sm opacity-80 mb-2">Tổng Số Thuốc</div>
-                                <div class="text-3xl font-bold" th:text="${totalMedicines != null ? totalMedicines : 0}"></div>
-                            </div>
-                            <i class="bi bi-archive-fill position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="summary-card summary-card-2">
-                            <div class="position-relative z-10 text-center">
-                                <div class="text-sm opacity-80 mb-2">Nhà cung cấp</div>
-                                <div class="text-3xl font-bold" th:text="${totalSuppliers != null ? totalSuppliers : 0}"></div>
-                            </div>
-                            <i class="bi bi-person-check position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="summary-card summary-card-3">
-                            <div class="position-relative z-10 text-center">
-                                <div class="text-sm opacity-80 mb-2">Số lượng tồn kho</div>
-                                <div class="text-3xl font-bold" th:text="${totalStock != null ? totalStock : 0}"></div>
-                            </div>
-                            <i class="bi bi-box position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
-                        </div>
-                    </div>
-                </div>
+      <div class="flex-grow-1 bg-light p-4">
+        <div class="container-fluid">
+          <div
+            th:if="${error != null}"
+            class="alert alert-danger"
+            th:text="${error}"
+          ></div>
+          <div
+            th:if="${message != null}"
+            class="alert alert-success"
+            th:text="${message}"
+          ></div>
 
-                <div class="filter-panel mb-4">
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                        <i class="bi bi-funnel-fill text-secondary" style="font-size: 20px;"></i>
-                        <h2 class="h5 mb-0">Bộ lọc</h2>
-                    </div>
-                    <form th:action="@{/api/medicines/view-medicine}" method="get">
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <label class="form-label">Tên thuốc</label>
-                                <input type="text" class="form-control" id="searchName" name="searchName" th:value="${searchname}" placeholder="Tên thuốc">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Loại thuốc</label>
-                                <select class="form-select" id="searchType" name="searchType">
-                                    <option value="">Loại thuốc</option>
-                                    <option value="giam_dau" th:selected="${searchType == 'giam_dau'}">Giảm đau</option>
-                                    <option value="khang_sinh" th:selected="${searchType == 'khang_sinh'}">Kháng sinh</option>
-                                    <option value="chong_viem" th:selected="${searchType == 'chong_viem'}">Chống viêm</option>
-                                    <option value="thuoc_ha_huyet_ap" th:selected="${searchType == 'thuoc_ha_huyet_ap'}">Thuốc hạ huyết áp</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Nhà cung cấp</label>
-                                <select class="form-select" id="searchSupplier" name="searchSupplier">
-                                    <option value="">Nhà cung cấp</option>
-                                    <option value="Pfizer" th:selected="${searchSupplier == 'Pfizer'}">Pfizer</option>
-                                    <option value="Novartis" th:selected="${searchSupplier == 'Novartis'}">Novartis</option>
-                                    <option value="Johnson" th:selected="${searchSupplier == 'Johnson'}">Johnson</option>
-                                    <option value="Roche" th:selected="${searchSupplier == 'Roche'}">Roche</option>
-                                    <option value="Merck" th:selected="${searchSupplier == 'Merck'}">Merck</option>
-                                    <option value="Sanofi" th:selected="${searchSupplier == 'Sanofi'}">Sanofi</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3 d-flex align-items-end gap-2">
-                                <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
-                                    <i class="bi bi-search"></i> Lọc
-                                </button>
-                                <button class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
-                                    <i class="bi bi-x"></i> Xóa Lọc
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+          <div class="row g-4 mb-4 justify-content-center">
+            <div class="col-md-4">
+              <div class="summary-card summary-card-1">
+                <div class="position-relative z-10 text-center">
+                  <div class="text-sm opacity-80 mb-2">Tổng Số Thuốc</div>
+                  <div
+                    class="text-3xl font-bold"
+                    th:text="${totalMedicines != null ? totalMedicines : 0}"
+                  ></div>
                 </div>
-
-                <div class="table-container">
-                    <div class="p-4 d-flex justify-content-between align-items-center border-bottom">
-                        <h2 class="h4">Danh sách thuốc</h2>
-                        <div class="d-flex gap-2">
-                            <div class="dropdown">
-                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="sortButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-sort-down"></i> Sắp xếp
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="sortButton">
-                                    <li><a class="dropdown-item" th:href="@{/api/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='name', sortDirection=${sortBy == 'name' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">Tên thuốc</a></li>
-                                    <li><a class="dropdown-item" th:href="@{/api/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='price', sortDirection=${sortBy == 'price' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">Giá</a></li>
-                                </ul>
-                            </div>
-                            <button class="btn btn-success d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addMedicineModal" id="addButton"><i class="bi bi-plus"></i> Thêm mới thuốc</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Tên thuốc</th>
-                                    <th>Ảnh</th>
-                                    <th>Loại thuốc</th>
-                                    <th>HSD</th>
-                                    <th>Giá</th>
-                                    <th>Số lượng tồn kho</th>
-                                    <th>Nhà cung cấp</th>
-                                    <th>Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="medicine : ${medicines}">
-                                    <td th:text="${medicine.id}"></td>
-                                    <td th:text="${medicine.name}"></td>
-                                    <td>
-    <img th:if="${medicine.image != null and medicine.image != 'default-medicine'}" 
-         th:src="${medicine.image}" 
-         th:onerror="this.src='/images/default-medicine.jpg'" 
-         alt="Thumbnail" 
-         class="img-fluid rounded" 
-         style="width: 50px; height: 50px; object-fit: cover;">
-    <img th:if="${medicine.image == null or medicine.image == 'default-medicine'}" 
-         src="/images/default-medicine.jpg" 
-         alt="No image" 
-         class="img-fluid rounded" 
-         style="width: 50px; height: 50px; object-fit: cover;">
-</td>
-                                    <td th:text="${medicine.type.displayName}"></td>
-                                    <td th:text="${#temporals.format(medicine.expiryDate, 'dd/MM/yyyy')}"></td>
-                                    <td th:text="${#numbers.formatDecimal(medicine.price, 0, 2, 'COMMA') + ' VNĐ'}"></td>
-                                    <td class="text-center" th:text="${medicine.stockQuantity}"></td>
-                                    <td class="text-center" th:text="${medicine.supplier.displayName}"></td>
-                                    <td>
-                                        <div class="d-flex gap-2">
-                                            <button class="btn btn-action-edit btn-sm text-white" th:onclick="'openEditModal(' + ${medicine.id} + ')'"><i class="bi bi-pencil"></i></button>
-                                            <button class="btn btn-action-delete btn-sm text-white" th:onclick="'deleteMedicine(' + ${medicine.id} + ')'"><i class="bi bi-trash"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr th:if="${medicines == null or medicines.isEmpty()}">
-                                    <td colspan="9" class="text-center">Không tìm thấy dữ liệu thuốc nào.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="p-3 d-flex justify-content-center border-top" th:if="${totalPages > 1}">
-                        <nav aria-label="Phân trang danh sách thuốc">
-                            <ul class="pagination mb-0">
-                                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                                    <a class="page-link text-dark" th:href="@{/api/medicines/view-medicine(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchname}, searchType=${searchType}, searchSupplier=${searchSupplier})}" aria-label="Previous">
-                                        <span aria-hidden="true">&laquo;</span>
-                                    </a>
-                                </li>
-                                <li class="page-item" th:if="${currentPage > 2}">
-                                    <a class="page-link text-dark" th:href="@{/api/medicines/view-medicine(page=0, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchname}, searchType=${searchType}, searchSupplier=${searchSupplier})}">1</a>
-                                </li>
-                                <li class="page-item disabled" th:if="${currentPage > 3}">
-                                    <span class="page-link text-dark">...</span>
-                                </li>
-                                <li class="page-item" th:each="i : ${#numbers.sequence(currentPage - 2 > 0 ? currentPage - 2 : 0, currentPage + 2 < totalPages - 1 ? currentPage + 2 : totalPages - 1)}">
-                                    <a class="page-link text-dark" th:href="@{/api/medicines/view-medicine(page=${i}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchname}, searchType=${searchType}, searchSupplier=${searchSupplier})}" th:classappend="${i == currentPage} ? 'active'" th:text="${i + 1}"></a>
-                                </li>
-                                <li class="page-item disabled" th:if="${currentPage < totalPages - 4}">
-                                    <span class="page-link text-dark">...</span>
-                                </li>
-                                <li class="page-item" th:if="${currentPage < totalPages - 3}">
-                                    <a class="page-link text-dark" th:href="@{/api/medicines/view-medicine(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchname}, searchType=${searchType}, searchSupplier=${searchSupplier})}" th:text="${totalPages}"></a>
-                                </li>
-                                <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
-                                    <a class="page-link text-dark" th:href="@{/api/medicines/view-medicine(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchname}, searchType=${searchType}, searchSupplier=${searchSupplier})}" aria-label="Next">
-                                        <span aria-hidden="true">&raquo;</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
+                <i
+                  class="bi bi-archive-fill position-absolute bottom-0 end-0 me-3 mb-3 opacity-50"
+                  style="font-size: 48px"
+                ></i>
+              </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal for Adding Medicine -->
-    <div class="modal fade" id="addMedicineModal" tabindex="-1" aria-labelledby="addMedicineModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addMedicineModalLabel">Thêm thuốc mới</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="col-md-4">
+              <div class="summary-card summary-card-2">
+                <div class="position-relative z-10 text-center">
+                  <div class="text-sm opacity-80 mb-2">Nhà cung cấp</div>
+                  <div
+                    class="text-3xl font-bold"
+                    th:text="${totalSuppliers != null ? totalSuppliers : 0}"
+                  ></div>
                 </div>
-                <div class="modal-body">
-                    <form id="addMedicineForm" th:action="@{/api/medicines/add}" method="post" enctype="multipart/form-data">
-                        <input type="hidden" th:name="page" th:value="${currentPage}">
-                        <input type="hidden" th:name="size" th:value="${pageSize}">
-                        <input type="hidden" th:name="sortBy" th:value="${sortBy}">
-                        <input type="hidden" th:name="sortDirection" th:value="${sortDirection}">
-                        <input type="hidden" th:name="searchName" th:value="${searchname}">
-                        <input type="hidden" th:name="searchType" th:value="${searchType}">
-                        <input type="hidden" th:name="searchSupplier" th:value="${searchSupplier}">
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Tên thuốc</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="type" class="form-label">Loại thuốc</label>
-                            <select class="form-select" id="type" name="type" required>
-                                <option value="giam_dau">Giảm đau</option>
-                                <option value="khang_sinh">Kháng sinh</option>
-                                <option value="chong_viem">Chống viêm</option>
-                                <option value="thuoc_ha_huyet_ap">Thuốc hạ huyết áp</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="expiryDate" class="form-label">Ngày hết hạn</label>
-                            <input type="date" class="form-control" id="expiryDate" name="expiryDate" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="price" class="form-label">Giá</label>
-                            <input type="number" class="form-control" id="price" name="price" step="0.01" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="stockQuantity" class="form-label">Số lượng tồn kho</label>
-                            <input type="number" class="form-control" id="stockQuantity" name="stockQuantity" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="supplier" class="form-label">Nhà cung cấp</label>
-                            <select class="form-select" id="supplier" name="supplier" required>
-                                <option value="Pfizer">Pfizer</option>
-                                <option value="Novartis">Novartis</option>
-                                <option value="Johnson">Johnson</option>
-                                <option value="Roche">Roche</option>
-                                <option value="Merck">Merck</option>
-                                <option value="Sanofi">Sanofi</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="imageFile" class="form-label">Hình ảnh</label>
-                            <input type="file" class="form-control" id="imageFile" name="imageFile">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Thêm</button>
-                    </form>
-                </div>
+                <i
+                  class="bi bi-person-check position-absolute bottom-0 end-0 me-3 mb-3 opacity-50"
+                  style="font-size: 48px"
+                ></i>
+              </div>
             </div>
+            <div class="col-md-4">
+              <div class="summary-card summary-card-3">
+                <div class="position-relative z-10 text-center">
+                  <div class="text-sm opacity-80 mb-2">Số lượng tồn kho</div>
+                  <div
+                    class="text-3xl font-bold"
+                    th:text="${totalStock != null ? totalStock : 0}"
+                  ></div>
+                </div>
+                <i
+                  class="bi bi-box position-absolute bottom-0 end-0 me-3 mb-3 opacity-50"
+                  style="font-size: 48px"
+                ></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-panel mb-4">
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <i
+                class="bi bi-funnel-fill text-secondary"
+                style="font-size: 20px"
+              ></i>
+              <h2 class="h5 mb-0">Bộ lọc</h2>
+            </div>
+            <form th:action="@{/api/medicines/view-medicine}" method="get">
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label class="form-label">Tên thuốc</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="searchName"
+                    name="searchName"
+                    th:value="${searchName}"
+                    placeholder="Tên thuốc"
+                  />
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Loại thuốc</label>
+                  <select class="form-select" id="searchType" name="searchType">
+                    <option value="">Loại thuốc</option>
+                    <option
+                      value="giam_dau"
+                      th:selected="${searchType == 'giam_dau'}"
+                    >
+                      Giảm đau
+                    </option>
+                    <option
+                      value="khang_sinh"
+                      th:selected="${searchType == 'khang_sinh'}"
+                    >
+                      Kháng sinh
+                    </option>
+                    <option
+                      value="chong_viem"
+                      th:selected="${searchType == 'chong_viem'}"
+                    >
+                      Chống viêm
+                    </option>
+                    <option
+                      value="thuoc_ha_huyet_ap"
+                      th:selected="${searchType == 'thuoc_ha_huyet_ap'}"
+                    >
+                      Thuốc hạ huyết áp
+                    </option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Nhà cung cấp</label>
+                  <select
+                    class="form-select"
+                    id="searchSupplier"
+                    name="searchSupplier"
+                  >
+                    <option value="">Nhà cung cấp</option>
+                    <option
+                      value="Pfizer"
+                      th:selected="${searchSupplier == 'Pfizer'}"
+                    >
+                      Pfizer
+                    </option>
+                    <option
+                      value="Novartis"
+                      th:selected="${searchSupplier == 'Novartis'}"
+                    >
+                      Novartis
+                    </option>
+                    <option
+                      value="Johnson"
+                      th:selected="${searchSupplier == 'Johnson'}"
+                    >
+                      Johnson
+                    </option>
+                    <option
+                      value="Roche"
+                      th:selected="${searchSupplier == 'Roche'}"
+                    >
+                      Roche
+                    </option>
+                    <option
+                      value="Merck"
+                      th:selected="${searchSupplier == 'Merck'}"
+                    >
+                      Merck
+                    </option>
+                    <option
+                      value="Sanofi"
+                      th:selected="${searchSupplier == 'Sanofi'}"
+                    >
+                      Sanofi
+                    </option>
+                  </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end gap-2">
+                  <button
+                    class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                    type="submit"
+                    id="filterButton"
+                  >
+                    <i class="bi bi-search"></i> Lọc
+                  </button>
+                  <button
+                    class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                    type="button"
+                    id="clearFilters"
+                  >
+                    <i class="bi bi-x"></i> Xóa Lọc
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div class="table-container">
+            <div
+              class="p-4 d-flex justify-content-between align-items-center border-bottom"
+            >
+              <h2 class="h4">Danh sách thuốc</h2>
+              <div class="d-flex gap-2">
+                <div class="dropdown">
+                  <button
+                    class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                    type="button"
+                    id="sortButton"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    <i class="bi bi-sort-down"></i> Sắp xếp
+                  </button>
+                  <ul class="dropdown-menu" aria-labelledby="sortButton">
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        th:href="@{/api/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='name', sortDirection=${sortBy == 'name' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}"
+                        >Tên thuốc</a
+                      >
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        th:href="@{/api/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='price', sortDirection=${sortBy == 'price' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}"
+                        >Giá</a
+                      >
+                    </li>
+                  </ul>
+                </div>
+                <a
+                  class="btn btn-success d-flex align-items-center gap-2"
+                  th:href="@{/api/medicines/add}"
+                  ><i class="bi bi-plus"></i> Thêm mới thuốc</a
+                >
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Tên thuốc</th>
+                    <th>Ảnh</th>
+                    <th>Loại thuốc</th>
+                    <th>HSD</th>
+                    <th>Giá</th>
+                    <th>Số lượng tồn kho</th>
+                    <th>Nhà cung cấp</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="medicine : ${medicines}">
+                    <td th:text="${medicine.id}"></td>
+                    <td th:text="${medicine.name}"></td>
+                    <td>
+                      <img
+                        th:if="${medicine.image != null and medicine.image != 'default-medicine'}"
+                        th:src="${medicine.image}"
+                        th:onerror="this.src='/images/default-medicine.jpg'"
+                        alt="Thumbnail"
+                        class="img-fluid rounded"
+                        style="width: 50px; height: 50px; object-fit: cover"
+                      />
+                      <img
+                        th:if="${medicine.image == null or medicine.image == 'default-medicine'}"
+                        src="/images/default-medicine.jpg"
+                        alt="No image"
+                        class="img-fluid rounded"
+                        style="width: 50px; height: 50px; object-fit: cover"
+                      />
+                    </td>
+                    <td th:text="${medicine.type.displayName}"></td>
+                    <td
+                      th:text="${#temporals.format(medicine.expiryDate, 'dd/MM/yyyy')}"
+                    ></td>
+                    <td
+                      th:text="${#numbers.formatDecimal(medicine.price, 0, 2, 'COMMA') + ' VNĐ'}"
+                    ></td>
+                    <td
+                      class="text-center"
+                      th:text="${medicine.stockQuantity}"
+                    ></td>
+                    <td
+                      class="text-center"
+                      th:text="${medicine.supplier.displayName}"
+                    ></td>
+                    <td>
+                      <div class="d-flex gap-2">
+                        <a
+                          class="btn btn-action-edit btn-sm text-white"
+                          th:href="@{/api/medicines/edit/{id}(id=${medicine.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}"
+                        >
+                          <i class="bi bi-pencil"></i>
+                        </a>
+                        <form
+                          th:action="@{/api/medicines/delete/{id}(id=${medicine.id})}"
+                          method="post"
+                          onsubmit="return confirm('Bạn có chắc muốn xóa thuốc này?')"
+                        >
+                          <input
+                            type="hidden"
+                            name="page"
+                            th:value="${currentPage}"
+                          />
+                          <input
+                            type="hidden"
+                            name="size"
+                            th:value="${pageSize}"
+                          />
+                          <input
+                            type="hidden"
+                            name="sortBy"
+                            th:value="${sortBy}"
+                          />
+                          <input
+                            type="hidden"
+                            name="sortDirection"
+                            th:value="${sortDirection}"
+                          />
+                          <input
+                            type="hidden"
+                            name="searchName"
+                            th:value="${searchName}"
+                          />
+                          <input
+                            type="hidden"
+                            name="searchType"
+                            th:value="${searchType}"
+                          />
+                          <input
+                            type="hidden"
+                            name="searchSupplier"
+                            th:value="${searchSupplier}"
+                          />
+                          <button
+                            type="submit"
+                            class="btn btn-action-delete btn-sm text-white"
+                          >
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr th:if="${medicines == null or medicines.isEmpty()}">
+                    <td colspan="9" class="text-center">
+                      Không tìm thấy dữ liệu thuốc nào.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div
+              class="p-3 d-flex justify-content-center border-top"
+              th:if="${totalPages > 1}"
+            >
+              <nav aria-label="Phân trang danh sách thuốc">
+                <ul class="pagination mb-0">
+                  <li
+                    class="page-item"
+                    th:classappend="${currentPage == 0} ? 'disabled'"
+                  >
+                    <a
+                      class="page-link text-dark"
+                      th:href="@{/api/medicines/view-medicine(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}"
+                      aria-label="Previous"
+                    >
+                      <span aria-hidden="true">&laquo;</span>
+                    </a>
+                  </li>
+                  <li class="page-item" th:if="${currentPage > 2}">
+                    <a
+                      class="page-link text-dark"
+                      th:href="@{/api/medicines/view-medicine(page=0, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}"
+                      >1</a
+                    >
+                  </li>
+                  <li class="page-item disabled" th:if="${currentPage > 3}">
+                    <span class="page-link text-dark">...</span>
+                  </li>
+                  <li
+                    class="page-item"
+                    th:each="i : ${#numbers.sequence(currentPage - 2 > 0 ? currentPage - 2 : 0, currentPage + 2 < totalPages - 1 ? currentPage + 2 : totalPages - 1)}"
+                  >
+                    <a
+                      class="page-link text-dark"
+                      th:href="@{/api/medicines/view-medicine(page=${i}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}"
+                      th:classappend="${i == currentPage} ? 'active'"
+                      th:text="${i + 1}"
+                    ></a>
+                  </li>
+                  <li
+                    class="page-item disabled"
+                    th:if="${currentPage < totalPages - 4}"
+                  >
+                    <span class="page-link text-dark">...</span>
+                  </li>
+                  <li class="page-item" th:if="${currentPage < totalPages - 3}">
+                    <a
+                      class="page-link text-dark"
+                      th:href="@{/api/medicines/view-medicine(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}"
+                      th:text="${totalPages}"
+                    ></a>
+                  </li>
+                  <li
+                    class="page-item"
+                    th:classappend="${currentPage == totalPages - 1} ? 'disabled'"
+                  >
+                    <a
+                      class="page-link text-dark"
+                      th:href="@{/api/medicines/view-medicine(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}"
+                      aria-label="Next"
+                    >
+                      <span aria-hidden="true">&raquo;</span>
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Xử lý active nav
-            const navLinks = document.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    navLinks.forEach(l => l.classList.remove('active'));
-                    link.classList.add('active');
-                    window.location.href = link.getAttribute('href');
-                });
-            });
-
-            // Xử lý clear filters
-            document.getElementById('clearFilters').addEventListener('click', () => {
-                document.getElementById('searchName').value = '';
-                document.getElementById('searchType').value = '';
-                document.getElementById('searchSupplier').value = '';
-                window.location.href = '/api/medicines/view-medicine';
-            });
-
-            // Xử lý xóa thuốc
-            window.deleteMedicine = function(id) {
-                if (confirm('Bạn có chắc muốn xóa thuốc này?')) {
-                    fetch(`/api/medicines/delete/${id}`, { method: 'DELETE' })
-                        .then(response => {
-                            if (response.ok) {
-                                window.location.reload();
-                            } else {
-                                alert('Xóa thất bại!');
-                            }
-                        });
-                }
-            };
-
-            // Xử lý sửa thuốc
-            window.openEditModal = function(id) {
-                fetch(`/api/medicines/list?page=0&size=1&searchId=${id}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const medicine = data.content[0];
-                        const modal = document.createElement('div');
-                        modal.className = 'modal fade';
-                        modal.id = 'editMedicineModal';
-                        modal.innerHTML = `
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Sửa thuốc</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form id="editMedicineForm" action="/api/medicines/update/${id}" method="post">
-                                            <div class="mb-3">
-                                                <label for="editName" class="form-label">Tên thuốc</label>
-                                                <input type="text" class="form-control" id="editName" name="name" value="${medicine.name}" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="editType" class="form-label">Loại thuốc</label>
-                                                <select class="form-select" id="editType" name="type" required>
-                                                    <option value="giam_dau" ${medicine.type === 'giam_dau' ? 'selected' : ''}>Giảm đau</option>
-                                                    <option value="khang_sinh" ${medicine.type === 'khang_sinh' ? 'selected' : ''}>Kháng sinh</option>
-                                                    <option value="chong_viem" ${medicine.type === 'chong_viem' ? 'selected' : ''}>Chống viêm</option>
-                                                    <option value="thuoc_ha_huyet_ap" ${medicine.type === 'thuoc_ha_huyet_ap' ? 'selected' : ''}>Thuốc hạ huyết áp</option>
-                                                </select>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="editExpiryDate" class="form-label">Ngày hết hạn</label>
-                                                <input type="date" class="form-control" id="editExpiryDate" name="expiryDate" value="${medicine.expiryDate}" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="editPrice" class="form-label">Giá</label>
-                                                <input type="number" class="form-control" id="editPrice" name="price" step="0.01" value="${medicine.price}" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="editStockQuantity" class="form-label">Số lượng tồn kho</label>
-                                                <input type="number" class="form-control" id="editStockQuantity" name="stockQuantity" value="${medicine.stockQuantity}" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="editSupplier" class="form-label">Nhà cung cấp</label>
-                                                <select class="form-select" id="editSupplier" name="supplier" required>
-                                                    <option value="Pfizer" ${medicine.supplier === 'Pfizer' ? 'selected' : ''}>Pfizer</option>
-                                                    <option value="Novartis" ${medicine.supplier === 'Novartis' ? 'selected' : ''}>Novartis</option>
-                                                    <option value="Johnson" ${medicine.supplier === 'Johnson' ? 'selected' : ''}>Johnson</option>
-                                                    <option value="Roche" ${medicine.supplier === 'Roche' ? 'selected' : ''}>Roche</option>
-                                                    <option value="Merck" ${medicine.supplier === 'Merck' ? 'selected' : ''}>Merck</option>
-                                                    <option value="Sanofi" ${medicine.supplier === 'Sanofi' ? 'selected' : ''}>Sanofi</option>
-                                                </select>
-                                            </div>
-                                            <button type="submit" class="btn btn-primary">Cập nhật</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        document.body.appendChild(modal);
-                        const bootstrapModal = new bootstrap.Modal(modal);
-                        bootstrapModal.show();
-                        modal.addEventListener('hidden.bs.modal', () => modal.remove());
-                        document.getElementById('editMedicineForm').addEventListener('submit', (e) => {
-                            e.preventDefault();
-                            const formData = new FormData(e.target);
-                            fetch(e.target.action, {
-                                method: 'PUT',
-                                body: JSON.stringify(Object.fromEntries(formData)),
-                                headers: { 'Content-Type': 'application/json' }
-                            })
-                            .then(response => {
-                                if (response.ok) {
-                                    window.location.reload();
-                                } else {
-                                    alert('Cập nhật thất bại!');
-                                }
-                            });
-                        });
-                    });
-            };
+      document.addEventListener("DOMContentLoaded", () => {
+        const navLinks = document.querySelectorAll(".nav-link");
+        navLinks.forEach((link) => {
+          link.addEventListener("click", (e) => {
+            e.preventDefault();
+            navLinks.forEach((l) => l.classList.remove("active"));
+            link.classList.add("active");
+            window.location.href = link.getAttribute("href");
+          });
         });
+
+        document
+          .getElementById("clearFilters")
+          .addEventListener("click", () => {
+            document.getElementById("searchName").value = "";
+            document.getElementById("searchType").value = "";
+            document.getElementById("searchSupplier").value = "";
+            window.location.href = "/api/medicines/view-medicine";
+          });
+      });
     </script>
-</body>
+  </body>
 </html>
