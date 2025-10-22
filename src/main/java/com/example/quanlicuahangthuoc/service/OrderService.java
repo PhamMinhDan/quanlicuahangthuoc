@@ -23,4 +23,19 @@ public class OrderService {
         Pageable pageable = PageRequest.of(page, size);
         return orderRepository.findAll(pageable);
     }
+    public Page<Order> getOrdersByPage(int pageNumber) {
+        Pageable pageable = PageRequest.of(pageNumber, 10);
+        return orderRepository.findAll(pageable);
+    }
+    public Order addOrder(Order order) {
+        return orderRepository.save(order);
+    }
+    public boolean deleteOrder(Integer id) {
+    if (orderRepository.existsById(id)) {
+        orderRepository.deleteById(id);
+        return true;
+    }
+    return false;
+}
+
 }
