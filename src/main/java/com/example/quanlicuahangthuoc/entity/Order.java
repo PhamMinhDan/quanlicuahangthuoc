@@ -68,6 +68,9 @@ public class Order {
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
+    public void setOrderDetails(Object o) {
+    }
+
     public enum OrderStatus {
         da_thanh_toan("Đã thanh toán"),
         chua_thanh_toan("Chưa thanh toán"),
