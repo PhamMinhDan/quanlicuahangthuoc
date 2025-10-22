@@ -19,6 +19,9 @@ public class OrderService {
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
+        public Order getOrderById(Integer id) {
+            return orderRepository.findById(id).orElse(null);
+        }
     public Page<Order> getOrdersPaginated(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return orderRepository.findAll(pageable);
