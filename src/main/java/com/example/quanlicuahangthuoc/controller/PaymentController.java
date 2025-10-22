@@ -98,5 +98,13 @@ public class PaymentController {
         }
         return "redirect:/payments"; // quay lại danh sách thanh toán
     }
+    @GetMapping("/search")
+    public String searchPayments(@RequestParam("keyword") String keyword, Model model) {
+        List<Payment> payments = paymentService.searchPayments(keyword);
+        model.addAttribute("payments", payments);
+        model.addAttribute("keyword", keyword);
+        return "payment/list"; // hiển thị lại danh sách thanh toán (với kết quả đã lọc)
+    }
+
 
 }

@@ -105,5 +105,12 @@ public class PaymentService {
             System.err.println("Không tìm thấy thanh toán với ID: " + id);
         }
     }
+    public List<Payment> searchPayments(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return paymentRepository.findAll();
+        }
+        return paymentRepository.findByKeyword(keyword.trim());
+    }
+
 
 }
