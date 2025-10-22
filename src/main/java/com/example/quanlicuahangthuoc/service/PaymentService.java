@@ -96,5 +96,14 @@ public class PaymentService {
 
         paymentRepository.save(existingPayment);
     }
+    @Transactional
+    public void deletePayment(Integer id) {
+        if (paymentRepository.existsById(id)) {
+            paymentRepository.deleteById(id);
+            System.out.println("Đã xoá thanh toán có ID: " + id);
+        } else {
+            System.err.println("Không tìm thấy thanh toán với ID: " + id);
+        }
+    }
 
 }

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -86,6 +87,16 @@ public class PaymentController {
     public String updatePayment(@PathVariable Integer id, @ModelAttribute("payment") Payment payment) {
         paymentService.updatePayment(id, payment);
         return "redirect:/payments";
+    }
+    @GetMapping("/delete/{id}")
+    public String deletePayment(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
+        try {
+            paymentService.deletePayment(id);
+            redirectAttributes.addFlashAttribute("message", "Xoá thanh toán thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi xoá thanh toán: " + e.getMessage());
+        }
+        return "redirect:/payments"; // quay lại danh sách thanh toán
     }
 
 }
