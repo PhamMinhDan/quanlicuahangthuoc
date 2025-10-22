@@ -27,7 +27,6 @@ public class PromotionService {
     public List<Promotion> getAllPromotions() {
         return promotionRepository.findAll();
     }
-    
     // READ - Lấy khuyến mãi theo ID
     public Optional<Promotion> getPromotionById(Integer id) {
         return promotionRepository.findById(id);
@@ -94,8 +93,24 @@ public class PromotionService {
         
         return promotionRepository.save(promotion);
     }
+    // Tìm kiếm theo tên
+    public List<Promotion> searchByName(String name) {
+        return promotionRepository.findByNameContaining(name);
+    }
+    
+    // Tìm kiếm theo loại
+    public List<Promotion> searchByType(String type) {
+        return promotionRepository.findByType(type);
+    }
+    
+    // Tìm kiếm theo cả tên và loại
+    public List<Promotion> searchByNameAndType(String name, String type) {
+        return promotionRepository.findByNameContainingAndType(name, type);
+    }
+    
+    // Tìm kiếm theo tên hoặc loại
+    public List<Promotion> searchByNameOrType(String name, String type) {
+        return promotionRepository.findByNameContainingOrType(name, type);
+    }
 }
-
-
-
 

@@ -11,6 +11,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
+
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
 @Controller
 @RequestMapping("/promotions")
 public class PromotionController {
@@ -93,5 +98,55 @@ public class PromotionController {
             model.addAttribute("error", "Lỗi khi thêm khuyến mãi: " + e.getMessage());
             return "promotion/add";
         }
+    }
+
+    public String getAllPromotions(Model model) {
+        List<Promotion> promotions = promotionService.getAllPromotions();
+        model.addAttribute("promotions", promotions);
+        return "promotion/list";
+    }
+    
+    @GetMapping("/search/name")
+    public String searchByName(@RequestParam String name, Model model) {
+        List<Promotion> promotions = promotionService.searchByName(name);
+        model.addAttribute("promotions", promotions);
+        model.addAttribute("searchType", "name");
+        model.addAttribute("searchValue", name);
+        return "promotion/list";
+    }
+    
+    @GetMapping("/search/type")
+    public String searchByType(@RequestParam String type, Model model) {
+        List<Promotion> promotions = promotionService.searchByType(type);
+        model.addAttribute("promotions", promotions);
+        model.addAttribute("searchType", "type");
+        model.addAttribute("searchValue", type);
+        return "promotion/list";
+    }
+    
+    @GetMapping("/search/name-and-type")
+    public String searchByNameAndType(
+            @RequestParam String name, 
+            @RequestParam String type,
+            Model model) {
+        List<Promotion> promotions = promotionService.searchByNameAndType(name, type);
+        model.addAttribute("promotions", promotions);
+        model.addAttribute("searchType", "name-and-type");
+        model.addAttribute("searchName", name);
+        model.addAttribute("searchTypeValue", type);
+        return "promotion/list";
+    }
+    
+    @GetMapping("/search/name-or-type")
+    public String searchByNameOrType(
+            @RequestParam String name, 
+            @RequestParam String type,
+            Model model) {
+        List<Promotion> promotions = promotionService.searchByNameOrType(name, type);
+        model.addAttribute("promotions", promotions);
+        model.addAttribute("searchType", "name-or-type");
+        model.addAttribute("searchName", name);
+        model.addAttribute("searchTypeValue", type);
+        return "promotion/list";
     }
 }
