@@ -3,55 +3,67 @@ package com.example.quanlicuahangthuoc.controller;
 import com.example.quanlicuahangthuoc.entity.Promotion;
 import com.example.quanlicuahangthuoc.service.PromotionService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/promotion")
-@CrossOrigin(origins = "*")
+@Controller
+@RequestMapping("/promotions")
 public class PromotionController {
     
     @Autowired
     private PromotionService promotionService;
     
-    // Lấy tất cả khuyến mãi
     @GetMapping
-    public ResponseEntity<List<Promotion>> getAllPromotions() {
+    public String getAllPromotions(Model model) {
         List<Promotion> promotions = promotionService.getAllPromotions();
-        return ResponseEntity.ok(promotions);
+        model.addAttribute("promotions", promotions);
+        return "promotion/list";
     }
     
-    // Tìm kiếm theo tên
     @GetMapping("/search/name")
-    public ResponseEntity<List<Promotion>> searchByName(@RequestParam String name) {
+    public String searchByName(@RequestParam String name, Model model) {
         List<Promotion> promotions = promotionService.searchByName(name);
-        return ResponseEntity.ok(promotions);
+        model.addAttribute("promotions", promotions);
+        model.addAttribute("searchType", "name");
+        model.addAttribute("searchValue", name);
+        return "promotion/list";
     }
     
-    // Tìm kiếm theo loại
     @GetMapping("/search/type")
-    public ResponseEntity<List<Promotion>> searchByType(@RequestParam String type) {
+    public String searchByType(@RequestParam String type, Model model) {
         List<Promotion> promotions = promotionService.searchByType(type);
-        return ResponseEntity.ok(promotions);
+        model.addAttribute("promotions", promotions);
+        model.addAttribute("searchType", "type");
+        model.addAttribute("searchValue", type);
+        return "promotion/list";
     }
     
-    // Tìm kiếm theo cả tên và loại
     @GetMapping("/search/name-and-type")
-    public ResponseEntity<List<Promotion>> searchByNameAndType(
+    public String searchByNameAndType(
             @RequestParam String name, 
-            @RequestParam String type) {
+            @RequestParam String type,
+            Model model) {
         List<Promotion> promotions = promotionService.searchByNameAndType(name, type);
-        return ResponseEntity.ok(promotions);
+        model.addAttribute("promotions", promotions);
+        model.addAttribute("searchType", "name-and-type");
+        model.addAttribute("searchName", name);
+        model.addAttribute("searchTypeValue", type);
+        return "promotion/list";
     }
     
-    // Tìm kiếm theo tên hoặc loại
     @GetMapping("/search/name-or-type")
-    public ResponseEntity<List<Promotion>> searchByNameOrType(
+    public String searchByNameOrType(
             @RequestParam String name, 
-            @RequestParam String type) {
+            @RequestParam String type,
+            Model model) {
         List<Promotion> promotions = promotionService.searchByNameOrType(name, type);
-        return ResponseEntity.ok(promotions);
+        model.addAttribute("promotions", promotions);
+        model.addAttribute("searchType", "name-or-type");
+        model.addAttribute("searchName", name);
+        model.addAttribute("searchTypeValue", type);
+        return "promotion/list";
     }
 }
