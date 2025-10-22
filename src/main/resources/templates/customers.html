@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUẢN LÍ CỬA HÀNG THUỐC - Khách Hàng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/medicine.css}">
+</head>
+<body>
+    <div class="d-flex">
+        <div th:replace="~{sidebar :: sidebar}"></div>
+
+        <div class="flex-grow-1 bg-light p-4">
+            <div class="container-fluid">
+                <div class="row g-4 mb-4 justify-content-center">
+                    <div class="col-md-4">
+                        <div class="summary-card summary-card-1">
+                            <div class="position-relative z-10 text-center">
+                                <div class="text-sm opacity-80 mb-2">Tổng Số Khách Hàng</div>
+                                <div class="text-3xl font-bold" th:text="${totalCustomers != null ? totalCustomers : 0}"></div>
+                            </div>
+                            <i class="bi bi-people-fill position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-panel mb-4">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <i class="bi bi-funnel-fill text-secondary" style="font-size: 20px;"></i>
+                        <h2 class="h5 mb-0">Bộ lọc</h2>
+                    </div>
+                    <form th:action="@{/api/customers/view-customers}" method="get">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Tên khách hàng</label>
+                                <input type="text" class="form-control" id="searchName" name="keyword" th:value="${keyword}" placeholder="Tên khách hàng">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Số điện thoại</label>
+                                <input type="text" class="form-control" id="phone" name="phone" th:value="${phone}" placeholder="Số điện thoại">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Loại khách hàng</label>
+                                <select class="form-select" id="searchCustomerType" name="customerType">
+                                    <option value="">Loại khách hàng</option>
+                                    <option value="vang_lai" th:selected="${customerType == 'vang_lai'}">Vãng lai</option>
+                                    <option value="than_thiet" th:selected="${customerType == 'than_thiet'}">Thân thiết</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
+                                    <i class="bi bi-search"></i> Lọc
+                                </button>
+                                <button class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
+                                    <i class="bi bi-x"></i> Xóa Lọc
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="table-container">
+                    <div class="p-4 d-flex justify-content-between align-items-center border-bottom">
+                        <h2 class="h4">Danh sách khách hàng</h2>
+                        <div class="d-flex gap-2">
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="sortButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-sort-down"></i> Sắp xếp
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="sortButton">
+                                    <li><a class="dropdown-item" th:href="@{/api/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='name', sortDirection='asc', keyword=${keyword}, phone=${phone}, customerType=${customerType})}">Họ tên (A-Z)</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/api/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='name', sortDirection='desc', keyword=${keyword}, phone=${phone}, customerType=${customerType})}">Họ tên (Z-A)</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/api/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='firstCharName', sortDirection='asc', keyword=${keyword}, phone=${phone}, customerType=${customerType})}">Ký tự đầu tên (A-Z)</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/api/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='firstCharName', sortDirection='desc', keyword=${keyword}, phone=${phone}, customerType=${customerType})}">Ký tự đầu tên (Z-A)</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/api/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='firstCharLastWord', sortDirection='asc', keyword=${keyword}, phone=${phone}, customerType=${customerType})}">Ký tự đầu của từ cuối (A-Z)</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/api/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='firstCharLastWord', sortDirection='desc', keyword=${keyword}, phone=${phone}, customerType=${customerType})}">Ký tự đầu của từ cuối (Z-A)</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/api/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='rewardPoints', sortDirection='asc', keyword=${keyword}, phone=${phone}, customerType=${customerType})}">Điểm thưởng (Bé đến lớn)</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/api/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='rewardPoints', sortDirection='desc', keyword=${keyword}, phone=${phone}, customerType=${customerType})}">Điểm thưởng (Lớn đến bé)</a></li>
+                                </ul>
+                            </div>
+                            <button class="btn btn-success d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addCustomerModal" id="addButton"><i class="bi bi-plus"></i> Thêm mới khách hàng</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên</th>
+                                    <th>SĐT</th>
+                                    <th>Email</th>
+                                    <th>Loại khách hàng</th>
+                                    <th>Điểm thưởng</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="customer : ${customers}">
+                                    <td th:text="${customer.id}"></td>
+                                    <td th:text="${customer.name}"></td>
+                                    <td th:text="${customer.phone}"></td>
+                                    <td th:text="${customer.email}"></td>
+                                    <td th:text="${customer.customerType.displayName}"></td>
+                                    <td class="text-center" th:text="${customer.rewardPoints}"></td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-primary btn-sm btn-action-edit text-white" th:onclick="'openEditModal(' + ${customer.id} + ')'"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deleteCustomer(' + ${customer.id} + ')'"><i class="bi bi-trash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${customers == null or customers.isEmpty()}">
+                                    <td colspan="7" class="text-center">Không tìm thấy dữ liệu khách hàng nào.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="p-3 d-flex justify-content-center border-top" th:if="${totalPages > 1}">
+                        <nav aria-label="Phân trang danh sách khách hàng">
+                            <ul class="pagination mb-0">
+                                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                                    <a class="page-link text-dark" th:href="@{/api/customers/view-customers(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item" th:if="${currentPage > 2}">
+                                    <a class="page-link text-dark" th:href="@{/api/customers/view-customers(page=0, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}">1</a>
+                                </li>
+                                <li class="page-item disabled" th:if="${currentPage > 3}">
+                                    <span class="page-link text-dark">...</span>
+                                </li>
+                                <li class="page-item" th:each="i : ${#numbers.sequence(currentPage - 2 > 0 ? currentPage - 2 : 0, currentPage + 2 < totalPages - 1 ? currentPage + 2 : totalPages - 1)}">
+                                    <a class="page-link text-dark" th:href="@{/api/customers/view-customers(page=${i}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}" th:classappend="${i == currentPage} ? 'active'" th:text="${i + 1}"></a>
+                                </li>
+                                <li class="page-item disabled" th:if="${currentPage < totalPages - 4}">
+                                    <span class="page-link text-dark">...</span>
+                                </li>
+                                <li class="page-item" th:if="${currentPage < totalPages - 3}">
+                                    <a class="page-link text-dark" th:href="@{/api/customers/view-customers(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}" th:text="${totalPages}"></a>
+                                </li>
+                                <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                                    <a class="page-link text-dark" th:href="@{/api/customers/view-customers(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Adding Customer -->
+    <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCustomerModalLabel">Thêm khách hàng mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addCustomerForm" th:action="@{/api/customers/add}" method="post" enctype="multipart/form-data">
+                        <input type="hidden" th:name="page" th:value="${currentPage}">
+                        <input type="hidden" th:name="size" th:value="${pageSize}">
+                        <input type="hidden" th:name="sortBy" th:value="${sortBy}">
+                        <input type="hidden" th:name="sortDirection" th:value="${sortDirection}">
+                        <input type="hidden" th:name="keyword" th:value="${keyword}">
+                        <input type="hidden" th:name="phone" th:value="${phone}">
+                        <input type="hidden" th:name="customerType" th:value="${customerType}">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Tên khách hàng</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Số điện thoại</label>
+                            <input type="text" class="form-control" id="phone" name="phone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="customerType" class="form-label">Loại khách hàng</label>
+                            <select class="form-select" id="customerType" name="customerType" required>
+                                <option value="vang_lai">Vãng lai</option>
+                                <option value="than_thiet">Thân thiết</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="rewardPoints" class="form-label">Điểm thưởng</label>
+                            <input type="number" class="form-control" id="rewardPoints" name="rewardPoints" value="0" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Thêm</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Editing Customer -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Xử lý active nav
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    window.location.href = link.getAttribute('href');
+                });
+            });
+
+            // Xử lý clear filters
+            document.getElementById('clearFilters').addEventListener('click', () => {
+                document.getElementById('searchName').value = '';
+                document.getElementById('phone').value = '';
+                document.getElementById('searchCustomerType').value = '';
+                window.location.href = '/api/customers/view-customers';
+            });
+
+            // Xử lý xóa khách hàng
+            window.deleteCustomer = function(id) {
+                if (confirm('Bạn có chắc muốn xóa khách hàng này?')) {
+                    fetch(`/api/customers/delete/${id}`, { method: 'DELETE' })
+                        .then(response => {
+                            if (response.ok) {
+                                window.location.reload();
+                            } else {
+                                response.text().then(text => {
+                                    alert('Xóa thất bại: ' + (text || 'Lỗi không xác định'));
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Lỗi khi xóa khách hàng:', error);
+                            alert('Lỗi khi xóa khách hàng: ' + error.message);
+                        });
+                }
+            };
+
+            // Xử lý sửa khách hàng
+            window.openEditModal = function(id) {
+                if (!id || id <= 0) {
+                    alert('ID khách hàng không hợp lệ!');
+                    return;
+                }
+                fetch(`/api/customers/search/${id}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Không tìm thấy khách hàng với ID ${id}: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(customer => {
+                        const modal = document.createElement('div');
+                        modal.className = 'modal fade';
+                        modal.id = 'editCustomerModal';
+                        modal.innerHTML = `
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Sửa khách hàng</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form id="editCustomerForm" action="/api/customers/update/${id}" method="post" enctype="multipart/form-data">
+                                            <input type="hidden" name="page" value="${currentPage}">
+                                            <input type="hidden" name="size" value="${pageSize}">
+                                            <input type="hidden" name="sortBy" value="${sortBy}">
+                                            <input type="hidden" name="sortDirection" value="${sortDirection}">
+                                            <input type="hidden" name="keyword" value="${keyword}">
+                                            <input type="hidden" name="phone" value="${phone}">
+                                            <input type="hidden" name="customerType" value="${customerType}">
+                                            <div class="mb-3">
+                                                <label for="editName" class="form-label">Tên khách hàng</label>
+                                                <input type="text" class="form-control" id="editName" name="name" value="${customer.name}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="editPhone" class="form-label">Số điện thoại</label>
+                                                <input type="text" class="form-control" id="editPhone" name="phone" value="${customer.phone}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="editEmail" class="form-label">Email</label>
+                                                <input type="email" class="form-control" id="editEmail" name="email" value="${customer.email}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="editCustomerType" class="form-label">Loại khách hàng</label>
+                                                <select class="form-select" id="editCustomerType" name="customerType" required>
+                                                    <option value="vang_lai" ${customer.customerType === 'vang_lai' ? 'selected' : ''}>Vãng lai</option>
+                                                    <option value="than_thiet" ${customer.customerType === 'than_thiet' ? 'selected' : ''}>Thân thiết</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="editRewardPoints" class="form-label">Điểm thưởng</label>
+                                                <input type="number" class="form-control" id="editRewardPoints" name="rewardPoints" value="${customer.rewardPoints}" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Cập nhật</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(modal);
+                        const bootstrapModal = new bootstrap.Modal(modal);
+                        bootstrapModal.show();
+                        modal.addEventListener('hidden.bs.modal', () => modal.remove());
+                        document.getElementById('editCustomerForm').addEventListener('submit', (e) => {
+                            e.preventDefault();
+                            const formData = new FormData(e.target);
+                            fetch(e.target.action, {
+                                method: 'PUT',
+                                body: JSON.stringify(Object.fromEntries(formData)),
+                                headers: { 'Content-Type': 'application/json' }
+                            })
+                            .then(response => {
+                                if (response.ok) {
+                                    window.location.reload();
+                                } else {
+                                    response.text().then(text => {
+                                        alert('Cập nhật thất bại: ' + (text || 'Lỗi không xác định'));
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Lỗi khi cập nhật khách hàng:', error);
+                                alert('Lỗi khi cập nhật khách hàng: ' + error.message);
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Lỗi khi tải dữ liệu khách hàng:', error);
+                        alert('Không thể tải dữ liệu khách hàng: ' + error.message);
+                    });
+            };
+        });
+    </script>
+</body>
+</html>
