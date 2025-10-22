@@ -23,20 +23,23 @@ public class PaymentService {
     @Transactional
     public List<Payment> getAllPayments() {
         try {
-            List<Payment> payments = paymentRepository.findAll();
-
-            // ⚠️ Xử lý tránh vòng lặp khi convert JSON
-            for (Payment payment : payments) {
-                if (payment.getOrder() != null) {
-                    payment.getOrder().setCustomer(null);
-                    payment.getOrder().setOrderDetails(null);
-                }
-            }
-
-            return payments;
+            return paymentRepository.findAllWithOrderAndCustomer();
         } catch (Exception e) {
             System.err.println("Error fetching payments: " + e.getMessage());
             return List.of();
+        }
+    }
+
+    /**
+     * Lấy thông tin thanh toán theo ID.
+     */
+    @Transactional
+    public Payment getPaymentById(Integer id) {
+        try {
+            return paymentRepository.findByIdWithOrderAndCustomer(id);
+        } catch (Exception e) {
+            System.err.println("Error fetching payment by id: " + e.getMessage());
+            return null;
         }
     }
 }
