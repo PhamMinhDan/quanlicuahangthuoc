@@ -42,11 +42,20 @@ public class Customer {
     @Column(name = "reward_points", nullable = false)
     private Integer rewardPoints = 0;
 
-    public enum CustomerType {
-        vang_lai,
-        than_thiet
+   public enum CustomerType {
+    vang_lai("Vãng lai"),
+    than_thiet("Thân thiết");
+
+    private final String displayName;
+
+    CustomerType(String displayName) {
+        this.displayName = displayName;
     }
 
+    public String getDisplayName() {
+        return displayName;
+    }
+}
     // Getter/Setter thủ công
     public Integer getId() {
         return id;

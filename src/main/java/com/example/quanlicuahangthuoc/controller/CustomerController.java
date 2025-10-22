@@ -1,16 +1,18 @@
 package com.example.quanlicuahangthuoc.controller;
 
 import com.example.quanlicuahangthuoc.entity.Customer;
-import com.example.quanlicuahangthuoc.repository.CustomerRepository;
 import com.example.quanlicuahangthuoc.service.CustomerService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.data.domain.Page;
+
 import java.util.List;
 
-@RestController
+@Controller
 @RequestMapping("/api/customers")
 public class CustomerController {
     private final CustomerService customerService;
@@ -19,7 +21,47 @@ public class CustomerController {
         this.customerService = customerService;
     }
 
-    @GetMapping
+    @GetMapping("/view-customers")
+    public String viewCustomers(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "customerType", required = false) String customerType,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            Model model) {
+        try {
+            Page<Customer> customerPage;
+            if ((keyword != null && !keyword.trim().isEmpty()) || 
+                (phone != null && !phone.trim().isEmpty()) || 
+                (customerType != null && !customerType.trim().isEmpty())) {
+                customerPage = customerService.searchWithPagingAndSort(keyword, phone, customerType, page, size, sortBy, sortDirection);
+            } else {
+                customerPage = customerService.getAllCustomersWithPagingAndSort(page, size, sortBy, sortDirection);
+            }
+
+            model.addAttribute("customers", customerPage.getContent());
+            model.addAttribute("currentPage", customerPage.getNumber());
+            model.addAttribute("totalPages", customerPage.getTotalPages());
+            model.addAttribute("pageSize", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("phone", phone);
+            model.addAttribute("customerType", customerType);
+            model.addAttribute("totalCustomers", customerService.getTotalCustomers());
+            model.addAttribute("activeNav", "customers");
+
+            return "customers";
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi khi tải danh sách khách hàng: " + e.getMessage());
+            return "customers";
+        }
+    }
+
+@GetMapping("/list")
+    @ResponseBody
     public ResponseEntity<List<Customer>> getAllCustomers(
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false, name = "sortDirection") String sortDirection) {
@@ -27,7 +69,8 @@ public class CustomerController {
         return ResponseEntity.ok(customers);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/search/{id}")
+    @ResponseBody
     public ResponseEntity<Customer> getCustomerById(@PathVariable Integer id) {
         try {
             Customer customer = customerService.getCustomerById(id);
@@ -36,7 +79,9 @@ public class CustomerController {
             return ResponseEntity.notFound().build();
         }
     }
-    @PostMapping
+
+    @PostMapping("/add")
+    @ResponseBody
     public ResponseEntity<?> createCustomer(@Valid @RequestBody Customer customer) {
         try {
             Customer createdCustomer = customerService.createCustomer(customer);
@@ -45,7 +90,9 @@ public class CustomerController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-    @PutMapping("/{id}")
+
+    @PutMapping("/update/{id}")
+    @ResponseBody
     public ResponseEntity<?> updateCustomer(@PathVariable Integer id, @Valid @RequestBody Customer customer) {
         try {
             Customer updatedCustomer = customerService.updateCustomer(id, customer);
@@ -54,7 +101,9 @@ public class CustomerController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-    @DeleteMapping("/{id}")
+
+    @DeleteMapping("/delete/{id}")
+    @ResponseBody
     public ResponseEntity<?> deleteCustomer(@PathVariable Integer id) {
         try {
             customerService.deleteCustomer(id);
@@ -63,7 +112,9 @@ public class CustomerController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
     @GetMapping("/paging")
+    @ResponseBody
     public ResponseEntity<Page<Customer>> getAllCustomersWithPaging(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -72,14 +123,18 @@ public class CustomerController {
         Page<Customer> customers = customerService.getAllCustomersWithPagingAndSort(page, size, sortBy, direction);
         return ResponseEntity.ok(customers);
     }
+
     @GetMapping("/search/paging")
+    @ResponseBody
     public ResponseEntity<Page<Customer>> searchWithPaging(
-            @RequestParam String keyword,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String customerType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String direction) {
-        Page<Customer> customers = customerService.searchWithPagingAndSort(keyword, page, size, sortBy, direction);
+        Page<Customer> customers = customerService.searchWithPagingAndSort(keyword, phone, customerType, page, size, sortBy, direction);
         return ResponseEntity.ok(customers);
     }
 }
