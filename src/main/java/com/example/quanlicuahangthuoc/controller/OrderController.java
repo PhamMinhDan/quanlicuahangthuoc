@@ -3,23 +3,24 @@ package com.example.quanlicuahangthuoc.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.example.quanlicuahangthuoc.entity.Order;
 import com.example.quanlicuahangthuoc.service.OrderService;
 
-@RestController
-@RequestMapping("/api/orders")
+@Controller
+@RequestMapping("/orders")
 public class OrderController {
-   @Autowired
+    @Autowired
     private OrderService orderService;
     
-    @GetMapping("/list")
-    public ResponseEntity<List<Order>> getAllOrders() {
+    @GetMapping
+    public String getAllOrders(Model model) {
         List<Order> orderList = orderService.getAllOrders();
-        return ResponseEntity.ok(orderList);
+        model.addAttribute("orders", orderList);
+        return "orders/list"; // tên file HTML trong templates
     }
 }
