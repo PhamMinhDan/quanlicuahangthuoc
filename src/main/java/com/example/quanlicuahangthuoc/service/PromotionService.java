@@ -16,6 +16,7 @@ public class PromotionService {
 
     @Autowired
     private PromotionRepository promotionRepository;
+
     // CREATE - Tạo khuyến mãi mới
     public Promotion createPromotion(Promotion promotion) {
         return promotionRepository.save(promotion);
@@ -25,11 +26,7 @@ public class PromotionService {
     public List<Promotion> getAllPromotions() {
         return promotionRepository.findAll();
     }
-    // READ - Lấy khuyến mãi theo ID
-    public Optional<Promotion> getPromotionById(Integer id) {
-        return promotionRepository.findById(id);
-    }
-    
+   
     // READ - Lấy khuyến mãi với phân trang
     public Page<Promotion> getAllPromotionsPaginated(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -43,19 +40,6 @@ public class PromotionService {
         return promotionRepository.findAll(pageable);
     }
     
-    // UPDATE - Cập nhật khuyến mãi
-    public Promotion updatePromotion(Integer id, Promotion promotionDetails) {
-        Optional<Promotion> optionalPromotion = promotionRepository.findById(id);
-        if (optionalPromotion.isPresent()) {
-            Promotion promotion = optionalPromotion.get();
-            promotion.setName(promotionDetails.getName());
-            promotion.setType(promotionDetails.getType());
-            promotion.setDiscountPercent(promotionDetails.getDiscountPercent());
-            promotion.setExpiredDate(promotionDetails.getExpiredDate());
-            return promotionRepository.save(promotion);
-        }
-        return null;
-    }
     
     // SEARCH - Tìm kiếm khuyến mãi theo tên
     public List<Promotion> searchPromotionsByName(String name) {
@@ -108,6 +92,35 @@ public class PromotionService {
         }
         promotionRepository.deleteById(id);
         return true;
+    }
+
+    public Promotion getPromotionById(Integer id) {
+        return promotionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khuyến mãi với ID: " + id));
+    }
+     public Optional<Promotion> getPromotionById(Integer id) {
+        return promotionRepository.findById(id);
+    }
+    public Promotion updatePromotion(Integer id, Promotion updatedPromotion) {
+        Promotion existingPromotion = promotionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khuyến mãi với ID: " + id));
+
+        if (updatedPromotion.getName() == null || updatedPromotion.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên khuyến mãi không được để trống");
+        }
+
+        Double discount = updatedPromotion.getDiscountPercent();
+        if (discount == null || discount < 0 || discount > 100) {
+            throw new IllegalArgumentException("Phần trăm giảm giá phải nằm trong khoảng 0 - 100");
+        }
+
+        existingPromotion.setName(updatedPromotion.getName());
+        existingPromotion.setType(updatedPromotion.getType());
+        existingPromotion.setDiscountPercent(updatedPromotion.getDiscountPercent());
+        existingPromotion.setExpiredDate(updatedPromotion.getExpiredDate());
+
+        return promotionRepository.save(existingPromotion);
+
     }
 }
 

@@ -58,7 +58,7 @@ public class PromotionController {
     }
     
   
-    @GetMapping("/{id}")
+   @GetMapping("/{id}")
     public String viewPromotion(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
         Optional<Promotion> promotion = promotionService.getPromotionById(id);
         
@@ -70,6 +70,7 @@ public class PromotionController {
             return "redirect:/promotions";
         }
     }
+    
     @GetMapping("/delete/{id}")
     public String deletePromotion(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         boolean deleted = promotionService.deletePromotion(id);
@@ -80,7 +81,42 @@ public class PromotionController {
         }
         return "redirect:/promotions";
     }
-
+    @GetMapping("/edit/{id}")
+    public String showEditForm(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Promotion promotion = promotionService.getPromotionById(id);
+            model.addAttribute("promotion", promotion);
+            return "promotion/edit";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/promotions";
+        }
+    }
+    
+     @PostMapping("/update/{id}")
+    public String updatePromotion(
+            @PathVariable Integer id,
+            @Valid @ModelAttribute("promotion") Promotion promotion,
+            BindingResult result,
+            RedirectAttributes redirectAttributes,
+            Model model) {
+        
+        if (result.hasErrors()) {
+            return "promotion/edit";
+        }
+        
+        try {
+            promotionService.updatePromotion(id, promotion);
+            redirectAttributes.addFlashAttribute("message", "Cập nhật khuyến mãi thành công!");
+            return "redirect:/promotions";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("error", e.getMessage());
+            return "promotion/edit";
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi khi cập nhật khuyến mãi: " + e.getMessage());
+            return "promotion/edit";
+        }
+    }
     @GetMapping("/new")
     public String showAddForm(Model model) {
         model.addAttribute("promotion", new Promotion());
