@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PromotionService {
@@ -17,84 +18,64 @@ public class PromotionService {
     @Autowired
     private PromotionRepository promotionRepository;
     
-    // Lấy tất cả khuyến mãi
+    // CREATE - Tạo khuyến mãi mới
+    public Promotion createPromotion(Promotion promotion) {
+        return promotionRepository.save(promotion);
+    }
+    
+    // READ - Lấy tất cả khuyến mãi
     public List<Promotion> getAllPromotions() {
         return promotionRepository.findAll();
     }
     
-    // Lấy khuyến mãi với phân trang (mặc định 10 items/trang)
+    // READ - Lấy khuyến mãi theo ID
+    public Optional<Promotion> getPromotionById(Integer id) {
+        return promotionRepository.findById(id);
+    }
+    
+    // READ - Lấy khuyến mãi với phân trang
     public Page<Promotion> getAllPromotionsPaginated(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return promotionRepository.findAll(pageable);
     }
     
-    // Lấy khuyến mãi với phân trang và sắp xếp
+    // READ - Lấy khuyến mãi với phân trang và sắp xếp
     public Page<Promotion> getAllPromotionsPaginatedAndSorted(int page, int size, String sortBy, String sortOrder) {
         Sort.Direction direction = "desc".equalsIgnoreCase(sortOrder) ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         return promotionRepository.findAll(pageable);
     }
     
-    // Lấy tất cả khuyến mãi với sắp xếp
-    public List<Promotion> getAllPromotionsSorted(String sortBy, String sortOrder) {
-        Sort.Direction direction = "desc".equalsIgnoreCase(sortOrder) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        
-        switch (sortBy.toLowerCase()) {
-            case "name":
-                return "desc".equalsIgnoreCase(sortOrder) ? 
-                    promotionRepository.findAllByOrderByNameDesc() : 
-                    promotionRepository.findAllByOrderByNameAsc();
-            case "validityperiod":
-            case "validity_period":
-                return "desc".equalsIgnoreCase(sortOrder) ? 
-                    promotionRepository.findAllByOrderByValidityPeriodDesc() : 
-                    promotionRepository.findAllByOrderByValidityPeriodAsc();
-            default:
-                return promotionRepository.findAll();
+    // UPDATE - Cập nhật khuyến mãi
+    public Promotion updatePromotion(Integer id, Promotion promotionDetails) {
+        Optional<Promotion> optionalPromotion = promotionRepository.findById(id);
+        if (optionalPromotion.isPresent()) {
+            Promotion promotion = optionalPromotion.get();
+            promotion.setName(promotionDetails.getName());
+            promotion.setType(promotionDetails.getType());
+            promotion.setDiscountPercent(promotionDetails.getDiscountPercent());
+            promotion.setExpiredDate(promotionDetails.getExpiredDate());
+            return promotionRepository.save(promotion);
         }
+        return null;
     }
     
-    // Sắp xếp theo tên tăng dần
-    public List<Promotion> getPromotionsSortedByNameAsc() {
-        return promotionRepository.findAllByOrderByNameAsc();
+    // DELETE - Xóa khuyến mãi
+    public boolean deletePromotion(Integer id) {
+        if (promotionRepository.existsById(id)) {
+            promotionRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
     
-    // Sắp xếp theo tên giảm dần
-    public List<Promotion> getPromotionsSortedByNameDesc() {
-        return promotionRepository.findAllByOrderByNameDesc();
+    // SEARCH - Tìm kiếm khuyến mãi theo tên
+    public List<Promotion> searchPromotionsByName(String name) {
+        return promotionRepository.findByNameContainingIgnoreCase(name);
     }
     
-    // Sắp xếp theo thời hạn tăng dần
-    public List<Promotion> getPromotionsSortedByValidityPeriodAsc() {
-        return promotionRepository.findAllByOrderByValidityPeriodAsc();
-    }
-    
-    // Sắp xếp theo thời hạn giảm dần
-    public List<Promotion> getPromotionsSortedByValidityPeriodDesc() {
-        return promotionRepository.findAllByOrderByValidityPeriodDesc();
-    }
-    
-    // Phân trang với sắp xếp theo tên tăng dần
-    public Page<Promotion> getPromotionsPaginatedSortedByNameAsc(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return promotionRepository.findAllByOrderByNameAsc(pageable);
-    }
-    
-    // Phân trang với sắp xếp theo tên giảm dần
-    public Page<Promotion> getPromotionsPaginatedSortedByNameDesc(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return promotionRepository.findAllByOrderByNameDesc(pageable);
-    }
-    
-    // Phân trang với sắp xếp theo thời hạn tăng dần
-    public Page<Promotion> getPromotionsPaginatedSortedByValidityPeriodAsc(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return promotionRepository.findAllByOrderByValidityPeriodAsc(pageable);
-    }
-    
-    // Phân trang với sắp xếp theo thời hạn giảm dần
-    public Page<Promotion> getPromotionsPaginatedSortedByValidityPeriodDesc(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return promotionRepository.findAllByOrderByValidityPeriodDesc(pageable);
+    // UTILITY - Kiểm tra khuyến mãi có tồn tại không
+    public boolean existsById(Integer id) {
+        return promotionRepository.existsById(id);
     }
 }
