@@ -1,23 +1,17 @@
 package com.example.quanlicuahangthuoc.service;
 
-import java.util.List;
-
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-
 import com.example.quanlicuahangthuoc.entity.Customer;
 import com.example.quanlicuahangthuoc.repository.CustomerRepository;
-import com.example.quanlicuahangthuoc.entity.Customer;
-import com.example.quanlicuahangthuoc.repository.CustomerRepository;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.stereotype.Service;
+
+import java.util.Comparator;
+import java.util.List;
+
 @Service
 public class CustomerService {
     private final CustomerRepository customerRepository;
@@ -34,25 +28,20 @@ public class CustomerService {
         if (sortBy == null || sortBy.isBlank()) {
             sortBy = "name";
         }
-        // normalize common aliases
-        if ("reward_points".equalsIgnoreCase(sortBy) || "rewardpoints".equalsIgnoreCase(sortBy)
-                || "rewardPoints".equals(sortBy) || "points".equalsIgnoreCase(sortBy)) {
-            sortBy = "rewardPoints";
-        }
         Sort.Direction direction = Sort.Direction.ASC;
         if ("desc".equalsIgnoreCase(sortDir)) {
             direction = Sort.Direction.DESC;
         }
-    // If caller requests sorting by the last token of the name (e.g. last name),
-        // perform in-memory sorting because it's not a mapped column.
-        if ("lastName".equalsIgnoreCase(sortBy) || "last_name".equalsIgnoreCase(sortBy)) {
+
+        if ("firstCharLastWord".equalsIgnoreCase(sortBy)) {
             List<Customer> all = customerRepository.findAll();
-            java.util.Comparator<Customer> cmp = java.util.Comparator.comparing(c -> {
-                String n = c.getName();
-                if (n == null) return "";
-                String[] parts = n.trim().split("\\s+");
-                return parts.length == 0 ? "" : parts[parts.length - 1];
-            }, String.CASE_INSENSITIVE_ORDER);
+            Comparator<Customer> cmp = Comparator.comparing(c -> {
+                String name = c.getName();
+                if (name == null || name.trim().isEmpty()) return "";
+                String[] parts = name.trim().split("\\s+");
+                String lastWord = parts.length > 0 ? parts[parts.length - 1] : "";
+                return lastWord.isEmpty() ? "" : lastWord.substring(0, 1).toLowerCase();
+            });
             if (direction == Sort.Direction.DESC) {
                 cmp = cmp.reversed();
             }
@@ -60,15 +49,10 @@ public class CustomerService {
             return all;
         }
 
-        // Whitelist allowed DB-side sortable fields to avoid runtime errors from invalid props
-        java.util.Set<String> allowed = java.util.Set.of("id", "name", "email", "phone", "rewardPoints", "customerType", "reward_points");
-        if (!allowed.contains(sortBy)) {
-            // fallback to name if unknown
-            sortBy = "name";
+        if ("rewardPoints".equalsIgnoreCase(sortBy) || "reward_points".equalsIgnoreCase(sortBy) || "points".equalsIgnoreCase(sortBy)) {
+            sortBy = "rewardPoints";
         }
-
-        Sort sort = Sort.by(direction, sortBy);
-        return customerRepository.findAll(sort);
+        return customerRepository.findAll(Sort.by(direction, sortBy));
     }
 
     public Customer getCustomerById(Integer id) {
@@ -76,55 +60,88 @@ public class CustomerService {
                 .orElseThrow(() -> new RuntimeException("Cannot find customer id: " + id));
     }
 
-
-     public Customer createCustomer(Customer customer) {
+    public Customer createCustomer(Customer customer) {
         if (customerRepository.existsByEmail(customer.getEmail())) {
             throw new RuntimeException("Email already existed");
         }
-
         if (customer.getRewardPoints() == null) {
             customer.setRewardPoints(0);
         }
-
         return customerRepository.save(customer);
     }
+
     public Customer updateCustomer(Integer id, Customer customerDetails) {
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Can not find customer id: " + id));
-
+                .orElseThrow(() -> new RuntimeException("Cannot find customer id: " + id));
         if (!customer.getEmail().equals(customerDetails.getEmail())
                 && customerRepository.existsByEmail(customerDetails.getEmail())) {
             throw new RuntimeException("Email already exist");
         }
-
         customer.setName(customerDetails.getName());
         customer.setPhone(customerDetails.getPhone());
         customer.setEmail(customerDetails.getEmail());
         customer.setCustomerType(customerDetails.getCustomerType());
         customer.setRewardPoints(customerDetails.getRewardPoints());
-
         return customerRepository.save(customer);
     }
+
     public void deleteCustomer(Integer id) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cannot find customer id: " + id));
-
         customerRepository.deleteById(id);
     }
+
     public Page<Customer> getAllCustomersWithPagingAndSort(int page, int size, String sortBy, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        if ("firstCharLastWord".equalsIgnoreCase(sortBy)) {
+            Page<Customer> pageResult = customerRepository.findAll(PageRequest.of(page, size));
+            List<Customer> sortedList = pageResult.getContent();
+            Comparator<Customer> cmp = Comparator.comparing(c -> {
+                String name = c.getName();
+                if (name == null || name.trim().isEmpty()) return "";
+                String[] parts = name.trim().split("\\s+");
+                String lastWord = parts.length > 0 ? parts[parts.length - 1] : "";
+                return lastWord.isEmpty() ? "" : lastWord.substring(0, 1).toLowerCase();
+            });
+            if (sortDirection == Sort.Direction.DESC) {
+                cmp = cmp.reversed();
+            }
+            sortedList.sort(cmp);
+            return new PageImpl<>(sortedList, PageRequest.of(page, size), pageResult.getTotalElements());
+        }
+        if ("rewardPoints".equalsIgnoreCase(sortBy) || "reward_points".equalsIgnoreCase(sortBy) || "points".equalsIgnoreCase(sortBy)) {
+            sortBy = "rewardPoints";
+        }
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
         return customerRepository.findAll(pageable);
     }
 
-    public Page<Customer> searchWithPagingAndSort(String keyword, int page, int size, String sortBy, String direction) {
+    public Page<Customer> searchWithPagingAndSort(String keyword, String phone, String customerType, int page, int size, String sortBy, String direction) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return customerRepository.findAll(pageable);
+        if ("firstCharLastWord".equalsIgnoreCase(sortBy)) {
+            Page<Customer> pageResult = customerRepository.searchByNamePhoneTypeWithPaging(keyword, phone, customerType, PageRequest.of(page, size));
+            List<Customer> sortedList = pageResult.getContent();
+            Comparator<Customer> cmp = Comparator.comparing(c -> {
+                String name = c.getName();
+                if (name == null || name.trim().isEmpty()) return "";
+                String[] parts = name.trim().split("\\s+");
+                String lastWord = parts.length > 0 ? parts[parts.length - 1] : "";
+                return lastWord.isEmpty() ? "" : lastWord.substring(0, 1).toLowerCase();
+            });
+            if (sortDirection == Sort.Direction.DESC) {
+                cmp = cmp.reversed();
+            }
+            sortedList.sort(cmp);
+            return new PageImpl<>(sortedList, PageRequest.of(page, size), pageResult.getTotalElements());
         }
+        if ("rewardPoints".equalsIgnoreCase(sortBy) || "reward_points".equalsIgnoreCase(sortBy) || "points".equalsIgnoreCase(sortBy)) {
+            sortBy = "rewardPoints";
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+        return customerRepository.searchByNamePhoneTypeWithPaging(keyword, phone, customerType, pageable);
+    }
 
-        return customerRepository.searchByNameOrPhoneWithPaging(keyword.trim(), pageable);
+    public long getTotalCustomers() {
+        return customerRepository.count();
     }
 }
