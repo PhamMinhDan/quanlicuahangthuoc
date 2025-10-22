@@ -24,4 +24,5 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
                              @Param("orderDate") java.time.LocalDate orderDate,
                              @Param("status") Order.OrderStatus status,
                              Pageable pageable);
+                             
 }
