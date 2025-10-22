@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -68,6 +70,7 @@ public class Staff {
     @Column(name = "phone", nullable = false, unique = true)
     private String phone;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "staff", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<Order> orders = new HashSet<>();
 
