@@ -3,7 +3,11 @@ package com.example.quanlicuahangthuoc.service;
 import com.example.quanlicuahangthuoc.entity.Payment;
 import com.example.quanlicuahangthuoc.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 import jakarta.transaction.Transactional;
 import java.util.List;
 
@@ -63,5 +67,50 @@ public class PaymentService {
             return List.of();
         }
     }
+    public Page<Payment> getPaymentsPaged(int pageNo, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNo - 1, pageSize);
+        return paymentRepository.findAll(pageable);
+    }
+    @Transactional
+    public void savePayment(Payment payment) {
+        try {
+            paymentRepository.save(payment);
+        } catch (Exception e) {
+            System.err.println("Error saving payment: " + e.getMessage());
+        }
+    }
+    @Transactional
+    public void updatePayment(Integer id, Payment updatedPayment) {
+        Payment existingPayment = paymentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thanh toán với ID: " + id));
+
+        existingPayment.setAmount(updatedPayment.getAmount());
+        existingPayment.setPaymentDate(updatedPayment.getPaymentDate());
+
+        if (updatedPayment.getOrder() != null) {
+            existingPayment.setOrder(updatedPayment.getOrder());
+        }
+        if (updatedPayment.getOrder() != null) {
+            existingPayment.setOrder(updatedPayment.getOrder());
+        }
+
+        paymentRepository.save(existingPayment);
+    }
+    @Transactional
+    public void deletePayment(Integer id) {
+        if (paymentRepository.existsById(id)) {
+            paymentRepository.deleteById(id);
+            System.out.println("Đã xoá thanh toán có ID: " + id);
+        } else {
+            System.err.println("Không tìm thấy thanh toán với ID: " + id);
+        }
+    }
+    public List<Payment> searchPayments(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return paymentRepository.findAll();
+        }
+        return paymentRepository.findByKeyword(keyword.trim());
+    }
+
 
 }
