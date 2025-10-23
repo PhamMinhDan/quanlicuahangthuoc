@@ -1,41 +1,81 @@
 package com.example.quanlicuahangthuoc.service;
 
-import java.util.List;
-
+import com.example.quanlicuahangthuoc.entity.Order;
+import com.example.quanlicuahangthuoc.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.example.quanlicuahangthuoc.entity.Order;
-import com.example.quanlicuahangthuoc.repository.OrderRepository;
+import java.time.LocalDate;
+import java.util.NoSuchElementException;
 
 @Service
 public class OrderService {
+
     @Autowired
     private OrderRepository orderRepository;
-    
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+
+    // Lấy đơn hàng theo ID
+    public Order getOrderById(Integer id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Không tìm thấy đơn hàng với ID: " + id));
     }
-    public Page<Order> getOrdersPaginated(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return orderRepository.findAll(pageable);
+
+    // Phân trang và tìm kiếm động
+    public Page<Order> getOrderPage(Integer customerId, LocalDate orderDate, Order.OrderStatus status, int page, int size, String sortBy, String sortDirection) {
+        Sort.Direction direction = "desc".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Sort sort;
+        if ("orderDate".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(direction, "orderDate");
+        } else if ("totalAmount".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(direction, "totalAmount");
+        } else if ("customer.id".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(direction, "customer.id");
+        } else if ("staff.id".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(direction, "staff.id");
+        } else if ("status".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(direction, "status");
+        } else if ("promotion.id".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(direction, "promotion.id");
+        } else {
+            sort = Sort.by(direction, "id");
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return orderRepository.findOrdersDynamically(customerId, orderDate, status, pageable);
     }
-    public Page<Order> getOrdersByPage(int pageNumber) {
-        Pageable pageable = PageRequest.of(pageNumber, 10);
-        return orderRepository.findAll(pageable);
+
+    // Tính tổng số đơn hàng
+    public long getTotalOrders() {
+        return orderRepository.countOrders();
     }
+
+    @Transactional
     public Order addOrder(Order order) {
+        if (orderRepository.findByCustomerId(order.getCustomer().getId()).isPresent()) {
+            throw new IllegalStateException("Đơn hàng với mã khách hàng " + order.getCustomer().getId() + " đã tồn tại.");
+        }
         return orderRepository.save(order);
     }
-    public boolean deleteOrder(Integer id) {
-    if (orderRepository.existsById(id)) {
-        orderRepository.deleteById(id);
-        return true;
-    }
-    return false;
-}
 
+    @Transactional
+    public void deleteOrder(Integer id) {
+        if (!orderRepository.existsById(id)) {
+            throw new NoSuchElementException("Không tìm thấy đơn hàng với ID: " + id + " để xóa.");
+        }
+        orderRepository.deleteById(id);
+    }
+
+    @Transactional
+    public Order updateOrder(Order order) {
+        if (!orderRepository.existsById(order.getId())) {
+            throw new NoSuchElementException("Không tìm thấy đơn hàng với ID: " + order.getId());
+        }
+        return orderRepository.save(order);
+    }
 }
