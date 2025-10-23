@@ -29,4 +29,22 @@ public class PaymentController {
         model.addAttribute("payment", payment);
         return "payment/detail";
     }
+    @GetMapping
+    public String listPayments(
+            @RequestParam(value = "sortField", defaultValue = "paymentDate") String sortField,
+            @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir,
+            Model model) {
+
+        List<Payment> payments = paymentService.getAllPayments();
+
+        // Xác định hướng sắp xếp tiếp theo (đảo ngược cho lần click kế)
+        String reverseSortDir = sortDir.equals("asc") ? "desc" : "asc";
+
+        model.addAttribute("payments", payments);
+        model.addAttribute("sortField", sortField);
+        model.addAttribute("sortDir", sortDir);
+        model.addAttribute("reverseSortDir", reverseSortDir);
+
+        return "payment/list";
+    }
 }
