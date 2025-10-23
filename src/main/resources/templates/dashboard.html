@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUẢN LÝ CỬA HÀNG THUỐC - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/medicine.css}">
+    <style>
+        .chart-container {
+            position: relative;
+            height: 350px;
+        }
+    </style>
+</head>
+<body>
+<div class="d-flex">
+    <div th:replace="~{sidebar :: sidebar}"></div>
+
+    <div class="main-content flex-grow-1 bg-light p-4">
+        <div class="container-fluid">
+            <!-- Thông báo lỗi/thành công -->
+            <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
+            <div th:if="${message != null}" class="alert alert-success" th:text="${message}"></div>
+
+            <!-- Tiêu đề Dashboard -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="h3 mb-1">Bảng Điều Khiển - Thống Kê Doanh Thu</h1>
+                    <p class="text-muted">Tổng quan thống kê về cửa hàng thuốc</p>
+                </div>
+            </div>
+
+            <!-- Thống kê chính -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="summary-card summary-card-1">
+                        <div class="position-relative z-10 text-center">
+                            <div class="text-sm opacity-80 mb-2">Tổng Doanh Thu Tháng Này</div>
+                            <div class="text-3xl font-bold" th:text="${totalRevenueThisMonth != null ? #numbers.formatDecimal(totalRevenueThisMonth, 0, 2, 'COMMA') + ' VNĐ' : '0 VNĐ'}"></div>
+                        </div>
+                        <i class="bi bi-currency-exchange position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-card summary-card-2">
+                        <div class="position-relative z-10 text-center">
+                            <div class="text-sm opacity-80 mb-2">Số Đơn Hàng Tháng Này</div>
+                            <div class="text-3xl font-bold" th:text="${totalOrdersThisMonth != null ? totalOrdersThisMonth : 0}"></div>
+                        </div>
+                        <i class="bi bi-cart-check position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-card summary-card-3">
+                        <div class="position-relative z-10 text-center">
+                            <div class="text-sm opacity-80 mb-2">Số Khách Hàng Tháng Này</div>
+                            <div class="text-3xl font-bold" th:text="${totalCustomersThisMonth != null ? totalCustomersThisMonth : 0}"></div>
+                        </div>
+                        <i class="bi bi-person position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-card summary-card-4">
+                        <div class="position-relative z-10 text-center">
+                            <div class="text-sm opacity-80 mb-2">Thanh Toán Chuyển Khoản</div>
+                            <div class="text-3xl font-bold" th:text="${totalTransferPaymentsThisMonth != null ? totalTransferPaymentsThisMonth : 0}"></div>
+                        </div>
+                        <i class="bi bi-bank position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Biểu đồ cột Doanh thu theo tháng -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Doanh Thu Theo Tháng (6 Tháng Gần Nhất)</h5>
+                            <small class="text-muted">Số liệu từ dữ liệu thanh toán</small>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${revenueMonths.isEmpty()}" class="alert alert-warning text-center">
+                                Không có dữ liệu doanh thu để hiển thị
+                            </div>
+                            <div th:unless="${revenueMonths.isEmpty()}">
+                                <div class="chart-container">
+                                    <canvas id="revenueChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Biểu đồ tròn Phương thức thanh toán và Trạng thái đơn hàng -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Phương Thức Thanh Toán</h5>
+                            <small class="text-muted">Tỷ lệ theo tháng hiện tại</small>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${paymentMethodData.isEmpty()}" class="alert alert-warning text-center">
+                                Không có dữ liệu phương thức thanh toán để hiển thị
+                            </div>
+                            <div th:unless="${paymentMethodData.isEmpty()}">
+                                <div class="chart-container">
+                                    <canvas id="paymentMethodChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Trạng Thái Đơn Hàng</h5>
+                            <small class="text-muted">Phân bố trạng thái đơn hàng</small>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${orderStatusData.isEmpty()}" class="alert alert-warning text-center">
+                                Không có dữ liệu trạng thái đơn hàng để hiển thị
+                            </div>
+                            <div th:unless="${orderStatusData.isEmpty()}">
+                                <div class="chart-container">
+                                    <canvas id="orderStatusChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Biểu đồ đường Số lượng khách hàng -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Số Lượng Khách Hàng Theo Tháng</h5>
+                            <small class="text-muted">Số lượng khách hàng có đơn hàng</small>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${customerMonths.isEmpty()}" class="alert alert-warning text-center">
+                                Không có dữ liệu khách hàng để hiển thị
+                            </div>
+                            <div th:unless="${customerMonths.isEmpty()}">
+                                <div class="chart-container">
+                                    <canvas id="customerChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    // Lấy dữ liệu từ Thymeleaf
+    const revenueMonths = /*[[${revenueMonths}]]*/ [];
+    const revenueData = /*[[${revenueData}]]*/ [];
+    const paymentMethodLabels = /*[[${paymentMethodLabels}]]*/ [];
+    const paymentMethodData = /*[[${paymentMethodData}]]*/ [];
+    const orderStatusLabels = /*[[${orderStatusLabels}]]*/ [];
+    const orderStatusData = /*[[${orderStatusData}]]*/ [];
+    const customerMonths = /*[[${customerMonths}]]*/ [];
+    const customerData = /*[[${customerData}]]*/ [];
+
+    // Biểu đồ cột - Doanh thu theo tháng
+    if (revenueMonths.length > 0) {
+        const revenueChart = new Chart(document.getElementById('revenueChart'), {
+            type: 'bar',
+            data: {
+                labels: revenueMonths,
+                datasets: [{
+                    label: 'Doanh Thu (VNĐ)',
+                    data: revenueData,
+                    backgroundColor: 'rgba(51, 204, 255, 0.8)',
+                    borderColor: 'rgba(51, 204, 255, 1)',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' VNĐ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + ' VNĐ';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Biểu đồ tròn - Phương thức thanh toán
+    if (paymentMethodData.length > 0) {
+        const paymentMethodChart = new Chart(document.getElementById('paymentMethodChart'), {
+            type: 'doughnut',
+            data: {
+                labels: paymentMethodLabels,
+                datasets: [{
+                    data: paymentMethodData,
+                    backgroundColor: [
+                        'rgba(76, 175, 80, 0.8)',
+                        'rgba(51, 204, 255, 0.8)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Biểu đồ tròn - Trạng thái đơn hàng
+    if (orderStatusData.length > 0) {
+        const orderStatusChart = new Chart(document.getElementById('orderStatusChart'), {
+            type: 'pie',
+            data: {
+                labels: orderStatusLabels,
+                datasets: [{
+                    data: orderStatusData,
+                    backgroundColor: [
+                        'rgba(76, 175, 80, 0.8)',
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(220, 53, 69, 0.8)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                return context.label + ': ' + context.parsed + ' đơn (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Biểu đồ đường - Số lượng khách hàng
+    if (customerMonths.length > 0) {
+        const customerChart = new Chart(document.getElementById('customerChart'), {
+            type: 'line',
+            data: {
+                labels: customerMonths,
+                datasets: [{
+                    label: 'Số Khách Hàng',
+                    data: customerData,
+                    borderColor: 'rgba(51, 204, 255, 1)',
+                    backgroundColor: 'rgba(51, 204, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3,
+                    pointRadius: 5,
+                    pointBackgroundColor: 'rgba(51, 204, 255, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+<div th:replace="~{footer :: footer}"></div>
+</body>
+</html>

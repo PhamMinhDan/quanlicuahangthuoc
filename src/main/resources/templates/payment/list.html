@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách thanh toán - Quản lý cửa hàng thuốc</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        .sidebar .nav-link {
+            color: #fff;
+            padding: 15px 20px;
+            margin: 5px 15px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            transform: translateX(5px);
+        }
+        .main-content {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .header-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        .payment-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+        .payment-card:hover {
+            transform: translateY(-2px);
+        }
+        .table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+            text-align: center;
+        }
+        .table td {
+            vertical-align: middle;
+            text-align: center;
+        }
+        .badge-payment-method {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .badge-cash {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+        .badge-transfer {
+            background: linear-gradient(45deg, #007bff, #6f42c1);
+            color: white;
+        }
+        .btn-view {
+            background: linear-gradient(45deg, #17a2b8, #138496);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-view:hover {
+            transform: scale(1.05);
+            color: white;
+        }
+        .amount-display {
+            font-weight: 700;
+            color: #28a745;
+            font-size: 1.1em;
+        }
+        .search-box {
+            border-radius: 25px;
+            border: 2px solid #e9ecef;
+            padding: 12px 20px;
+            transition: all 0.3s ease;
+        }
+        .search-box:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar">
+                <div class="d-flex flex-column">
+                    <div class="text-center text-white py-4">
+                        <i class="fas fa-pills fa-3x mb-3"></i>
+                        <h4>Quản lý thuốc</h4>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/medicines">
+                                <i class="fas fa-pills me-2"></i> Quản lý thuốc
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/staff">
+                                <i class="fas fa-users me-2"></i> Quản lý nhân viên
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/customers">
+                                <i class="fas fa-user-friends me-2"></i> Khách hàng
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/orders">
+                                <i class="fas fa-shopping-cart me-2"></i> Đơn hàng
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/payments">
+                                <i class="fas fa-credit-card me-2"></i> Thanh toán
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/promotions">
+                                <i class="fas fa-gift me-2"></i> Khuyến mãi
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 main-content">
+                <div class="p-4">
+                    <!-- Header -->
+                    <div class="header-section">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h1 class="mb-0">
+                                    <i class="fas fa-credit-card text-primary me-3"></i>
+                                    Danh sách thanh toán
+                                </h1>
+                                <p class="text-muted mt-2 mb-0">Quản lý và theo dõi các giao dịch thanh toán</p>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-end">
+                                    <input type="text" class="form-control search-box" placeholder="Tìm kiếm theo phương thức thanh toán..." style="max-width: 300px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <div class="card-body text-white text-center">
+                                    <i class="fas fa-receipt fa-2x mb-2"></i>
+                                    <h4 th:text="${#lists.size(payments)}">0</h4>
+                                    <small>Tổng giao dịch</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-0" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                                <div class="card-body text-white text-center">
+                                    <i class="fas fa-money-bill-wave fa-2x mb-2"></i>
+                                    <h4 th:text="${#aggregates.sum(payments.![amount])} ?: '0'">0</h4>
+                                    <small>Tổng tiền (VNĐ)</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-0" style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);">
+                                <div class="card-body text-white text-center">
+                                    <i class="fas fa-hand-holding-usd fa-2x mb-2"></i>
+                                    <h4 th:text="${#lists.size(payments.?[paymentMethod.name() == 'tien_mat'])}">0</h4>
+                                    <small>Tiền mặt</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-0" style="background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);">
+                                <div class="card-body text-white text-center">
+                                    <i class="fas fa-university fa-2x mb-2"></i>
+                                    <h4 th:text="${#lists.size(payments.?[paymentMethod.name() == 'chuyen_khoan'])}">0</h4>
+                                    <small>Chuyển khoản</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payments Table -->
+                    <div class="payment-card">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Phương thức</th>
+                                        <th>Số tiền</th>
+                                        <th>Tiền thối</th>
+                                        <th>Ngày thanh toán</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:if="${#lists.isEmpty(payments)}">
+                                        <td colspan="6" class="text-center py-5">
+                                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                            <br>
+                                            <span class="text-muted">Chưa có giao dịch thanh toán nào</span>
+                                        </td>
+                                    </tr>
+                                    <tr th:each="payment, iterStat : ${payments}" th:unless="${#lists.isEmpty(payments)}">
+                                        <td>
+                                            <strong th:text="${iterStat.count}">1</strong>
+                                        </td>
+                                        <td>
+                                            <span th:class="${payment.paymentMethod.name() == 'tien_mat'} ? 'badge badge-cash' : 'badge badge-transfer'" 
+                                                  th:text="${payment.paymentMethod.displayName}">
+                                                Tiền mặt
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="amount-display" th:text="${#numbers.formatDecimal(payment.amount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
+                                                1,000,000 VNĐ
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span th:if="${payment.change != null}" 
+                                                  th:text="${#numbers.formatDecimal(payment.change, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"
+                                                  class="text-success">
+                                                50,000 VNĐ
+                                            </span>
+                                            <span th:unless="${payment.change != null}" class="text-muted">-</span>
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-calendar-alt me-2 text-muted"></i>
+                                            <span th:text="${#temporals.format(payment.paymentDate, 'dd/MM/yyyy')}">
+                                                22/10/2025
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a th:href="@{/payments/{id}(id=${payment.id})}" class="btn btn-view btn-sm">
+                                                <i class="fas fa-eye me-1"></i> Xem
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Simple search functionality
+        document.querySelector('.search-box').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr:not(:first-child)');
+            
+            rows.forEach(row => {
+                const methodCell = row.querySelector('td:nth-child(2)');
+                if (methodCell) {
+                    const methodText = methodCell.textContent.toLowerCase();
+                    row.style.display = methodText.includes(searchTerm) ? '' : 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
