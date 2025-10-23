@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Repository
@@ -25,4 +26,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
             @Param("phone") String phone,
             @Param("customerType") String customerType,
             Pageable pageable);
+    @Query("SELECT COUNT(DISTINCT o.customer.id) FROM Order o WHERE " +
+            "o.orderDate >= :startDate AND o.orderDate <= :endDate")
+    long countCustomersByOrdersInPeriod(@Param("startDate") LocalDate startDate,
+                                        @Param("endDate") LocalDate endDate);
 }

@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -120,5 +121,12 @@ public class CustomerService {
 
     public long getTotalCustomers() {
         return customerRepository.count();
+    }
+    @Transactional(readOnly = true)
+    public long getCustomersThisMonth() {
+        LocalDate now = LocalDate.now();
+        LocalDate startOfMonth = now.withDayOfMonth(1);
+        LocalDate endOfMonth = now.withDayOfMonth(now.lengthOfMonth());
+        return customerRepository.countCustomersByOrdersInPeriod(startOfMonth, endOfMonth);
     }
 }

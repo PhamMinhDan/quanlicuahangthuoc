@@ -17,7 +17,7 @@
                 </div>
             </div>
             <nav class="nav flex-column">
-                <a class="nav-link" th:classappend="${activeNav == 'home'} ? 'active'" th:href="@{/}">
+                <a class="nav-link" th:classappend="${activeNav == 'home'} ? 'active'" th:href="@{/dashboard}">
                     <i class="bi bi-house"></i> Trang chủ
                 </a>
                 <a class="nav-link" th:classappend="${activeNav == 'medicines'} ? 'active'" th:href="@{medicines/view-medicine}">
@@ -35,7 +35,7 @@
                 <a class="nav-link" th:classappend="${activeNav == 'orders'} ? 'active'" th:href="@{/orders/view-orders}" onclick="return false;">
                     <i class="bi bi-receipt"></i> Quản lí đơn hàng
                 </a>
-                <a class="nav-link" th:classappend="${activeNav == 'payment'} ? 'active'" href="#" onclick="return false;">
+                <a class="nav-link" th:classappend="${activeNav == 'payment'} ? 'active'" th:href="@{/payments/view-payments}" onclick="return false;">
                     <i class="bi bi-credit-card"></i> Thanh toán
                 </a>
             </nav>

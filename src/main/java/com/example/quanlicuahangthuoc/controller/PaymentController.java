@@ -2,14 +2,17 @@ package com.example.quanlicuahangthuoc.controller;
 
 import com.example.quanlicuahangthuoc.entity.Payment;
 import com.example.quanlicuahangthuoc.service.PaymentService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
+import java.time.LocalDate;
+import java.util.NoSuchElementException;
 
 @Controller
 @RequestMapping("/payments")
@@ -18,93 +21,155 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
-    @GetMapping
-    public String listPayments(Model model) {
-        List<Payment> payments = paymentService.getAllPayments();
-        model.addAttribute("payments", payments);
-        return "payment/list";
-    }
-
-    @GetMapping("/{id}")
-    public String viewPayment(@PathVariable Integer id, Model model) {
-        Payment payment = paymentService.getPaymentById(id);
-        model.addAttribute("payment", payment);
-        return "payment/detail";
-    }
-    @GetMapping
+    @GetMapping("/view-payments")
     public String listPayments(
-            @RequestParam(value = "sortField", defaultValue = "paymentDate") String sortField,
+            @RequestParam(value = "orderId", required = false) Integer orderId,
+            @RequestParam(value = "paymentDate", required = false) LocalDate paymentDate,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortField", defaultValue = "id") String sortField,
             @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir,
             Model model) {
-
-        List<Payment> payments = paymentService.getAllPayments();
-
-        // Xác định hướng sắp xếp tiếp theo (đảo ngược cho lần click kế)
-        String reverseSortDir = sortDir.equals("asc") ? "desc" : "asc";
-
-        model.addAttribute("payments", payments);
-        model.addAttribute("sortField", sortField);
-        model.addAttribute("sortDir", sortDir);
-        model.addAttribute("reverseSortDir", reverseSortDir);
-
-        return "payment/list";
+        try {
+            Page<Payment> paymentPage = paymentService.getPaymentsPaged(orderId, paymentDate, page, size, sortField, sortDir);
+            model.addAttribute("payments", paymentPage.getContent());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", paymentPage.getTotalPages());
+            model.addAttribute("pageSize", size);
+            model.addAttribute("sortField", sortField);
+            model.addAttribute("sortDir", sortDir);
+            model.addAttribute("orderId", orderId);
+            model.addAttribute("paymentDate", paymentDate);
+            model.addAttribute("totalPayments", paymentService.getTotalPayments());
+            model.addAttribute("totalAmount", paymentService.getTotalAmount());
+            model.addAttribute("totalCashPayments", paymentService.getTotalCashPayments());
+            model.addAttribute("totalTransferPayments", paymentService.getTotalTransferPayments());
+            model.addAttribute("activeNav", "payments");
+            return "payment";
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi khi tải danh sách thanh toán: " + e.getMessage());
+            model.addAttribute("totalPayments", paymentService.getTotalPayments());
+            model.addAttribute("totalAmount", paymentService.getTotalAmount());
+            model.addAttribute("totalCashPayments", paymentService.getTotalCashPayments());
+            model.addAttribute("totalTransferPayments", paymentService.getTotalTransferPayments());
+            return "payment";
+        }
     }
-    @GetMapping("/page")
-    public String listPaymentsPaged(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "5") int size,
-            Model model) {
 
-        Page<Payment> paymentPage = paymentService.getPaymentsPaged(page, size);
-        model.addAttribute("payments", paymentPage.getContent());
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", paymentPage.getTotalPages());
-        return "payment/list";
-    }
-    // Hiển thị form thêm thanh toán mới
     @GetMapping("/new")
     public String showAddPaymentForm(Model model) {
         model.addAttribute("payment", new Payment());
-        return "payment/add"; // trỏ đến file payment/add.html
+        model.addAttribute("activeNav", "payments");
+        return "payment-add";
     }
 
-    // Xử lý khi người dùng submit form
     @PostMapping("/save")
-    public String savePayment(@ModelAttribute("payment") Payment payment) {
-        paymentService.savePayment(payment);
-        return "redirect:/payments"; // Sau khi thêm, quay lại danh sách
-    }
-    // Hiển thị form chỉnh sửa thanh toán
-    @GetMapping("/edit/{id}")
-    public String showEditPaymentForm(@PathVariable Integer id, Model model) {
-        Payment payment = paymentService.getPaymentById(id);
-        model.addAttribute("payment", payment);
-        return "payment/edit"; // Trỏ tới file templates/payment/edit.html
+    public String savePayment(
+            @Valid @ModelAttribute Payment payment,
+            BindingResult bindingResult,
+            Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("error", bindingResult.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .reduce((e1, e2) -> e1 + "; " + e2)
+                    .orElse("Lỗi nhập liệu"));
+            model.addAttribute("payment", payment);
+            model.addAttribute("activeNav", "payments");
+            return "payment-add";
+        }
+        try {
+            paymentService.savePayment(payment);
+            model.addAttribute("message", "Thêm thanh toán thành công");
+            return "redirect:/payments/view-payments";
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi khi thêm thanh toán: " + e.getMessage());
+            model.addAttribute("payment", payment);
+            model.addAttribute("activeNav", "payments");
+            return "payment-add";
+        }
     }
 
-    // Xử lý khi người dùng nhấn “Lưu”
-    @PostMapping("/update/{id}")
-    public String updatePayment(@PathVariable Integer id, @ModelAttribute("payment") Payment payment) {
-        paymentService.updatePayment(id, payment);
-        return "redirect:/payments";
+    @GetMapping("/edit/{id}")
+    public String showEditPaymentForm(
+            @PathVariable Integer id,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortField", defaultValue = "id") String sortField,
+            @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir,
+            @RequestParam(value = "orderId", required = false) Integer orderId,
+            @RequestParam(value = "paymentDate", required = false) LocalDate paymentDate,
+            Model model) {
+        try {
+            Payment payment = paymentService.getPaymentById(id);
+            model.addAttribute("payment", payment);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("sortField", sortField);
+            model.addAttribute("sortDir", sortDir);
+            model.addAttribute("orderId", orderId);
+            model.addAttribute("paymentDate", paymentDate);
+            model.addAttribute("activeNav", "payments");
+            return "payment-edit";
+        } catch (NoSuchElementException e) {
+            model.addAttribute("error", "Thanh toán không tồn tại: " + e.getMessage());
+            model.addAttribute("totalPayments", paymentService.getTotalPayments());
+            model.addAttribute("totalAmount", paymentService.getTotalAmount());
+            model.addAttribute("totalCashPayments", paymentService.getTotalCashPayments());
+            model.addAttribute("totalTransferPayments", paymentService.getTotalTransferPayments());
+            return listPayments(orderId, paymentDate, page, size, sortField, sortDir, model);
+        }
     }
-    @GetMapping("/delete/{id}")
-    public String deletePayment(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
+
+    @PostMapping("/update/{id}")
+    public String updatePayment(
+            @PathVariable Integer id,
+            @Valid @ModelAttribute Payment payment,
+            BindingResult bindingResult,
+            Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("error", bindingResult.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .reduce((e1, e2) -> e1 + "; " + e2)
+                    .orElse("Lỗi nhập liệu"));
+            model.addAttribute("payment", payment);
+            model.addAttribute("activeNav", "payments");
+            return "payment-edit";
+        }
+        try {
+            paymentService.updatePayment(id, payment);
+            model.addAttribute("message", "Cập nhật thanh toán thành công");
+            return "redirect:/payments/view-payments";
+        } catch (NoSuchElementException e) {
+            model.addAttribute("error", "Thanh toán không tồn tại: " + e.getMessage());
+            model.addAttribute("payment", payment);
+            model.addAttribute("activeNav", "payments");
+            return "payment-edit";
+        }
+    }
+
+    @PostMapping("/delete/{id}")
+    public String deletePayment(
+            @PathVariable Integer id,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortField", defaultValue = "id") String sortField,
+            @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir,
+            @RequestParam(value = "orderId", required = false) Integer orderId,
+            @RequestParam(value = "paymentDate", required = false) LocalDate paymentDate,
+            RedirectAttributes redirectAttributes) {
         try {
             paymentService.deletePayment(id);
-            redirectAttributes.addFlashAttribute("message", "Xoá thanh toán thành công!");
+            redirectAttributes.addFlashAttribute("message", "Xóa thanh toán thành công");
+        } catch (NoSuchElementException e) {
+            redirectAttributes.addFlashAttribute("error", "Thanh toán không tồn tại: " + e.getMessage());
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Lỗi khi xoá thanh toán: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Lỗi server: " + e.getMessage());
         }
-        return "redirect:/payments"; // quay lại danh sách thanh toán
+        return "redirect:/payments/view-payments?page=" + page +
+                "&size=" + size +
+                "&sortField=" + sortField +
+                "&sortDir=" + sortDir +
+                (orderId != null ? "&orderId=" + orderId : "") +
+                (paymentDate != null ? "&paymentDate=" + paymentDate : "");
     }
-    @GetMapping("/search")
-    public String searchPayments(@RequestParam("keyword") String keyword, Model model) {
-        List<Payment> payments = paymentService.searchPayments(keyword);
-        model.addAttribute("payments", payments);
-        model.addAttribute("keyword", keyword);
-        return "payment/list"; // hiển thị lại danh sách thanh toán (với kết quả đã lọc)
-    }
-
-
 }

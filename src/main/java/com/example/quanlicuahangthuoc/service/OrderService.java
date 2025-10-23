@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 @Service
@@ -77,5 +80,31 @@ public class OrderService {
             throw new NoSuchElementException("Không tìm thấy đơn hàng với ID: " + order.getId());
         }
         return orderRepository.save(order);
+    }
+    @Transactional(readOnly = true)
+    public long countOrdersInPeriod(LocalDate startDate, LocalDate endDate) {
+        return orderRepository.countByOrderDateBetween(startDate, endDate);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Order.OrderStatus, Long> getOrderStatusCount(LocalDate startDate, LocalDate endDate) {
+        Map<Order.OrderStatus, Long> result = new HashMap<>();
+        for (Order.OrderStatus status : Order.OrderStatus.values()) {
+            long count = orderRepository.countByStatusAndOrderDateBetween(status, startDate, endDate);
+            result.put(status, count);
+        }
+        return result;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Long> getCustomersByMonth(LocalDate startDate) {
+        List<Object[]> results = orderRepository.countCustomersByMonth(startDate);
+        Map<String, Long> customersByMonth = new HashMap<>();
+        for (Object[] result : results) {
+            String month = (String) result[0];
+            Long count = ((Number) result[1]).longValue();
+            customersByMonth.put(month, count);
+        }
+        return customersByMonth;
     }
 }

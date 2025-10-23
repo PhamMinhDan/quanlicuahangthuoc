@@ -6,111 +6,102 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.transaction.Transactional;
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 @Service
 public class PaymentService {
 
-    private final PaymentRepository paymentRepository;
-
     @Autowired
-    public PaymentService(PaymentRepository paymentRepository) {
-        this.paymentRepository = paymentRepository;
+    private PaymentRepository paymentRepository;
+
+    public Page<Payment> getPaymentsPaged(Integer orderId, LocalDate paymentDate, int page, int size, String sortField, String sortDir) {
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC, sortField);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return paymentRepository.findByFilters(orderId, paymentDate, pageable);
     }
 
-    /**
-     * Lấy danh sách tất cả thanh toán từ database.
-     */
-    @Transactional
-    public List<Payment> getAllPayments() {
-        try {
-            return paymentRepository.findAllWithOrderAndCustomer();
-        } catch (Exception e) {
-            System.err.println("Error fetching payments: " + e.getMessage());
-            return List.of();
-        }
-    }
-
-    /**
-     * Lấy thông tin thanh toán theo ID.
-     */
     @Transactional
     public Payment getPaymentById(Integer id) {
-        try {
-            return paymentRepository.findByIdWithOrderAndCustomer(id);
-        } catch (Exception e) {
-            System.err.println("Error fetching payment by id: " + e.getMessage());
-            return null;
-        }
+        return paymentRepository.findByIdWithOrderAndCustomer(id)
+                .orElseThrow(() -> new NoSuchElementException("Không tìm thấy thanh toán với ID: " + id));
     }
-    /**
-     * Lấy danh sách thanh toán có sắp xếp.
-     * @param sortField  Trường cần sắp xếp (ví dụ: "paymentDate" hoặc "amount")
-     * @param sortDir    Chiều sắp xếp ("asc" hoặc "desc")
-     */
-    @Transactional
-    public List<Payment> getAllPaymentsSorted(String sortField, String sortDir) {
-        try {
-            // Tạo đối tượng Sort theo trường và chiều được chọn
-            org.springframework.data.domain.Sort sort =
-                    sortDir.equalsIgnoreCase("asc")
-                            ? org.springframework.data.domain.Sort.by(sortField).ascending()
-                            : org.springframework.data.domain.Sort.by(sortField).descending();
 
-            // Giả sử repository có sẵn phương thức findAll(Sort sort)
-            return paymentRepository.findAll(sort);
-        } catch (Exception e) {
-            System.err.println("Error sorting payments: " + e.getMessage());
-            return List.of();
-        }
-    }
-    public Page<Payment> getPaymentsPaged(int pageNo, int pageSize) {
-        Pageable pageable = PageRequest.of(pageNo - 1, pageSize);
-        return paymentRepository.findAll(pageable);
-    }
     @Transactional
     public void savePayment(Payment payment) {
-        try {
-            paymentRepository.save(payment);
-        } catch (Exception e) {
-            System.err.println("Error saving payment: " + e.getMessage());
-        }
+        paymentRepository.save(payment);
     }
+
     @Transactional
     public void updatePayment(Integer id, Payment updatedPayment) {
-        Payment existingPayment = paymentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thanh toán với ID: " + id));
-
+        Payment existingPayment = getPaymentById(id);
+        existingPayment.setOrder(updatedPayment.getOrder());
+        existingPayment.setPaymentMethod(updatedPayment.getPaymentMethod());
         existingPayment.setAmount(updatedPayment.getAmount());
+        existingPayment.setChange(updatedPayment.getChange());
         existingPayment.setPaymentDate(updatedPayment.getPaymentDate());
-
-        if (updatedPayment.getOrder() != null) {
-            existingPayment.setOrder(updatedPayment.getOrder());
-        }
-        if (updatedPayment.getOrder() != null) {
-            existingPayment.setOrder(updatedPayment.getOrder());
-        }
-
         paymentRepository.save(existingPayment);
     }
+
     @Transactional
     public void deletePayment(Integer id) {
-        if (paymentRepository.existsById(id)) {
-            paymentRepository.deleteById(id);
-            System.out.println("Đã xoá thanh toán có ID: " + id);
-        } else {
-            System.err.println("Không tìm thấy thanh toán với ID: " + id);
+        if (!paymentRepository.existsById(id)) {
+            throw new NoSuchElementException("Không tìm thấy thanh toán với ID: " + id);
         }
-    }
-    public List<Payment> searchPayments(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return paymentRepository.findAll();
-        }
-        return paymentRepository.findByKeyword(keyword.trim());
+        paymentRepository.deleteById(id);
     }
 
+    public long getTotalPayments() {
+        return paymentRepository.countPayments();
+    }
 
+    public Double getTotalAmount() {
+        return paymentRepository.sumTotalAmount();
+    }
+
+    public long getTotalCashPayments() {
+        return paymentRepository.countCashPayments();
+    }
+
+    public long getTotalTransferPayments() {
+        return paymentRepository.countTransferPayments();
+    }
+
+    @Transactional(readOnly = true)
+    public Double getTotalAmountInPeriod(LocalDate startDate, LocalDate endDate) {
+        return paymentRepository.findByPaymentDateBetween(startDate, endDate)
+                .stream()
+                .map(payment -> payment.getAmount() != null ? payment.getAmount().doubleValue() : 0.0)
+                .mapToDouble(Double::doubleValue)
+                .sum();
+    }
+
+    @Transactional(readOnly = true)
+    public long getTotalCashPaymentsInPeriod(LocalDate startDate, LocalDate endDate) {
+        return paymentRepository.countByPaymentMethodAndPaymentDateBetween(Payment.PaymentMethod.tien_mat, startDate, endDate);
+    }
+
+    @Transactional(readOnly = true)
+    public long getTotalTransferPaymentsInPeriod(LocalDate startDate, LocalDate endDate) {
+        return paymentRepository.countByPaymentMethodAndPaymentDateBetween(Payment.PaymentMethod.chuyen_khoan, startDate, endDate);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Double> getRevenueByMonth(LocalDate startDate) {
+        List<Object[]> results = paymentRepository.findRevenueByMonth(startDate);
+        Map<String, Double> revenueByMonth = new HashMap<>();
+        for (Object[] result : results) {
+            String month = (String) result[0];
+            Double amount = ((Number) result[1]).doubleValue();
+            revenueByMonth.put(month, amount);
+        }
+        return revenueByMonth;
+    }
 }

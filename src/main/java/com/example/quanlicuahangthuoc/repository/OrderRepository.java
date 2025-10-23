@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -26,4 +27,13 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             Pageable pageable);
     @Query("SELECT COUNT(o) FROM Order o")
     long countOrders();
+    @Query("SELECT FUNCTION('DATE_FORMAT', o.orderDate, '%Y-%m'), COUNT(DISTINCT o.customer.id) " +
+            "FROM Order o " +
+            "WHERE o.orderDate >= :startDate " +
+            "GROUP BY FUNCTION('DATE_FORMAT', o.orderDate, '%Y-%m')")
+    List<Object[]> countCustomersByMonth(@Param("startDate") LocalDate startDate);
+
+    long countByStatusAndOrderDateBetween(Order.OrderStatus status, LocalDate startDate, LocalDate endDate);
+
+    long countByOrderDateBetween(LocalDate startDate, LocalDate endDate);
 }

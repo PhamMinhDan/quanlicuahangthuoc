@@ -2,6 +2,7 @@
     --primary-color: #33CCFF; /* Xanh dương nhạt */
     --secondary-color: #80df6a; /* Xanh Lá Tươi (Teal/Emerald) */
     --accent-orange: #f58536; /* Cam Cảnh báo */
+    --accent-yellow: #FFC107; /* Vàng cho Thanh Toán Chuyển Khoản */
     --light-purple-bg: #E6F7FF; /* Nền sidebar active, tông xanh nhạt */
 }
 
@@ -75,19 +76,19 @@ body {
 }
 
 .summary-card-1 {
-    background: var(--primary-color); /* Loại bỏ gradient, dùng màu xanh dương nhạt */
+    background: var(--primary-color); /* Xanh dương nhạt */
 }
 
 .summary-card-2 {
-    background: var(--secondary-color); /* Loại bỏ gradient, dùng màu xanh lá */
+    background: var(--secondary-color); /* Xanh lá */
 }
 
 .summary-card-3 {
-    background: var(--accent-orange); /* Loại bỏ gradient, dùng màu cam */
+    background: var(--accent-orange); /* Cam */
 }
 
 .summary-card-4 {
-    background: var(--accent-yellow); /* Loại bỏ gradient, dùng màu vàng */
+    background: var(--accent-yellow); /* Vàng */
 }
 
 /* ================== FILTERS & TABLE ================== */
