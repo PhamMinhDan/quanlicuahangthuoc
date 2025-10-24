@@ -7,53 +7,22 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" th:href="@{/medicine.css}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
 <div class="d-flex">
   <div th:replace="~{sidebar :: sidebar}"></div>
 
-  <div class="flex-grow-1 bg-light p-4">
+  <div class="main-content flex-grow-1 bg-light p-4">
     <div class="container-fluid">
       <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
       <div th:if="${message != null}" class="alert alert-success" th:text="${message}"></div>
 
-      <div class="row g-4 mb-4 justify-content-center">
-        <div class="col-md-3">
-          <div class="summary-card summary-card-1">
-            <div class="position-relative z-10 text-center">
-              <div class="text-sm opacity-80 mb-2">Tổng Số Thanh Toán</div>
-              <div class="text-3xl font-bold" th:text="${totalPayments != null ? totalPayments : 0}"></div>
-            </div>
-            <i class="bi bi-wallet-fill position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="summary-card summary-card-2">
-            <div class="position-relative z-10 text-center">
-              <div class="text-sm opacity-80 mb-2">Tổng Tiền</div>
-              <div class="text-3xl font-bold" th:text="${totalAmount != null ? #numbers.formatDecimal(totalAmount, 0, 2, 'COMMA') + ' VNĐ' : '0 VNĐ'}"></div>
-            </div>
-            <i class="bi bi-currency-bitcoin position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="summary-card summary-card-3">
-            <div class="position-relative z-10 text-center">
-              <div class="text-sm opacity-80 mb-2">Thanh Toán Tiền Mặt</div>
-              <div class="text-3xl font-bold" th:text="${totalCashPayments != null ? totalCashPayments : 0}"></div>
-            </div>
-            <i class="bi bi-cash position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="summary-card summary-card-4">
-            <div class="position-relative z-10 text-center">
-              <div class="text-sm opacity-80 mb-2">Thanh Toán Chuyển Khoản</div>
-              <div class="text-3xl font-bold" th:text="${totalTransferPayments != null ? totalTransferPayments : 0}"></div>
-            </div>
-            <i class="bi bi-bank position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
-          </div>
-        </div>
+      <!-- Tiêu đề trang -->
+      <div class="mb-4">
+        <h1 class="display-6 fw-bold text-primary">
+          <i class="bi bi-credit-card"></i> DANH SÁCH THANH TOÁN
+        </h1>
       </div>
 
       <div class="filter-panel mb-4">
@@ -63,19 +32,24 @@
         </div>
         <form th:action="@{/payments/view-payments}" method="get">
           <div class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label class="form-label">Mã đơn</label>
               <input type="number" class="form-control" id="orderId" name="orderId" th:value="${orderId}" placeholder="Mã đơn" min="1">
             </div>
-            <div class="col-md-4">
-              <label class="form-label">Ngày thanh toán</label>
-              <input type="date" class="form-control" id="paymentDate" name="paymentDate" th:value="${paymentDate}">
+            <div class="col-md-3">
+              <label class="form-label">Từ ngày</label>
+              <input type="text" class="form-control" id="fromDate" name="fromDate" th:value="${fromDate}" placeholder="dd/MM/yyyy">
             </div>
-            <div class="col-md-4 d-flex align-items-end gap-2">
+            <div class="col-md-3">
+              <label class="form-label">Đến ngày</label>
+              <input type="text" class="form-control" id="toDate" name="toDate" th:value="${toDate}" placeholder="dd/MM/yyyy">
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2">
               <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
                 <i class="bi bi-search"></i> Lọc
               </button>
-              <button class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
+              <button th:if="${orderId != null or (fromDate != null and fromDate != '') or (toDate != null and toDate != '')}" 
+                      class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
                 <i class="bi bi-x"></i> Xóa Lọc
               </button>
             </div>
@@ -84,62 +58,50 @@
       </div>
 
       <div class="table-container">
-        <div class="p-4 d-flex justify-content-between align-items-center border-bottom">
-          <h2 class="h4">Danh Sách Thanh Toán</h2>
-          <div class="d-flex gap-2">
-            <div class="dropdown">
-              <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                Sắp xếp
-              </button>
-              <ul class="dropdown-menu" aria-labelledby="sortDropdown">
-                <li><a class="dropdown-item" th:href="@{/payments/view-payments(page=${currentPage}, size=${pageSize}, sortField='paymentDate', sortDir='asc', orderId=${orderId}, paymentDate=${paymentDate})}">Ngày thanh toán tăng dần</a></li>
-                <li><a class="dropdown-item" th:href="@{/payments/view-payments(page=${currentPage}, size=${pageSize}, sortField='paymentDate', sortDir='desc', orderId=${orderId}, paymentDate=${paymentDate})}">Ngày thanh toán giảm dần</a></li>
-                <li><a class="dropdown-item" th:href="@{/payments/view-payments(page=${currentPage}, size=${pageSize}, sortField='amount', sortDir='asc', orderId=${orderId}, paymentDate=${paymentDate})}">Số tiền tăng dần</a></li>
-                <li><a class="dropdown-item" th:href="@{/payments/view-payments(page=${currentPage}, size=${pageSize}, sortField='amount', sortDir='desc', orderId=${orderId}, paymentDate=${paymentDate})}">Số tiền giảm dần</a></li>
-              </ul>
-            </div>
-            <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/payments/new}">
-              <i class="bi bi-plus"></i> Thêm mới thanh toán
-            </a>
+        <div class="p-2 d-flex justify-content-between align-items-center border-bottom">
+          <div class="text-muted fs-5" th:if="${payments != null}">
+            <i class="bi bi-credit-card"></i>
+            <span class="fw-bold" th:text="${#lists.size(payments)}">0</span>
+            <span>/</span>
+            <span class="fw-bold" th:text="${totalItems}">0</span>
+            <span>thanh toán</span>
           </div>
+          <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/payments/new}">
+            <i class="bi bi-plus"></i> Thêm mới thanh toán
+          </a>
         </div>
         <div class="table-responsive">
           <table class="table table-hover">
             <thead>
             <tr>
-              <th>
-                ID
-                <a th:href="@{/payments/view-payments(page=${currentPage}, size=${pageSize}, sortField='id', sortDir=${sortField == 'id' and sortDir == 'asc' ? 'desc' : 'asc'}, orderId=${orderId}, paymentDate=${paymentDate})}">
-                  <i th:class="${sortField == 'id'} ? (${sortDir == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
-                </a>
-              </th>
-              <th>Mã đơn</th>
-              <th>Phương thức</th>
-              <th>
+              <th style="white-space: nowrap;">STT</th>
+              <th style="white-space: nowrap;">Mã đơn</th>
+              <th style="white-space: nowrap;">Phương thức</th>
+              <th style="white-space: nowrap;">
                 Số tiền
                 <a th:href="@{/payments/view-payments(page=${currentPage}, size=${pageSize}, sortField='amount', sortDir=${sortField == 'amount' and sortDir == 'asc' ? 'desc' : 'asc'}, orderId=${orderId}, paymentDate=${paymentDate})}">
                   <i th:class="${sortField == 'amount'} ? (${sortDir == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                 </a>
               </th>
-              <th>Tiền thừa</th>
-              <th>
+              <th style="white-space: nowrap;">Tiền thừa</th>
+              <th style="white-space: nowrap;">
                 Ngày TT
                 <a th:href="@{/payments/view-payments(page=${currentPage}, size=${pageSize}, sortField='paymentDate', sortDir=${sortField == 'paymentDate' and sortDir == 'asc' ? 'desc' : 'asc'}, orderId=${orderId}, paymentDate=${paymentDate})}">
                   <i th:class="${sortField == 'paymentDate'} ? (${sortDir == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                 </a>
               </th>
-              <th>Hành động</th>
+              <th style="white-space: nowrap;">Hành động</th>
             </tr>
             </thead>
             <tbody>
-            <tr th:each="payment : ${payments}">
-              <td th:text="${payment.id}"></td>
-              <td th:text="${payment.order != null ? payment.order.id : 'N/A'}"></td>
-              <td th:text="${payment.paymentMethod != null ? payment.paymentMethod.displayName : 'N/A'}"></td>
-              <td th:text="${payment.amount != null ? #numbers.formatDecimal(payment.amount, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
-              <td th:text="${payment.change != null ? #numbers.formatDecimal(payment.change, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
-              <td th:text="${payment.paymentDate != null ? #temporals.format(payment.paymentDate, 'dd/MM/yyyy') : 'N/A'}"></td>
-              <td>
+            <tr th:each="payment, iterStat : ${payments}">
+              <td style="white-space: nowrap;" th:text="${currentPage * pageSize + iterStat.index + 1}"></td>
+              <td style="white-space: nowrap;" th:text="${payment.order != null ? payment.order.id : 'N/A'}"></td>
+              <td style="white-space: nowrap;" th:text="${payment.paymentMethod != null ? payment.paymentMethod.displayName : 'N/A'}"></td>
+              <td style="white-space: nowrap;" th:text="${payment.amount != null ? #numbers.formatDecimal(payment.amount, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
+              <td style="white-space: nowrap;" th:text="${payment.change != null ? #numbers.formatDecimal(payment.change, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
+              <td style="white-space: nowrap;" th:text="${payment.paymentDate != null ? #temporals.format(payment.paymentDate, 'dd/MM/yyyy') : 'N/A'}"></td>
+              <td style="white-space: nowrap;">
                 <div class="d-flex gap-2">
                   <a class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/payments/edit/{id}(id=${payment.id}, page=${currentPage}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}">
                     <i class="bi bi-pencil"></i>
@@ -159,29 +121,71 @@
         <div class="p-3 d-flex justify-content-center border-top" th:if="${totalPages > 1}">
           <nav aria-label="Phân trang danh sách thanh toán">
             <ul class="pagination mb-0">
+              <!-- First page button -->
               <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${currentPage - 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}" aria-label="Previous">
+                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=0, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}" aria-label="First">
+                  <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+              </li>
+              
+              <!-- Previous button (circular) -->
+              <li class="page-item">
+                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${currentPage == 0 ? totalPages - 1 : currentPage - 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}" aria-label="Previous">
                   <span aria-hidden="true">&laquo;</span>
                 </a>
               </li>
-              <li class="page-item" th:if="${currentPage > 2}">
+              
+              <!-- Trang 1 -->
+              <li class="page-item" th:classappend="${currentPage == 0} ? 'active'">
                 <a class="page-link text-dark" th:href="@{/payments/view-payments(page=0, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}">1</a>
               </li>
-              <li class="page-item disabled" th:if="${currentPage > 3}">
+              
+              <!-- Trang 2 -->
+              <li class="page-item" th:if="${totalPages > 2}" th:classappend="${currentPage == 1} ? 'active'">
+                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=1, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}">2</a>
+              </li>
+              
+              <!-- Dấu ... sau trang 2 -->
+              <li class="page-item disabled" th:if="${currentPage > 3 and totalPages > 4}">
                 <span class="page-link text-dark">...</span>
               </li>
-              <li class="page-item" th:each="i : ${#numbers.sequence(currentPage - 2 > 0 ? currentPage - 2 : 0, currentPage + 2 < totalPages - 1 ? currentPage + 2 : totalPages - 1)}">
-                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${i}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}" th:classappend="${i == currentPage} ? 'active'" th:text="${i + 1}"></a>
+              
+              <!-- Trang currentPage-1 -->
+              <li class="page-item" th:if="${currentPage > 2 and currentPage < totalPages - 1}">
+                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${currentPage - 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}" th:text="${currentPage}"></a>
               </li>
-              <li class="page-item disabled" th:if="${currentPage < totalPages - 4}">
+              
+              <!-- Trang hiện tại -->
+              <li class="page-item active" th:if="${currentPage > 1 and currentPage < totalPages - 1}">
+                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${currentPage}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}" th:text="${currentPage + 1}"></a>
+              </li>
+              
+              <!-- Trang currentPage+1 -->
+              <li class="page-item" th:if="${currentPage >= 1 and currentPage < totalPages - 2}">
+                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${currentPage + 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}" th:text="${currentPage + 2}"></a>
+              </li>
+              
+              <!-- Dấu ... trước trang cuối -->
+              <li class="page-item disabled" th:if="${currentPage < totalPages - 4 and totalPages > 4}">
                 <span class="page-link text-dark">...</span>
               </li>
-              <li class="page-item" th:if="${currentPage < totalPages - 3}">
+              
+              <!-- Trang cuối -->
+              <li class="page-item" th:if="${totalPages > 1}" th:classappend="${currentPage == totalPages - 1} ? 'active'">
                 <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${totalPages - 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}" th:text="${totalPages}"></a>
               </li>
-              <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
-                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${currentPage + 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}" aria-label="Next">
+              
+              <!-- Next button (circular) -->
+              <li class="page-item">
+                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${currentPage == totalPages - 1 ? 0 : currentPage + 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}" aria-label="Next">
                   <span aria-hidden="true">&raquo;</span>
+                </a>
+              </li>
+              
+              <!-- Last page button -->
+              <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${totalPages - 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}" aria-label="Last">
+                  <span aria-hidden="true">&raquo;&raquo;</span>
                 </a>
               </li>
             </ul>
@@ -193,8 +197,22 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
 <script th:inline="javascript">
   document.addEventListener('DOMContentLoaded', () => {
+    // Khởi tạo Flatpickr cho khoảng thời gian
+    flatpickr("#fromDate", {
+      dateFormat: "d/m/Y",
+      locale: "vn",
+      allowInput: true
+    });
+    
+    flatpickr("#toDate", {
+      dateFormat: "d/m/Y",
+      locale: "vn",
+      allowInput: true
+    });
     const navLinks = document.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
       link.addEventListener('click', (e) => {
@@ -206,8 +224,6 @@
     });
 
     document.getElementById('clearFilters').addEventListener('click', () => {
-      document.getElementById('orderId').value = '';
-      document.getElementById('paymentDate').value = '';
       window.location.href = '/payments/view-payments';
     });
 
@@ -216,7 +232,8 @@
     const sortField = [[${sortField}]];
     const sortDir = [[${sortDir}]];
     const orderId = [[${orderId}]] || '';
-    const paymentDate = [[${paymentDate}]] || '';
+    const fromDate = [[${fromDate}]] || '';
+    const toDate = [[${toDate}]] || '';
 
     window.deletePayment = function(id) {
       if (confirm('Bạn có chắc muốn xóa thanh toán này?')) {
@@ -229,7 +246,8 @@
             sortField: sortField,
             sortDir: sortDir,
             orderId: orderId,
-            paymentDate: paymentDate
+            fromDate: fromDate,
+            toDate: toDate
           })
         })
                 .then(response => {
@@ -244,5 +262,6 @@
     };
   });
 </script>
+<div th:replace="~{footer :: footer}"></div>
 </body>
 </html>

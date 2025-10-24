@@ -12,39 +12,16 @@
 <div class="d-flex">
     <div th:replace="~{sidebar :: sidebar}"></div>
 
-    <div class="flex-grow-1 bg-light p-4">
+    <div class="main-content flex-grow-1 bg-light p-4">
         <div class="container-fluid">
             <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
             <div th:if="${message != null}" class="alert alert-success" th:text="${message}"></div>
 
-            <div class="row g-4 mb-4 justify-content-center">
-                <div class="col-md-4">
-                    <div class="summary-card summary-card-1">
-                        <div class="position-relative z-10 text-center">
-                            <div class="text-sm opacity-80 mb-2">Tổng Số Nhân Viên</div>
-                            <div class="text-3xl font-bold" th:text="${totalStaff != null ? totalStaff : 0}"></div>
-                        </div>
-                        <i class="bi bi-person-fill position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="summary-card summary-card-2">
-                        <div class="position-relative z-10 text-center">
-                            <div class="text-sm opacity-80 mb-2">Tổng Quản Lý</div>
-                            <div class="text-3xl font-bold" th:text="${totalManagers != null ? totalManagers : 0}"></div>
-                        </div>
-                        <i class="bi bi-person-badge position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="summary-card summary-card-3">
-                        <div class="position-relative z-10 text-center">
-                            <div class="text-sm opacity-80 mb-2">Tổng Nhân Viên</div>
-                            <div class="text-3xl font-bold" th:text="${totalStaff != null && totalManagers != null ? totalStaff - totalManagers : 0}"></div>
-                        </div>
-                        <i class="bi bi-people position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
-                    </div>
-                </div>
+            <!-- Tiêu đề trang -->
+            <div class="mb-4">
+                <h1 class="display-6 fw-bold text-primary">
+                    <i class="bi bi-person-badge"></i> DANH SÁCH NHÂN VIÊN
+                </h1>
             </div>
 
             <div class="filter-panel mb-4">
@@ -54,11 +31,11 @@
                 </div>
                 <form th:action="@{/api/staff/view-staff}" method="get">
                     <div class="row g-3">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label">Tên nhân viên</label>
                             <input type="text" class="form-control" id="searchName" name="name" th:value="${name}" placeholder="Tên nhân viên">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label">Chức vụ</label>
                             <select class="form-select" id="searchRole" name="role">
                                 <option value="">Tất cả chức vụ</option>
@@ -66,11 +43,12 @@
                                 <option value="nhan_vien" th:selected="${role == 'nhan_vien'}">Nhân viên</option>
                             </select>
                         </div>
-                        <div class="col-md-6 d-flex align-items-end gap-2">
+                        <div class="col-md-4 d-flex align-items-end gap-2">
                             <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
                                 <i class="bi bi-search"></i> Lọc
                             </button>
-                            <button class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
+                            <button th:if="${name != null and name != '' or role != null and role != ''}" 
+                                    class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
                                 <i class="bi bi-x"></i> Xóa Lọc
                             </button>
                         </div>
@@ -79,59 +57,52 @@
             </div>
 
             <div class="table-container">
-                <div class="p-4 d-flex justify-content-between align-items-center border-bottom">
-                    <h2 class="h4">Danh sách nhân viên</h2>
-                    <div class="d-flex gap-2">
-                        <div class="dropdown">
-                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                Sắp xếp
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="sortDropdown">
-                                <li><a class="dropdown-item" th:href="@{/api/staff/view-staff(page=${currentPage}, size=${pageSize}, sortBy='name', sortDirection='asc', name=${name}, role=${role})}">Tên A-Z</a></li>
-                                <li><a class="dropdown-item" th:href="@{/api/staff/view-staff(page=${currentPage}, size=${pageSize}, sortBy='name', sortDirection='desc', name=${name}, role=${role})}">Tên Z-A</a></li>
-                                <li><a class="dropdown-item" th:href="@{/api/staff/view-staff(page=${currentPage}, size=${pageSize}, sortBy='salary', sortDirection='asc', name=${name}, role=${role})}">Lương từ bé đến lớn</a></li>
-                                <li><a class="dropdown-item" th:href="@{/api/staff/view-staff(page=${currentPage}, size=${pageSize}, sortBy='salary', sortDirection='desc', name=${name}, role=${role})}">Lương từ lớn đến bé</a></li>
-                            </ul>
-                        </div>
-                        <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/api/staff/add}">
-                            <i class="bi bi-plus"></i> Thêm nhân viên mới
-                        </a>
+                <div class="p-2 d-flex justify-content-between align-items-center border-bottom">
+                    <div class="text-muted fs-5" th:if="${staffs != null}">
+                        <i class="bi bi-person-badge"></i>
+                        <span class="fw-bold" th:text="${#lists.size(staffs)}">0</span>
+                        <span>/</span>
+                        <span class="fw-bold" th:text="${totalItems}">0</span>
+                        <span>nhân viên</span>
                     </div>
+                    <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/api/staff/add}">
+                        <i class="bi bi-plus"></i> Thêm nhân viên mới
+                    </a>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>
+                            <th style="white-space: nowrap;">STT</th>
+                            <th style="white-space: nowrap;">
                                 Tên
                                 <a th:href="@{/api/staff/view-staff(page=${currentPage}, size=${pageSize}, sortBy='name', sortDirection=${sortBy == 'name' and sortDirection == 'asc' ? 'desc' : 'asc'}, name=${name}, role=${role})}">
                                     <i th:class="${sortBy == 'name'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                                 </a>
                             </th>
-                            <th>Email</th>
-                            <th>SĐT</th>
-                            <th>Chức vụ</th>
-                            <th>Ca làm việc</th>
-                            <th>
+                            <th style="white-space: nowrap;">Email</th>
+                            <th style="white-space: nowrap;">SĐT</th>
+                            <th style="white-space: nowrap;">Chức vụ</th>
+                            <th style="white-space: nowrap;">Ca làm việc</th>
+                            <th style="white-space: nowrap;">
                                 Lương
                                 <a th:href="@{/api/staff/view-staff(page=${currentPage}, size=${pageSize}, sortBy='salary', sortDirection=${sortBy == 'salary' and sortDirection == 'asc' ? 'desc' : 'asc'}, name=${name}, role=${role})}">
                                     <i th:class="${sortBy == 'salary'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                                 </a>
                             </th>
-                            <th>Hành động</th>
+                            <th style="white-space: nowrap;">Hành động</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:each="staff : ${staffs}">
-                            <td th:text="${staff.id}"></td>
-                            <td th:text="${staff.name}"></td>
-                            <td th:text="${staff.email}"></td>
-                            <td th:text="${staff.phone}"></td>
-                            <td th:text="${staff.role != null ? staff.role.displayName : 'N/A'}"></td>
-                            <td th:text="${staff.workShift != null ? staff.workShift.displayName : 'N/A'}"></td>
-                            <td th:text="${staff.salary != null ? #numbers.formatDecimal(staff.salary, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
-                            <td>
+                        <tr th:each="staff, iterStat : ${staffs}">
+                            <td style="white-space: nowrap;" th:text="${currentPage * pageSize + iterStat.index + 1}"></td>
+                            <td style="white-space: nowrap;" th:text="${staff.name}"></td>
+                            <td style="white-space: nowrap;" th:text="${staff.email}"></td>
+                            <td style="white-space: nowrap;" th:text="${staff.phone}"></td>
+                            <td style="white-space: nowrap;" th:text="${staff.role != null ? staff.role.displayName : 'N/A'}"></td>
+                            <td style="white-space: nowrap;" th:text="${staff.workShift != null ? staff.workShift.displayName : 'N/A'}"></td>
+                            <td style="white-space: nowrap;" th:text="${staff.salary != null ? #numbers.formatDecimal(staff.salary, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
+                            <td style="white-space: nowrap;">
                                 <div class="d-flex gap-2">
                                     <a class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/api/staff/edit/{id}(id=${staff.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}"><i class="bi bi-pencil"></i></a>
                                     <button class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deleteStaff(' + ${staff.id} + ')'"><i class="bi bi-trash"></i></button>
@@ -147,29 +118,71 @@
                 <div class="p-3 d-flex justify-content-center border-top" th:if="${totalPages > 1}">
                     <nav aria-label="Phân trang danh sách nhân viên">
                         <ul class="pagination mb-0">
+                            <!-- First page button -->
                             <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                                <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" aria-label="Previous">
+                                <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=0, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" aria-label="First">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            
+                            <!-- Previous button (circular) -->
+                            <li class="page-item">
+                                <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${currentPage == 0 ? totalPages - 1 : currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" aria-label="Previous">
                                     <span aria-hidden="true">&laquo;</span>
                                 </a>
                             </li>
-                            <li class="page-item" th:if="${currentPage > 2}">
+                            
+                            <!-- Trang 1 -->
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'active'">
                                 <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=0, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}">1</a>
                             </li>
-                            <li class="page-item disabled" th:if="${currentPage > 3}">
+                            
+                            <!-- Trang 2 -->
+                            <li class="page-item" th:if="${totalPages > 2}" th:classappend="${currentPage == 1} ? 'active'">
+                                <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=1, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}">2</a>
+                            </li>
+                            
+                            <!-- Dấu ... sau trang 2 -->
+                            <li class="page-item disabled" th:if="${currentPage > 3 and totalPages > 4}">
                                 <span class="page-link text-dark">...</span>
                             </li>
-                            <li class="page-item" th:each="i : ${#numbers.sequence(currentPage - 2 > 0 ? currentPage - 2 : 0, currentPage + 2 < totalPages - 1 ? currentPage + 2 : totalPages - 1)}">
-                                <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${i}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" th:classappend="${i == currentPage} ? 'active'" th:text="${i + 1}"></a>
+                            
+                            <!-- Trang currentPage-1 -->
+                            <li class="page-item" th:if="${currentPage > 2 and currentPage < totalPages - 1}">
+                                <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" th:text="${currentPage}"></a>
                             </li>
-                            <li class="page-item disabled" th:if="${currentPage < totalPages - 4}">
+                            
+                            <!-- Trang hiện tại -->
+                            <li class="page-item active" th:if="${currentPage > 1 and currentPage < totalPages - 1}">
+                                <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" th:text="${currentPage + 1}"></a>
+                            </li>
+                            
+                            <!-- Trang currentPage+1 -->
+                            <li class="page-item" th:if="${currentPage >= 1 and currentPage < totalPages - 2}">
+                                <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" th:text="${currentPage + 2}"></a>
+                            </li>
+                            
+                            <!-- Dấu ... trước trang cuối -->
+                            <li class="page-item disabled" th:if="${currentPage < totalPages - 4 and totalPages > 4}">
                                 <span class="page-link text-dark">...</span>
                             </li>
-                            <li class="page-item" th:if="${currentPage < totalPages - 3}">
+                            
+                            <!-- Trang cuối -->
+                            <li class="page-item" th:if="${totalPages > 1}" th:classappend="${currentPage == totalPages - 1} ? 'active'">
                                 <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" th:text="${totalPages}"></a>
                             </li>
-                            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
-                                <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" aria-label="Next">
+                            
+                            <!-- Next button (circular) -->
+                            <li class="page-item">
+                                <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${currentPage == totalPages - 1 ? 0 : currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" aria-label="Next">
                                     <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            
+                            <!-- Last page button -->
+                            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                                <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" aria-label="Last">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
                                 </a>
                             </li>
                         </ul>
@@ -232,5 +245,6 @@
         };
     });
 </script>
+<div th:replace="~{footer :: footer}"></div>
 </body>
 </html>

@@ -19,17 +19,8 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 @Entity
 @Table(name = "customer")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class Customer {
 
     @Id
@@ -40,6 +31,9 @@ public class Customer {
     @NotBlank(message = "Name cannot be empty")
     @Size(max = 255, message = "The name must not exceed 255 characters")
     private String name;
+    
+    @Column(name = "last_name")
+    private String lastName; // Tên riêng để sắp xếp
 
     @Column(nullable = false)
     @NotBlank(message = "Phone cannot be empty")
@@ -65,6 +59,10 @@ public class Customer {
     @JsonManagedReference
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<Order> orders = new HashSet<>();
+
+    // Constructor
+    public Customer() {
+    }
 
      public enum CustomerType {
     vang_lai("Vãng lai"),
@@ -95,6 +93,19 @@ public class Customer {
 
     public void setName(String name) {
         this.name = name;
+        // Tự động tách tên cuối (tên riêng)
+        if (name != null && !name.trim().isEmpty()) {
+            String[] parts = name.trim().split("\\s+");
+            this.lastName = parts[parts.length - 1]; // Lấy phần tên cuối
+        }
+    }
+    
+    public String getLastName() {
+        return lastName;
+    }
+    
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getPhone() {

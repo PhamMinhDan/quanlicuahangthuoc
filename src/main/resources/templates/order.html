@@ -7,26 +7,22 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/medicine.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
 <div class="d-flex">
     <div th:replace="~{sidebar :: sidebar}"></div>
 
-    <div class="flex-grow-1 bg-light p-4">
+    <div class="main-content flex-grow-1 bg-light p-4">
         <div class="container-fluid">
             <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
             <div th:if="${message != null}" class="alert alert-success" th:text="${message}"></div>
 
-            <div class="row g-4 mb-4 justify-content-center">
-                <div class="col-md-4">
-                    <div class="summary-card summary-card-1">
-                        <div class="position-relative z-10 text-center">
-                            <div class="text-sm opacity-80 mb-2">Tổng Số Đơn Hàng</div>
-                            <div class="text-3xl font-bold" th:text="${totalOrders != null ? totalOrders : 0}"></div>
-                        </div>
-                        <i class="bi bi-cart-fill position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
-                    </div>
-                </div>
+            <!-- Tiêu đề trang -->
+            <div class="mb-4">
+                <h1 class="display-6 fw-bold text-primary">
+                    <i class="bi bi-cart"></i> DANH SÁCH ĐƠN HÀNG
+                </h1>
             </div>
 
             <div class="filter-panel mb-4">
@@ -36,15 +32,19 @@
                 </div>
                 <form th:action="@{/orders/view-orders}" method="get">
                     <div class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-2">
                             <label class="form-label">Mã khách hàng</label>
-                            <input type="number" class="form-control" id="customerId" name="customerId" th:value="${customerId}" placeholder="Mã khách hàng" min="1">
+                            <input type="number" class="form-control" id="customerId" name="customerId" th:value="${customerId}" placeholder="Mã KH" min="1">
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Ngày đặt hàng</label>
-                            <input type="date" class="form-control" id="orderDate" name="orderDate" th:value="${orderDate}">
+                        <div class="col-md-2">
+                            <label class="form-label">Từ ngày</label>
+                            <input type="text" class="form-control" id="fromDate" name="fromDate" th:value="${fromDate}" placeholder="dd/MM/yyyy">
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-2">
+                            <label class="form-label">Đến ngày</label>
+                            <input type="text" class="form-control" id="toDate" name="toDate" th:value="${toDate}" placeholder="dd/MM/yyyy">
+                        </div>
+                        <div class="col-md-2">
                             <label class="form-label">Trạng thái</label>
                             <select class="form-select" id="status" name="status">
                                 <option value="">Chọn trạng thái</option>
@@ -54,11 +54,12 @@
                                         th:selected="${status == s}"></option>
                             </select>
                         </div>
-                        <div class="col-md-3 d-flex align-items-end gap-2">
+                        <div class="col-md-4 d-flex align-items-end gap-2">
                             <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
                                 <i class="bi bi-search"></i> Lọc
                             </button>
-                            <button class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
+                            <button th:if="${customerId != null or (fromDate != null and fromDate != '') or (toDate != null and toDate != '') or (status != null and status != '')}" 
+                                    class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
                                 <i class="bi bi-x"></i> Xóa Lọc
                             </button>
                         </div>
@@ -67,69 +68,72 @@
             </div>
 
             <div class="table-container">
-                <div class="p-4 d-flex justify-content-between align-items-center border-bottom">
-                    <h2 class="h4">Danh Sách Đơn Hàng</h2>
-                    <div class="d-flex gap-2">
-                        <div class="dropdown">
-                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                Sắp xếp
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="sortDropdown">
-                                <li><a class="dropdown-item" th:href="@{/orders/view-orders(page=${currentPage}, size=${pageSize}, sortBy='orderDate', sortDirection='asc', customerId=${customerId}, orderDate=${orderDate}, status=${status})}">Ngày tăng dần</a></li>
-                                <li><a class="dropdown-item" th:href="@{/orders/view-orders(page=${currentPage}, size=${pageSize}, sortBy='orderDate', sortDirection='desc', customerId=${customerId}, orderDate=${orderDate}, status=${status})}">Ngày giảm dần</a></li>
-                                <li><a class="dropdown-item" th:href="@{/orders/view-orders(page=${currentPage}, size=${pageSize}, sortBy='totalAmount', sortDirection='asc', customerId=${customerId}, orderDate=${orderDate}, status=${status})}">Tổng tiền tăng dần</a></li>
-                                <li><a class="dropdown-item" th:href="@{/orders/view-orders(page=${currentPage}, size=${pageSize}, sortBy='totalAmount', sortDirection='desc', customerId=${customerId}, orderDate=${orderDate}, status=${status})}">Tổng tiền giảm dần</a></li>
-                            </ul>
-                        </div>
-                        <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/orders/add}">
-                            <i class="bi bi-plus"></i> Thêm mới đơn hàng
-                        </a>
+                <div class="p-2 d-flex justify-content-between align-items-center border-bottom">
+                    <div class="text-muted fs-5" th:if="${orders != null}">
+                        <i class="bi bi-cart"></i>
+                        <span class="fw-bold" th:text="${#lists.size(orders)}">0</span>
+                        <span>/</span>
+                        <span class="fw-bold" th:text="${totalItems}">0</span>
+                        <span>đơn hàng</span>
                     </div>
+                    <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/orders/add}">
+                        <i class="bi bi-plus"></i> Thêm mới đơn hàng
+                    </a>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                         <tr>
-                            <th>
-                                ID
-                                <a th:href="@{/orders/view-orders(page=${currentPage}, size=${pageSize}, sortBy='id', sortDirection=${sortBy == 'id' and sortDirection == 'asc' ? 'desc' : 'asc'}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}">
-                                    <i th:class="${sortBy == 'id'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
-                                </a>
-                            </th>
-                            <th>Mã KH</th>
-                            <th>Mã NV</th>
-                            <th>Mã KM</th>
-                            <th>
+                            <th style="white-space: nowrap;">STT</th>
+                            <th style="white-space: nowrap;">Mã KH</th>
+                            <th style="white-space: nowrap;">Mã NV</th>
+                            <th style="white-space: nowrap;">Mã KM</th>
+                            <th style="white-space: nowrap;">
                                 Ngày
                                 <a th:href="@{/orders/view-orders(page=${currentPage}, size=${pageSize}, sortBy='orderDate', sortDirection=${sortBy == 'orderDate' and sortDirection == 'asc' ? 'desc' : 'asc'}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}">
                                     <i th:class="${sortBy == 'orderDate'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                                 </a>
                             </th>
-                            <th>Trạng thái</th>
-                            <th>
+                            <th style="white-space: nowrap;">Trạng thái</th>
+                            <th style="white-space: nowrap;">
                                 Tổng tiền
                                 <a th:href="@{/orders/view-orders(page=${currentPage}, size=${pageSize}, sortBy='totalAmount', sortDirection=${sortBy == 'totalAmount' and sortDirection == 'asc' ? 'desc' : 'asc'}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}">
                                     <i th:class="${sortBy == 'totalAmount'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                                 </a>
                             </th>
-                            <th>Hành động</th>
+                            <th style="white-space: nowrap;">Hành động</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:each="order : ${orders}">
-                            <td th:text="${order.id}"></td>
-                            <td th:text="${order.customer != null ? order.customer.id : 'N/A'}"></td>
-                            <td th:text="${order.staff != null ? order.staff.id : 'N/A'}"></td>
-                            <td th:text="${order.promotion != null ? order.promotion.id : 'N/A'}"></td>
-                            <td th:text="${order.orderDate != null ? #temporals.format(order.orderDate, 'dd/MM/yyyy') : 'N/A'}"></td>
-                            <td th:text="${order.status != null ? order.status.displayName : 'N/A'}"></td>
-                            <td th:text="${order.totalAmount != null ? #numbers.formatDecimal(order.totalAmount, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
-                            <td>
+                        <tr th:each="order, iterStat : ${orders}">
+                            <td style="white-space: nowrap;" th:text="${currentPage * pageSize + iterStat.index + 1}"></td>
+                            <td style="white-space: nowrap;" th:text="${order.customer != null ? order.customer.id : 'N/A'}"></td>
+                            <td style="white-space: nowrap;" th:text="${order.staff != null ? order.staff.id : 'N/A'}"></td>
+
+
+                            <td style="white-space: nowrap; text-align: center;">
+                                <span th:if="${order.promotion != null}" th:text="${order.promotion.id}"></span>
+                                <span th:if="${order.promotion == null}" class="text-muted">--</span>
+                            </td>
+                            <td style="white-space: nowrap;" th:text="${order.orderDate != null ? #temporals.format(order.orderDate, 'dd/MM/yyyy') : 'N/A'}"></td>
+                            <td style="white-space: nowrap;" th:text="${order.status != null ? order.status.displayName : 'N/A'}"></td>
+                            <td style="white-space: nowrap;" th:text="${order.totalAmount != null ? #numbers.formatDecimal(order.totalAmount, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
+                            <td style="white-space: nowrap;">
                                 <div class="d-flex gap-2">
-                                    <a class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/orders/edit/{id}(id=${order.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}">
+                                    <a class="btn btn-info btn-sm text-white btn-view-detail" 
+                                       th:href="@{'/orders/detail/' + ${order.id}(page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, fromDate=${fromDateStr}, toDate=${toDateStr}, status=${status})}"
+                                       title="Xem chi tiết"
+                                       th:attr="data-order-id=${order.id}">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a class="btn btn-primary btn-sm btn-action-edit text-white" 
+                                       th:href="@{/orders/edit/{id}(id=${order.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, fromDate=${fromDateStr}, toDate=${toDateStr}, status=${status})}"
+                                       title="Chỉnh sửa">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <button class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deleteOrder(' + ${order.id} + ')'">
+                                    <button class="btn btn-danger btn-sm btn-action-delete text-white" 
+                                            th:onclick="'deleteOrder(' + ${order.id} + ')'"
+                                            title="Xóa">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -144,29 +148,71 @@
                 <div class="p-3 d-flex justify-content-center border-top" th:if="${totalPages > 1}">
                     <nav aria-label="Phân trang danh sách đơn hàng">
                         <ul class="pagination mb-0">
+                            <!-- First page button -->
                             <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                                <a class="page-link text-dark" th:href="@{/orders/view-orders(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}" aria-label="Previous">
+                                <a class="page-link text-dark" th:href="@{/orders/view-orders(page=0, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}" aria-label="First">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            
+                            <!-- Previous button (circular) -->
+                            <li class="page-item">
+                                <a class="page-link text-dark" th:href="@{/orders/view-orders(page=${currentPage == 0 ? totalPages - 1 : currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}" aria-label="Previous">
                                     <span aria-hidden="true">&laquo;</span>
                                 </a>
                             </li>
-                            <li class="page-item" th:if="${currentPage > 2}">
+                            
+                            <!-- Trang 1 -->
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'active'">
                                 <a class="page-link text-dark" th:href="@{/orders/view-orders(page=0, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}">1</a>
                             </li>
-                            <li class="page-item disabled" th:if="${currentPage > 3}">
+                            
+                            <!-- Trang 2 -->
+                            <li class="page-item" th:if="${totalPages > 2}" th:classappend="${currentPage == 1} ? 'active'">
+                                <a class="page-link text-dark" th:href="@{/orders/view-orders(page=1, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}">2</a>
+                            </li>
+                            
+                            <!-- Dấu ... sau trang 2 -->
+                            <li class="page-item disabled" th:if="${currentPage > 3 and totalPages > 4}">
                                 <span class="page-link text-dark">...</span>
                             </li>
-                            <li class="page-item" th:each="i : ${#numbers.sequence(currentPage - 2 > 0 ? currentPage - 2 : 0, currentPage + 2 < totalPages - 1 ? currentPage + 2 : totalPages - 1)}">
-                                <a class="page-link text-dark" th:href="@{/orders/view-orders(page=${i}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}" th:classappend="${i == currentPage} ? 'active'" th:text="${i + 1}"></a>
+                            
+                            <!-- Trang currentPage-1 -->
+                            <li class="page-item" th:if="${currentPage > 2 and currentPage < totalPages - 1}">
+                                <a class="page-link text-dark" th:href="@{/orders/view-orders(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}" th:text="${currentPage}"></a>
                             </li>
-                            <li class="page-item disabled" th:if="${currentPage < totalPages - 4}">
+                            
+                            <!-- Trang hiện tại -->
+                            <li class="page-item active" th:if="${currentPage > 1 and currentPage < totalPages - 1}">
+                                <a class="page-link text-dark" th:href="@{/orders/view-orders(page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}" th:text="${currentPage + 1}"></a>
+                            </li>
+                            
+                            <!-- Trang currentPage+1 -->
+                            <li class="page-item" th:if="${currentPage >= 1 and currentPage < totalPages - 2}">
+                                <a class="page-link text-dark" th:href="@{/orders/view-orders(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}" th:text="${currentPage + 2}"></a>
+                            </li>
+                            
+                            <!-- Dấu ... trước trang cuối -->
+                            <li class="page-item disabled" th:if="${currentPage < totalPages - 4 and totalPages > 4}">
                                 <span class="page-link text-dark">...</span>
                             </li>
-                            <li class="page-item" th:if="${currentPage < totalPages - 3}">
+                            
+                            <!-- Trang cuối -->
+                            <li class="page-item" th:if="${totalPages > 1}" th:classappend="${currentPage == totalPages - 1} ? 'active'">
                                 <a class="page-link text-dark" th:href="@{/orders/view-orders(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}" th:text="${totalPages}"></a>
                             </li>
-                            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
-                                <a class="page-link text-dark" th:href="@{/orders/view-orders(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}" aria-label="Next">
+                            
+                            <!-- Next button (circular) -->
+                            <li class="page-item">
+                                <a class="page-link text-dark" th:href="@{/orders/view-orders(page=${currentPage == totalPages - 1 ? 0 : currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}" aria-label="Next">
                                     <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            
+                            <!-- Last page button -->
+                            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                                <a class="page-link text-dark" th:href="@{/orders/view-orders(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}" aria-label="Last">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
                                 </a>
                             </li>
                         </ul>
@@ -178,8 +224,23 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
 <script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', () => {
+        // Khởi tạo Flatpickr cho ngày đặt hàng
+        // Initialize Flatpickr for date range
+        flatpickr("#fromDate", {
+            dateFormat: "d/m/Y",
+            locale: "vn",
+            allowInput: true
+        });
+        
+        flatpickr("#toDate", {
+            dateFormat: "d/m/Y",
+            locale: "vn",
+            allowInput: true
+        });
         const navLinks = document.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
@@ -190,16 +251,20 @@
             });
         });
 
-        document.getElementById('clearFilters').addEventListener('click', () => {
-            window.location.href = '/orders/view-orders';
-        });
+        const clearFiltersBtn = document.getElementById('clearFilters');
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', () => {
+                window.location.href = '/orders/view-orders';
+            });
+        }
 
         const currentPage = [[${currentPage}]];
         const pageSize = [[${pageSize}]];
         const sortBy = [[${sortBy}]];
         const sortDirection = [[${sortDirection}]];
         const customerId = [[${customerId}]] || '';
-        const orderDate = [[${orderDate}]] || '';
+        const fromDate = [[${fromDate}]] || '';
+        const toDate = [[${toDate}]] || '';
         const status = [[${status}]] || '';
 
         window.deleteOrder = function(id) {
@@ -213,7 +278,8 @@
                         sortBy: sortBy,
                         sortDirection: sortDirection,
                         customerId: customerId,
-                        orderDate: orderDate,
+                        fromDate: fromDate,
+                        toDate: toDate,
                         status: status
                     })
                 })
@@ -229,5 +295,6 @@
         };
     });
 </script>
+<div th:replace="~{footer :: footer}"></div>
 </body>
 </html>

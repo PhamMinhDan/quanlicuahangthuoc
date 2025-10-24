@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,12 +25,25 @@ public class OrderService {
 
     // Lấy đơn hàng theo ID
     public Order getOrderById(Integer id) {
-        return orderRepository.findById(id)
+        return orderRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new NoSuchElementException("Không tìm thấy đơn hàng với ID: " + id));
     }
 
-    // Phân trang và tìm kiếm động
-    public Page<Order> getOrderPage(Integer customerId, LocalDate orderDate, Order.OrderStatus status, int page, int size, String sortBy, String sortDirection) {
+    // Parse date từ string dd/MM/yyyy
+    public LocalDate parseDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            return LocalDate.parse(dateStr, formatter);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // Phân trang và tìm kiếm động với khoảng thời gian
+    public Page<Order> getOrderPage(Integer customerId, LocalDate fromDate, LocalDate toDate, Order.OrderStatus status, int page, int size, String sortBy, String sortDirection) {
         Sort.Direction direction = "desc".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
 
         Sort sort;
@@ -50,7 +64,7 @@ public class OrderService {
         }
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        return orderRepository.findOrdersDynamically(customerId, orderDate, status, pageable);
+        return orderRepository.findOrdersByDateRange(customerId, fromDate, toDate, status, pageable);
     }
 
     // Tính tổng số đơn hàng

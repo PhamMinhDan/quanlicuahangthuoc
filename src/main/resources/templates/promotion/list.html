@@ -12,39 +12,16 @@
     <div class="d-flex">
         <div th:replace="~{sidebar :: sidebar}"></div>
 
-        <div class="flex-grow-1 bg-light p-4">
+        <div class="main-content flex-grow-1 bg-light p-4">
             <div class="container-fluid">
                 <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
                 <div th:if="${message != null}" class="alert alert-success" th:text="${message}"></div>
 
-                <div class="row g-4 mb-4 justify-content-center">
-                    <div class="col-md-4">
-                        <div class="summary-card summary-card-1">
-                            <div class="position-relative z-10 text-center">
-                                <div class="text-sm opacity-80 mb-2">Tổng Số Khuyến Mãi</div>
-                                <div class="text-3xl font-bold" th:text="${totalPromotions != null ? totalPromotions : 0}"></div>
-                            </div>
-                            <i class="bi bi-gift-fill position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px"></i>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="summary-card summary-card-2">
-                            <div class="position-relative z-10 text-center">
-                                <div class="text-sm opacity-80 mb-2">Khuyến Mãi Đang Hoạt Động</div>
-                                <div class="text-3xl font-bold" th:text="${activePromotions != null ? activePromotions : 0}"></div>
-                            </div>
-                            <i class="bi bi-check-circle-fill position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px"></i>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="summary-card summary-card-3">
-                            <div class="position-relative z-10 text-center">
-                                <div class="text-sm opacity-80 mb-2">Khuyến Mãi Hết Hạn</div>
-                                <div class="text-3xl font-bold" th:text="${expiredPromotions != null ? expiredPromotions : 0}"></div>
-                            </div>
-                            <i class="bi bi-x-circle-fill position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px"></i>
-                        </div>
-                    </div>
+                <!-- Tiêu đề trang -->
+                <div class="mb-4">
+                    <h1 class="display-6 fw-bold text-primary">
+                        <i class="bi bi-gift"></i> DANH SÁCH KHUYẾN MÃI
+                    </h1>
                 </div>
 
                 <div class="filter-panel mb-4">
@@ -66,14 +43,13 @@
                                     <option value="giam_gia_co_dinh" th:selected="${searchType == 'giam_gia_co_dinh'}">Giảm giá cố định</option>
                                 </select>
                             </div>
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
+                            <div class="col-md-4 d-flex align-items-end gap-2">
+                                <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
                                     <i class="bi bi-search"></i> Lọc
                                 </button>
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button class="btn btn-secondary w-100 d-flex align-items-center justify-content-center gap-2" type="button" onclick="window.location.href='/promotions'">
-                                    <i class="bi bi-x-lg"></i> Xóa Lọc
+                                <button th:if="${searchName != null and searchName != '' or searchType != null and searchType != ''}" 
+                                        class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" onclick="window.location.href='/promotions'">
+                                    <i class="bi bi-x"></i> Xóa Lọc
                                 </button>
                             </div>
                         </div>
@@ -81,73 +57,57 @@
                 </div>
 
                 <div class="table-container">
-                    <div class="p-4 d-flex justify-content-between align-items-center border-bottom">
-                        <h2 class="h4">Danh sách khuyến mãi</h2>
-                        <div class="d-flex gap-2">
-                            <div class="dropdown">
-                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-sort-down"></i> Sắp xếp
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="sortButton">
-                                    <li><h6 class="dropdown-header">Tên khuyến mãi</h6></li>
-                                    <li>
-                                        <a class="dropdown-item" th:href="@{/promotions(sortBy='name', sortOrder='asc')}" th:classappend="${sortBy == 'name' and sortOrder == 'asc' ? 'active' : ''}">
-                                            <i class="bi bi-sort-alpha-down"></i> Tên từ A - Z
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" th:href="@{/promotions(sortBy='name', sortOrder='desc')}" th:classappend="${sortBy == 'name' and sortOrder == 'desc' ? 'active' : ''}">
-                                            <i class="bi bi-sort-alpha-down-alt"></i> Tên từ Z - A
-                                        </a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><h6 class="dropdown-header">Thời hạn</h6></li>
-                                    <li>
-                                        <a class="dropdown-item" th:href="@{/promotions(sortBy='expiredDate', sortOrder='asc')}" th:classappend="${sortBy == 'expiredDate' and sortOrder == 'asc' ? 'active' : ''}">
-                                            <i class="bi bi-sort-numeric-down"></i> Thời hạn tăng dần
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" th:href="@{/promotions(sortBy='expiredDate', sortOrder='desc')}" th:classappend="${sortBy == 'expiredDate' and sortOrder == 'desc' ? 'active' : ''}">
-                                            <i class="bi bi-sort-numeric-down-alt"></i> Thời hạn giảm dần
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                            <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/promotions/new}">
-                                <i class="bi bi-plus"></i> Thêm mới khuyến mãi
-                            </a>
+                    <div class="p-2 d-flex justify-content-between align-items-center border-bottom">
+                        <div class="text-muted fs-5" th:if="${promotions != null}">
+                            <i class="bi bi-gift"></i>
+                            <span class="fw-bold" th:text="${#lists.size(promotions)}">0</span>
+                            <span>/</span>
+                            <span class="fw-bold" th:text="${totalItems}">0</span>
+                            <span>khuyến mãi</span>
                         </div>
+                        <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/promotions/new}">
+                            <i class="bi bi-plus"></i> Thêm mới khuyến mãi
+                        </a>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>STT</th>
-                                    <th>Tên khuyến mãi</th>
-                                    <th>Loại</th>
-                                    <th>Giảm giá (%)</th>
-                                    <th>Ngày hết hạn</th>
-                                    <th>Trạng thái</th>
-                                    <th>Hành động</th>
+                                    <th style="white-space: nowrap;">STT</th>
+                                    <th style="white-space: nowrap;">
+                                        Tên khuyến mãi
+                                        <a th:href="@{/promotions(page=${currentPage}, size=${pageSize}, sortBy='name', sortDirection=${sortBy == 'name' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType})}">
+                                            <i th:class="${sortBy == 'name'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
+                                        </a>
+                                    </th>
+                                    <th style="white-space: nowrap;">Loại</th>
+                                    <th style="white-space: nowrap;">
+                                        Giảm giá (%)
+                                        <a th:href="@{/promotions(page=${currentPage}, size=${pageSize}, sortBy='discountPercent', sortDirection=${sortBy == 'discountPercent' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType})}">
+                                            <i th:class="${sortBy == 'discountPercent'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
+                                        </a>
+                                    </th>
+                                    <th style="white-space: nowrap;">Ngày hết hạn</th>
+                                    <th style="white-space: nowrap;">Trạng thái</th>
+                                    <th style="white-space: nowrap;">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr th:each="promotion, iterStat : ${promotions}">
-                                    <td th:text="${currentPage != null ? (currentPage * pageSize) + iterStat.index + 1 : iterStat.index + 1}"></td>
-                                    <td th:text="${promotion.name}"></td>
-                                    <td>
+                                    <td style="white-space: nowrap;" th:text="${currentPage != null ? (currentPage * pageSize) + iterStat.index + 1 : iterStat.index + 1}"></td>
+                                    <td style="white-space: nowrap;" th:text="${promotion.name}"></td>
+                                    <td style="white-space: nowrap;">
                                         <span th:if="${promotion.type == 'giam_gia_pha_tram'}">Giảm giá phần trăm</span>
                                         <span th:if="${promotion.type == 'giam_gia_co_dinh'}">Giảm giá cố định</span>
                                         <span th:if="${promotion.type != 'giam_gia_pha_tram' and promotion.type != 'giam_gia_co_dinh'}" th:text="${promotion.type}"></span>
                                     </td>
-                                    <td class="text-center" th:text="${promotion.discountPercent + '%'}"></td>
-                                    <td th:text="${#temporals.format(promotion.expiredDate, 'dd/MM/yyyy')}"></td>
-                                    <td>
+                                    <td class="text-center" style="white-space: nowrap;" th:text="${promotion.discountPercent + '%'}"></td>
+                                    <td style="white-space: nowrap;" th:text="${#temporals.format(promotion.expiredDate, 'dd/MM/yyyy')}"></td>
+                                    <td style="white-space: nowrap;">
                                         <span th:if="${promotion.expiredDate != null and promotion.expiredDate.isAfter(#temporals.createToday())}" class="badge bg-success">Còn hạn</span>
                                         <span th:if="${promotion.expiredDate != null and (promotion.expiredDate.isBefore(#temporals.createToday()) or promotion.expiredDate.isEqual(#temporals.createToday()))}" class="badge bg-danger">Hết hạn</span>
                                     </td>
-                                    <td>
+                                    <td style="white-space: nowrap;">
                                         <div class="d-flex gap-2">
                                             <a class="btn btn-action-edit btn-sm text-white" th:href="@{/promotions/edit/{id}(id=${promotion.id})}">
                                                 <i class="bi bi-pencil"></i>
@@ -167,29 +127,71 @@
                     <div class="p-3 d-flex justify-content-center border-top" th:if="${totalPages > 1}">
                         <nav aria-label="Phân trang danh sách khuyến mãi">
                             <ul class="pagination mb-0">
+                                <!-- First page button -->
                                 <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                                    <a class="page-link text-dark" th:href="@{/promotions(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortOrder=${sortOrder})}" aria-label="Previous">
+                                    <a class="page-link text-dark" th:href="@{/promotions(page=0, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType})}" aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                
+                                <!-- Previous button (circular) -->
+                                <li class="page-item">
+                                    <a class="page-link text-dark" th:href="@{/promotions(page=${currentPage == 0 ? totalPages - 1 : currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType})}" aria-label="Previous">
                                         <span aria-hidden="true">&laquo;</span>
                                     </a>
                                 </li>
-                                <li class="page-item" th:if="${currentPage > 2}">
-                                    <a class="page-link text-dark" th:href="@{/promotions(page=0, size=${pageSize}, sortBy=${sortBy}, sortOrder=${sortOrder})}">1</a>
+                                
+                                <!-- Trang 1 -->
+                                <li class="page-item" th:classappend="${currentPage == 0} ? 'active'">
+                                    <a class="page-link text-dark" th:href="@{/promotions(page=0, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType})}">1</a>
                                 </li>
-                                <li class="page-item disabled" th:if="${currentPage > 3}">
+                                
+                                <!-- Trang 2 -->
+                                <li class="page-item" th:if="${totalPages > 2}" th:classappend="${currentPage == 1} ? 'active'">
+                                    <a class="page-link text-dark" th:href="@{/promotions(page=1, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType})}">2</a>
+                                </li>
+                                
+                                <!-- Dấu ... sau trang 2 -->
+                                <li class="page-item disabled" th:if="${currentPage > 3 and totalPages > 4}">
                                     <span class="page-link text-dark">...</span>
                                 </li>
-                                <li class="page-item" th:each="i : ${#numbers.sequence(currentPage - 2 > 0 ? currentPage - 2 : 0, currentPage + 2 < totalPages - 1 ? currentPage + 2 : totalPages - 1)}">
-                                    <a class="page-link text-dark" th:href="@{/promotions(page=${i}, size=${pageSize}, sortBy=${sortBy}, sortOrder=${sortOrder})}" th:classappend="${i == currentPage} ? 'active'" th:text="${i + 1}"></a>
+                                
+                                <!-- Trang currentPage-1 -->
+                                <li class="page-item" th:if="${currentPage > 2 and currentPage < totalPages - 1}">
+                                    <a class="page-link text-dark" th:href="@{/promotions(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType})}" th:text="${currentPage}"></a>
                                 </li>
-                                <li class="page-item disabled" th:if="${currentPage < totalPages - 4}">
+                                
+                                <!-- Trang hiện tại -->
+                                <li class="page-item active" th:if="${currentPage > 1 and currentPage < totalPages - 1}">
+                                    <a class="page-link text-dark" th:href="@{/promotions(page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType})}" th:text="${currentPage + 1}"></a>
+                                </li>
+                                
+                                <!-- Trang currentPage+1 -->
+                                <li class="page-item" th:if="${currentPage >= 1 and currentPage < totalPages - 2}">
+                                    <a class="page-link text-dark" th:href="@{/promotions(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType})}" th:text="${currentPage + 2}"></a>
+                                </li>
+                                
+                                <!-- Dấu ... trước trang cuối -->
+                                <li class="page-item disabled" th:if="${currentPage < totalPages - 4 and totalPages > 4}">
                                     <span class="page-link text-dark">...</span>
                                 </li>
-                                <li class="page-item" th:if="${currentPage < totalPages - 3}">
-                                    <a class="page-link text-dark" th:href="@{/promotions(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortOrder=${sortOrder})}" th:text="${totalPages}"></a>
+                                
+                                <!-- Trang cuối -->
+                                <li class="page-item" th:if="${totalPages > 1}" th:classappend="${currentPage == totalPages - 1} ? 'active'">
+                                    <a class="page-link text-dark" th:href="@{/promotions(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType})}" th:text="${totalPages}"></a>
                                 </li>
-                                <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
-                                    <a class="page-link text-dark" th:href="@{/promotions(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortOrder=${sortOrder})}" aria-label="Next">
+                                
+                                <!-- Next button (circular) -->
+                                <li class="page-item">
+                                    <a class="page-link text-dark" th:href="@{/promotions(page=${currentPage == totalPages - 1 ? 0 : currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType})}" aria-label="Next">
                                         <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                
+                                <!-- Last page button -->
+                                <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                                    <a class="page-link text-dark" th:href="@{/promotions(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType})}" aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
                                     </a>
                                 </li>
                             </ul>
@@ -213,7 +215,8 @@
                 });
             });
         });
-    </script>
-</body>
+        </script>
+        <div th:replace="~{footer :: footer}"></div>
+    </body>
 </html>
 

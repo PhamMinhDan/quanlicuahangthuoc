@@ -13,7 +13,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.security.core.Authentication;
 import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -37,7 +37,7 @@ public class MedicineController {
             @RequestParam(value = "searchName", required = false) String searchName,
             @RequestParam(value = "searchType", required = false) String searchType,
             @RequestParam(value = "searchSupplier", required = false) String searchSupplier,
-            Model model) {
+            Model model, Authentication authentication) {
         try {
             Page<Medicine> medicinePage;
             if (searchName != null || searchType != null || searchSupplier != null) {
@@ -56,23 +56,26 @@ public class MedicineController {
             model.addAttribute("searchName", searchName);
             model.addAttribute("searchType", searchType);
             model.addAttribute("searchSupplier", searchSupplier);
-
-            // Cập nhật thống kê từ CSDL
             model.addAttribute("totalMedicines", medicineService.getTotalMedicinesCount());
             model.addAttribute("totalSuppliers", medicineService.getTotalSuppliersCount());
             model.addAttribute("totalStock", medicineService.getTotalStockQuantity());
-
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("activeNav", "medicines");
             return "medicine";
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi khi tải danh sách thuốc: " + e.getMessage());
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             return "medicine";
         }
     }
 
     @GetMapping("/add")
-    public String showAddMedicineForm(Model model) {
+    public String showAddMedicineForm(Model model, Authentication authentication) {
         model.addAttribute("medicine", new Medicine());
+        model.addAttribute("isManager", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
         model.addAttribute("activeNav", "medicines");
         return "medicine-form";
     }
@@ -117,15 +120,16 @@ public class MedicineController {
     }
 
     @GetMapping("/edit/{id}")
-    public String showEditMedicineForm(@PathVariable Integer id,
-                                       @RequestParam(value = "page", defaultValue = "0") int page,
-                                       @RequestParam(value = "size", defaultValue = "10") int size,
-                                       @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-                                       @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
-                                       @RequestParam(value = "searchName", required = false) String searchName,
-                                       @RequestParam(value = "searchType", required = false) String searchType,
-                                       @RequestParam(value = "searchSupplier", required = false) String searchSupplier,
-                                       Model model) {
+    public String showEditMedicineForm(
+            @PathVariable Integer id,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "searchName", required = false) String searchName,
+            @RequestParam(value = "searchType", required = false) String searchType,
+            @RequestParam(value = "searchSupplier", required = false) String searchSupplier,
+            Model model, Authentication authentication) {
         try {
             Medicine medicine = medicineService.getMedicineById(id);
             model.addAttribute("medicine", medicine);
@@ -136,6 +140,8 @@ public class MedicineController {
             model.addAttribute("searchName", searchName);
             model.addAttribute("searchType", searchType);
             model.addAttribute("searchSupplier", searchSupplier);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("activeNav", "medicines");
             return "medicine-form";
         } catch (NoSuchElementException e) {
@@ -147,6 +153,8 @@ public class MedicineController {
             model.addAttribute("searchName", searchName);
             model.addAttribute("searchType", searchType);
             model.addAttribute("searchSupplier", searchSupplier);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("activeNav", "medicines");
             return "medicine";
         }

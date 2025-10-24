@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,10 +23,25 @@ public class PaymentService {
     @Autowired
     private PaymentRepository paymentRepository;
 
-    public Page<Payment> getPaymentsPaged(Integer orderId, LocalDate paymentDate, int page, int size, String sortField, String sortDir) {
+    // Parse date từ string dd/MM/yyyy
+    public LocalDate parseDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            return LocalDate.parse(dateStr, formatter);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    public DateTimeFormatter getDateFormatter() {
+        return DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    }
+    public Page<Payment> getPaymentsPaged(Integer orderId, LocalDate fromDate, LocalDate toDate, int page, int size, String sortField, String sortDir) {
         Sort sort = Sort.by(sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC, sortField);
         Pageable pageable = PageRequest.of(page, size, sort);
-        return paymentRepository.findByFilters(orderId, paymentDate, pageable);
+        return paymentRepository.findByDateRange(orderId, fromDate, toDate, pageable);
     }
 
     @Transactional
@@ -104,4 +120,5 @@ public class PaymentService {
         }
         return revenueByMonth;
     }
+
 }

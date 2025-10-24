@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
@@ -37,7 +38,7 @@ public class Medicine {
     private MedicineType type;
 
     @NotNull(message = "Ngày hết hạn không được để trống")
-    @Future(message = "Ngày hết hạn phải là thời gian trong tương lai")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     @Column(name = "expiry_date", nullable = false)
     private LocalDate expiryDate;
 
@@ -55,6 +56,9 @@ public class Medicine {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Supplier supplier;
+
+    @Column(name = "usage_instructions", columnDefinition = "TEXT")
+    private String usageInstructions;
 
     public Integer getId() {
         return id;
@@ -118,6 +122,14 @@ public class Medicine {
 
     public void setSupplier(Supplier supplier) {
         this.supplier = supplier;
+    }
+
+    public String getUsageInstructions() {
+        return usageInstructions;
+    }
+
+    public void setUsageInstructions(String usageInstructions) {
+        this.usageInstructions = usageInstructions;
     }
 
     public enum MedicineType {
