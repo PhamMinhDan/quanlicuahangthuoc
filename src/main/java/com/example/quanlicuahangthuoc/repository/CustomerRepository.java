@@ -4,9 +4,14 @@ import com.example.quanlicuahangthuoc.entity.Customer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
+
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -18,7 +23,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
     Optional<Customer> findByPhone(String phone);
 
     @Query("SELECT c FROM Customer c WHERE " +
-           "(:keyword IS NULL OR :keyword = '' OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:keyword IS NULL OR :keyword = '' OR LOWER(c.lastName) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:phone IS NULL OR :phone = '' OR c.phone LIKE CONCAT('%', :phone, '%')) AND " +
            "(:customerType IS NULL OR :customerType = '' OR CAST(c.customerType AS string) = :customerType)")
     Page<Customer> searchByNamePhoneTypeWithPaging(
@@ -30,4 +35,12 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
             "o.orderDate >= :startDate AND o.orderDate <= :endDate")
     long countCustomersByOrdersInPeriod(@Param("startDate") LocalDate startDate,
                                         @Param("endDate") LocalDate endDate);
+    
+    // Update lastName cho dữ liệu cũ
+    @Transactional
+    @Modifying
+    @Query(value = "UPDATE customer SET last_name = SUBSTRING_INDEX(name, ' ', -1) " +
+                   "WHERE last_name IS NULL OR last_name = ''", 
+           nativeQuery = true)
+    int updateLastNameForOldData();
 }

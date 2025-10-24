@@ -32,7 +32,7 @@ public class CustomerService {
     }
 
     @Transactional
-    public void createCustomer(Customer customer) {
+    public Customer createCustomer(Customer customer) {
         if (customer.getName() == null || customer.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Tên khách hàng không được để trống");
         }
@@ -58,7 +58,7 @@ public class CustomerService {
         if (customer.getCustomerType() == null) {
             customer.setCustomerType(Customer.CustomerType.vang_lai); // Mặc định là "Vãng lai"
         }
-        customerRepository.save(customer);
+        return customerRepository.saveAndFlush(customer);
     }
 
     @Transactional
@@ -106,6 +106,10 @@ public class CustomerService {
         if ("rewardPoints".equalsIgnoreCase(sortBy) || "reward_points".equalsIgnoreCase(sortBy) || "points".equalsIgnoreCase(sortBy)) {
             sortBy = "rewardPoints";
         }
+        // Sắp xếp theo tên cuối (tên riêng) thay vì toàn bộ họ tên
+        if ("name".equalsIgnoreCase(sortBy)) {
+            sortBy = "lastName";
+        }
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
         return customerRepository.findAll(pageable);
     }
@@ -114,6 +118,10 @@ public class CustomerService {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         if ("rewardPoints".equalsIgnoreCase(sortBy) || "reward_points".equalsIgnoreCase(sortBy) || "points".equalsIgnoreCase(sortBy)) {
             sortBy = "rewardPoints";
+        }
+        // Sắp xếp theo tên cuối (tên riêng) thay vì toàn bộ họ tên
+        if ("name".equalsIgnoreCase(sortBy)) {
+            sortBy = "lastName";
         }
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
         return customerRepository.searchByNamePhoneTypeWithPaging(keyword, phone, customerType, pageable);

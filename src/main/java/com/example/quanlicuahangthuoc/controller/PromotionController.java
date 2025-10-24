@@ -19,7 +19,6 @@ public class PromotionController {
     
     @Autowired
     private PromotionService promotionService;
-
     @GetMapping
     public String listPromotions(
             @RequestParam(defaultValue = "0") int page,
@@ -43,7 +42,6 @@ public class PromotionController {
         model.addAttribute("totalPages", promotionPage.getTotalPages());
         model.addAttribute("totalItems", promotionPage.getTotalElements());
         model.addAttribute("pageSize", size);
-
         List<Promotion> allPromotionsForStats = promotionService.getAllPromotions();
         long activeCount = allPromotionsForStats.stream()
                 .filter(p -> p.getExpiredDate() != null && p.getExpiredDate().isAfter(java.time.LocalDate.now()))
@@ -51,7 +49,6 @@ public class PromotionController {
         long expiredCount = allPromotionsForStats.stream()
                 .filter(p -> p.getExpiredDate() != null && (p.getExpiredDate().isBefore(java.time.LocalDate.now()) || p.getExpiredDate().isEqual(java.time.LocalDate.now())))
                 .count();
-
         model.addAttribute("totalPromotions", allPromotionsForStats.size());
         model.addAttribute("activePromotions", activeCount);
         model.addAttribute("expiredPromotions", expiredCount);
@@ -161,7 +158,6 @@ public class PromotionController {
             return "promotion/add";
         }
     }
-
     @GetMapping("/search")
     public String search(
             @RequestParam(required = false, defaultValue = "") String searchName,
@@ -181,14 +177,12 @@ public class PromotionController {
         } else {
             promotions = promotionService.searchByType(searchType.trim());
         }
-
         long activeCount = promotions.stream()
                 .filter(p -> p.getExpiredDate() != null && p.getExpiredDate().isAfter(java.time.LocalDate.now()))
                 .count();
         long expiredCount = promotions.stream()
                 .filter(p -> p.getExpiredDate() != null && (p.getExpiredDate().isBefore(java.time.LocalDate.now()) || p.getExpiredDate().isEqual(java.time.LocalDate.now())))
                 .count();
-
         model.addAttribute("promotions", promotions);
         model.addAttribute("totalPromotions", promotions.size());
         model.addAttribute("activePromotions", activeCount);
@@ -211,7 +205,6 @@ public class PromotionController {
         long expiredCount = promotions.stream()
                 .filter(p -> p.getExpiredDate() != null && (p.getExpiredDate().isBefore(java.time.LocalDate.now()) || p.getExpiredDate().isEqual(java.time.LocalDate.now())))
                 .count();
-
         model.addAttribute("promotions", promotions);
         model.addAttribute("totalPromotions", promotions.size());
         model.addAttribute("activePromotions", activeCount);
@@ -234,7 +227,6 @@ public class PromotionController {
         long expiredCount = promotions.stream()
                 .filter(p -> p.getExpiredDate() != null && (p.getExpiredDate().isBefore(java.time.LocalDate.now()) || p.getExpiredDate().isEqual(java.time.LocalDate.now())))
                 .count();
-
         model.addAttribute("promotions", promotions);
         model.addAttribute("totalPromotions", promotions.size());
         model.addAttribute("activePromotions", activeCount);

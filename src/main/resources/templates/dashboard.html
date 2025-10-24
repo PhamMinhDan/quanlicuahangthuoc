@@ -18,7 +18,7 @@
 <div class="d-flex">
     <div th:replace="~{sidebar :: sidebar}"></div>
 
-    <div class="flex-grow-1 bg-light p-4">
+    <div class="main-content flex-grow-1 bg-light p-4">
         <div class="container-fluid">
             <!-- Thông báo lỗi/thành công -->
             <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
@@ -346,5 +346,6 @@
         });
     }
 </script>
+<div th:replace="~{footer :: footer}"></div>
 </body>
 </html>

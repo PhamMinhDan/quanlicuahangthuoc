@@ -12,21 +12,16 @@
 <div class="d-flex">
     <div th:replace="~{sidebar :: sidebar}"></div>
 
-    <div class="flex-grow-1 bg-light p-4">
+    <div class="main-content flex-grow-1 bg-light p-4">
         <div class="container-fluid">
             <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
             <div th:if="${message != null}" class="alert alert-success" th:text="${message}"></div>
 
-            <div class="row g-4 mb-4 justify-content-center">
-                <div class="col-md-4">
-                    <div class="summary-card summary-card-1">
-                        <div class="position-relative z-10 text-center">
-                            <div class="text-sm opacity-80 mb-2">Tổng Số Khách Hàng</div>
-                            <div class="text-3xl font-bold" th:text="${totalCustomers != null ? totalCustomers : 0}"></div>
-                        </div>
-                        <i class="bi bi-person-fill position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
-                    </div>
-                </div>
+            <!-- Tiêu đề trang -->
+            <div class="mb-4">
+                <h1 class="display-6 fw-bold text-primary">
+                    <i class="bi bi-people"></i> DANH SÁCH KHÁCH HÀNG
+                </h1>
             </div>
 
             <div class="filter-panel mb-4">
@@ -56,7 +51,8 @@
                             <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
                                 <i class="bi bi-search"></i> Lọc
                             </button>
-                            <button class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
+                            <button th:if="${keyword != null and keyword != '' or phone != null and phone != '' or customerType != null and customerType != ''}" 
+                                    class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
                                 <i class="bi bi-x"></i> Xóa Lọc
                             </button>
                         </div>
@@ -65,65 +61,53 @@
             </div>
 
             <div class="table-container">
-                <div class="p-4 d-flex justify-content-between align-items-center border-bottom">
-                    <h2 class="h4">Danh sách khách hàng</h2>
-                    <div class="d-flex gap-2">
-                        <div class="dropdown">
-                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                Sắp xếp
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="sortDropdown">
-                                <li><a class="dropdown-item" th:href="@{/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='name', sortDirection='asc', keyword=${keyword}, phone=${phone}, customerType=${customerType})}">Tên A-Z</a></li>
-                                <li><a class="dropdown-item" th:href="@{/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='name', sortDirection='desc', keyword=${keyword}, phone=${phone}, customerType=${customerType})}">Tên Z-A</a></li>
-                                <li><a class="dropdown-item" th:href="@{/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='rewardPoints', sortDirection='asc', keyword=${keyword}, phone=${phone}, customerType=${customerType})}">Điểm thưởng tăng dần</a></li>
-                                <li><a class="dropdown-item" th:href="@{/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='rewardPoints', sortDirection='desc', keyword=${keyword}, phone=${phone}, customerType=${customerType})}">Điểm thưởng giảm dần</a></li>
-                            </ul>
-                        </div>
-                        <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/customers/add}" th:if="${isManager}">
-                            <i class="bi bi-plus"></i> Thêm mới khách hàng
-                        </a>
+                <div class="p-2 d-flex justify-content-between align-items-center border-bottom">
+                    <div class="text-muted fs-5" th:if="${customers != null}">
+                        <i class="bi bi-people"></i>
+                        <span class="fw-bold" th:text="${#lists.size(customers)}">0</span>
+                        <span>/</span>
+                        <span class="fw-bold" th:text="${totalItems}">0</span>
+                        <span>khách hàng</span>
                     </div>
+                    <a th:if="${isManager}" class="btn btn-success d-flex align-items-center gap-2" th:href="@{/customers/add}">
+                        <i class="bi bi-plus"></i> Thêm mới khách hàng
+                    </a>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>
+                            <th style="white-space: nowrap;">STT</th>
+                            <th style="white-space: nowrap;">
                                 Tên
                                 <a th:href="@{/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='name', sortDirection=${sortBy == 'name' and sortDirection == 'asc' ? 'desc' : 'asc'}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}">
                                     <i th:class="${sortBy == 'name'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                                 </a>
                             </th>
-                            <th>SĐT</th>
-                            <th>Email</th>
-                            <th>
-                                Loại khách hàng
-                                <a th:href="@{/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='customerType', sortDirection=${sortBy == 'customerType' and sortDirection == 'asc' ? 'desc' : 'asc'}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}">
-                                    <i th:class="${sortBy == 'customerType'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
-                                </a>
-                            </th>
-                            <th>
+                            <th style="white-space: nowrap;">SĐT</th>
+                            <th style="white-space: nowrap;">Email</th>
+                            <th style="white-space: nowrap;">Loại khách hàng</th>
+                            <th style="white-space: nowrap;">
                                 Điểm thưởng
                                 <a th:href="@{/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='rewardPoints', sortDirection=${sortBy == 'rewardPoints' and sortDirection == 'asc' ? 'desc' : 'asc'}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}">
                                     <i th:class="${sortBy == 'rewardPoints'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                                 </a>
                             </th>
-                            <th th:if="${isManager}">Hành động</th>
+                            <th th:if="${isManager}" style="white-space: nowrap;">Hành động</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:each="customer : ${customers}">
-                            <td th:text="${customer.id}"></td>
-                            <td th:text="${customer.name}"></td>
-                            <td th:text="${customer.phone}"></td>
-                            <td th:text="${customer.email}"></td>
-                            <td th:text="${customer.customerType != null ? customer.customerType.getDisplayName() : 'N/A'}"></td>
-                            <td th:text="${customer.rewardPoints != null ? customer.rewardPoints : '0'}"></td>
-                            <td th:if="${isManager}">
+                        <tr th:each="customer, iterStat : ${customers}">
+                            <td style="white-space: nowrap;" th:text="${currentPage * pageSize + iterStat.index + 1}"></td>
+                            <td style="white-space: nowrap;" th:text="${customer.name}"></td>
+                            <td style="white-space: nowrap;" th:text="${customer.phone}"></td>
+                            <td style="white-space: nowrap;" th:text="${customer.email}"></td>
+                            <td style="white-space: nowrap;" th:text="${customer.customerType != null ? customer.customerType.getDisplayName() : 'N/A'}"></td>
+                            <td style="white-space: nowrap;" th:text="${customer.rewardPoints != null ? customer.rewardPoints : '0'}"></td>
+                            <td style="white-space: nowrap;">
                                 <div class="d-flex gap-2">
-                                    <a class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/customers/edit/{id}(id=${customer.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}"><i class="bi bi-pencil"></i></a>
-                                    <button class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deleteCustomer(' + ${customer.id} + ')'"><i class="bi bi-trash"></i></button>
+                                    <a th:if="${isManager}" class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/customers/edit/{id}(id=${customer.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}"><i class="bi bi-pencil"></i></a>
+                                    <button th:if="${isManager}" class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deleteCustomer(' + ${customer.id} + ')'"><i class="bi bi-trash"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -136,29 +120,71 @@
                 <div class="p-3 d-flex justify-content-center border-top" th:if="${totalPages > 1}">
                     <nav aria-label="Phân trang danh sách khách hàng">
                         <ul class="pagination mb-0">
+                            <!-- First page button -->
                             <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                                <a class="page-link text-dark" th:href="@{/customers/view-customers(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}" aria-label="Previous">
+                                <a class="page-link text-dark" th:href="@{/customers/view-customers(page=0, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}" aria-label="First">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            
+                            <!-- Previous button (circular) -->
+                            <li class="page-item">
+                                <a class="page-link text-dark" th:href="@{/customers/view-customers(page=${currentPage == 0 ? totalPages - 1 : currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}" aria-label="Previous">
                                     <span aria-hidden="true">&laquo;</span>
                                 </a>
                             </li>
-                            <li class="page-item" th:if="${currentPage > 2}">
+                            
+                            <!-- Trang 1 -->
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'active'">
                                 <a class="page-link text-dark" th:href="@{/customers/view-customers(page=0, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}">1</a>
                             </li>
-                            <li class="page-item disabled" th:if="${currentPage > 3}">
+                            
+                            <!-- Trang 2 -->
+                            <li class="page-item" th:if="${totalPages > 2}" th:classappend="${currentPage == 1} ? 'active'">
+                                <a class="page-link text-dark" th:href="@{/customers/view-customers(page=1, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}">2</a>
+                            </li>
+                            
+                            <!-- Dấu ... sau trang 2 -->
+                            <li class="page-item disabled" th:if="${currentPage > 3 and totalPages > 4}">
                                 <span class="page-link text-dark">...</span>
                             </li>
-                            <li class="page-item" th:each="i : ${#numbers.sequence(currentPage - 2 > 0 ? currentPage - 2 : 0, currentPage + 2 < totalPages - 1 ? currentPage + 2 : totalPages - 1)}">
-                                <a class="page-link text-dark" th:href="@{/customers/view-customers(page=${i}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}" th:classappend="${i == currentPage} ? 'active'" th:text="${i + 1}"></a>
+                            
+                            <!-- Trang currentPage-1 -->
+                            <li class="page-item" th:if="${currentPage > 2 and currentPage < totalPages - 1}">
+                                <a class="page-link text-dark" th:href="@{/customers/view-customers(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}" th:text="${currentPage}"></a>
                             </li>
-                            <li class="page-item disabled" th:if="${currentPage < totalPages - 4}">
+                            
+                            <!-- Trang hiện tại -->
+                            <li class="page-item active" th:if="${currentPage > 1 and currentPage < totalPages - 1}">
+                                <a class="page-link text-dark" th:href="@{/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}" th:text="${currentPage + 1}"></a>
+                            </li>
+                            
+                            <!-- Trang currentPage+1 -->
+                            <li class="page-item" th:if="${currentPage >= 1 and currentPage < totalPages - 2}">
+                                <a class="page-link text-dark" th:href="@{/customers/view-customers(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}" th:text="${currentPage + 2}"></a>
+                            </li>
+                            
+                            <!-- Dấu ... trước trang cuối -->
+                            <li class="page-item disabled" th:if="${currentPage < totalPages - 4 and totalPages > 4}">
                                 <span class="page-link text-dark">...</span>
                             </li>
-                            <li class="page-item" th:if="${currentPage < totalPages - 3}">
+                            
+                            <!-- Trang cuối -->
+                            <li class="page-item" th:if="${totalPages > 1}" th:classappend="${currentPage == totalPages - 1} ? 'active'">
                                 <a class="page-link text-dark" th:href="@{/customers/view-customers(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}" th:text="${totalPages}"></a>
                             </li>
-                            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
-                                <a class="page-link text-dark" th:href="@{/customers/view-customers(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}" aria-label="Next">
+                            
+                            <!-- Next button (circular) -->
+                            <li class="page-item">
+                                <a class="page-link text-dark" th:href="@{/customers/view-customers(page=${currentPage == totalPages - 1 ? 0 : currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}" aria-label="Next">
                                     <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            
+                            <!-- Last page button -->
+                            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                                <a class="page-link text-dark" th:href="@{/customers/view-customers(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}" aria-label="Last">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
                                 </a>
                             </li>
                         </ul>
@@ -198,7 +224,7 @@
             if (currentPage !== 0) params.append('page', currentPage);
             if (pageSize !== 10) params.append('size', pageSize); // Giả sử mặc định là 10
             if (sortBy !== 'id') params.append('sortBy', sortBy); // Giả sử mặc định là 'id'
-            if (sortDirection !== 'asc') params.append('sortDirection', sortDirection); // Giả sử mặc định là 'asc'
+            if (sortDirection !== 'desc') params.append('sortDirection', sortDirection); // Giả sử mặc định là 'desc'
             if (params.toString()) {
                 url += '?' + params.toString();
             }
@@ -206,7 +232,7 @@
         });
 
         window.deleteCustomer = function(id) {
-            if (confirm('Bạn có chắc muốn xóa khách hàng này?')) {
+            if ([[${isManager}]] && confirm('Bạn có chắc muốn xóa khách hàng này?')) {
                 fetch(`/customers/delete/${id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -228,9 +254,12 @@
                         }
                     })
                     .catch(error => alert('Lỗi khi xóa khách hàng: ' + error.message));
+            } else if (![[${isManager}]]) {
+                alert('Bạn không có quyền xóa khách hàng.');
             }
         };
     });
 </script>
+<div th:replace="~{footer :: footer}"></div>
 </body>
 </html>

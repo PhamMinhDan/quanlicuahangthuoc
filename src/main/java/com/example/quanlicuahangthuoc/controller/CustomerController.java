@@ -80,7 +80,7 @@ public class CustomerController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam(value = "customerType", required = false) String customerType,
@@ -99,7 +99,7 @@ public class CustomerController {
         try {
             customerService.createCustomer(customer);
             model.addAttribute("message", "Thêm khách hàng thành công");
-            return "redirect:/customers/view-customers";
+             return "redirect:/customers/view-customers?page=0&size=10&sortBy=id&sortDirection=desc";
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", "Lỗi: " + e.getMessage());
             model.addAttribute("customer", customer);
@@ -120,6 +120,12 @@ public class CustomerController {
             @RequestParam(value = "customerType", required = false) String customerType,
             Model model,
             Authentication authentication) {
+        // Kiểm tra vai trò quan_ly
+        if (!authentication.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly"))) {
+            model.addAttribute("error", "Bạn không có quyền chỉnh sửa khách hàng.");
+            return viewCustomers(keyword, phone, customerType, page, size, sortBy, sortDirection, model, authentication);
+        }
+
         try {
             Customer customer = customerService.getCustomerById(id);
             model.addAttribute("customer", customer);
@@ -150,11 +156,27 @@ public class CustomerController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam(value = "customerType", required = false) String customerType,
-            Model model) {
+            Model model,
+            Authentication authentication) {
+        // Kiểm tra vai trò quan_ly
+        if (!authentication.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly"))) {
+            model.addAttribute("error", "Bạn không có quyền chỉnh sửa khách hàng.");
+            model.addAttribute("customer", customer);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("phone", phone);
+            model.addAttribute("customerType", customerType);
+            model.addAttribute("activeNav", "customers");
+            return "customer-form";
+        }
+
         if (bindingResult.hasErrors()) {
             String errorMessage = bindingResult.getAllErrors().stream()
                     .map(error -> error.getDefaultMessage())
@@ -176,7 +198,10 @@ public class CustomerController {
         try {
             customerService.updateCustomer(id, customer);
             model.addAttribute("message", "Cập nhật khách hàng thành công");
-            return "redirect:/customers/view-customers";
+            return "redirect:/customers/view-customers?page=" + page + "&size=" + size + "&sortBy=" + sortBy + "&sortDirection=" + sortDirection +
+                    (keyword != null ? "&keyword=" + keyword : "") +
+                    (phone != null ? "&phone=" + phone : "") +
+                    (customerType != null ? "&customerType=" + customerType : "");
         } catch (NoSuchElementException e) {
             model.addAttribute("error", "Khách hàng không tồn tại: " + e.getMessage());
             model.addAttribute("customer", customer);
@@ -210,11 +235,21 @@ public class CustomerController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam(value = "customerType", required = false) String customerType,
-            Model model) {
+            Model model,
+            Authentication authentication) {
+        // Kiểm tra vai trò quan_ly
+        if (!authentication.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly"))) {
+            model.addAttribute("error", "Bạn không có quyền xóa khách hàng.");
+            return "redirect:/customers/view-customers?page=" + page + "&size=" + size + "&sortBy=" + sortBy + "&sortDirection=" + sortDirection +
+                    (keyword != null ? "&keyword=" + keyword : "") +
+                    (phone != null ? "&phone=" + phone : "") +
+                    (customerType != null ? "&customerType=" + customerType : "");
+        }
+
         try {
             customerService.deleteCustomer(id);
             model.addAttribute("message", "Xóa khách hàng thành công");
@@ -223,6 +258,9 @@ public class CustomerController {
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi server: " + e.getMessage());
         }
-        return "redirect:/customers/view-customers";
+        return "redirect:/customers/view-customers?page=" + page + "&size=" + size + "&sortBy=" + sortBy + "&sortDirection=" + sortDirection +
+                (keyword != null ? "&keyword=" + keyword : "") +
+                (phone != null ? "&phone=" + phone : "") +
+                (customerType != null ? "&customerType=" + customerType : "");
     }
 }

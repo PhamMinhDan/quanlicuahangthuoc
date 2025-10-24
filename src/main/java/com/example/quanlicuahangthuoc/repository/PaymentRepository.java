@@ -21,6 +21,17 @@ public interface PaymentRepository extends JpaRepository<Payment, Integer> {
     Page<Payment> findByFilters(@Param("orderId") Integer orderId,
                                 @Param("paymentDate") LocalDate paymentDate,
                                 Pageable pageable);
+    
+    @Query("SELECT p FROM Payment p JOIN FETCH p.order o JOIN FETCH o.customer " +
+            "WHERE (:orderId IS NULL OR o.id = :orderId) " +
+            "AND ((:fromDate IS NULL AND :toDate IS NULL) OR " +
+            "     (:fromDate IS NOT NULL AND :toDate IS NULL AND p.paymentDate = :fromDate) OR " +
+            "     (:fromDate IS NULL AND :toDate IS NOT NULL AND p.paymentDate = :toDate) OR " +
+            "     (:fromDate IS NOT NULL AND :toDate IS NOT NULL AND p.paymentDate BETWEEN :fromDate AND :toDate))")
+    Page<Payment> findByDateRange(@Param("orderId") Integer orderId,
+                                   @Param("fromDate") LocalDate fromDate,
+                                   @Param("toDate") LocalDate toDate,
+                                   Pageable pageable);
 
     @Query("SELECT p FROM Payment p JOIN FETCH p.order o JOIN FETCH o.customer WHERE p.id = :id")
     Optional<Payment> findByIdWithOrderAndCustomer(@Param("id") Integer id);

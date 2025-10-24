@@ -10,8 +10,8 @@
     <div th:fragment="sidebar">
         <div class="sidebar flex-shrink-0 p-0">
             <div class="sidebar-header">
-                <i class="bi bi-menu" style="font-size: 24px;"></i>
-                <div>
+                <i class="bi bi-capsule-pill sidebar-logo"></i>
+                <div class="sidebar-title">
                     <div>QUẢN LÍ CỬA</div>
                     <div>HÀNG THUỐC</div>
                 </div>
@@ -32,10 +32,10 @@
                 <a class="nav-link" th:classappend="${activeNav == 'promotions'} ? 'active'" th:href="@{/promotions}">
                     <i class="bi bi-gift"></i> Quản lí khuyến mãi
                 </a>
-                <a class="nav-link" th:classappend="${activeNav == 'orders'} ? 'active'" th:href="@{/orders/view-orders}" onclick="return false;">
+                <a class="nav-link" th:classappend="${activeNav == 'orders'} ? 'active'" th:href="@{/orders/view-orders}">
                     <i class="bi bi-receipt"></i> Quản lí đơn hàng
                 </a>
-                <a class="nav-link" th:classappend="${activeNav == 'payment'} ? 'active'" th:href="@{/payments/view-payments}" onclick="return false;">
+                <a class="nav-link" th:classappend="${activeNav == 'payment'} ? 'active'" th:href="@{/payments/view-payments}">
                     <i class="bi bi-credit-card"></i> Thanh toán
                 </a>
             </nav>

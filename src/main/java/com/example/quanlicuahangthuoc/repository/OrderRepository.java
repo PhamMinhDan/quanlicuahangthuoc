@@ -15,6 +15,17 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Integer> {
     Optional<Order> findByCustomerId(Integer customerId);
+    
+    @Query("SELECT DISTINCT o FROM Order o " +
+           "LEFT JOIN FETCH o.customer " +
+           "LEFT JOIN FETCH o.staff " +
+           "LEFT JOIN FETCH o.promotion " +
+           "LEFT JOIN FETCH o.orderDetails od " +
+           "LEFT JOIN FETCH od.medicine " +
+           "LEFT JOIN FETCH od.staff " +
+           "LEFT JOIN FETCH od.promotion " +
+           "WHERE o.id = :id")
+    Optional<Order> findByIdWithDetails(@Param("id") Integer id);
 
     @Query("SELECT o FROM Order o " +
             "WHERE (:customerId IS NULL OR o.customer.id = :customerId) " +
@@ -23,6 +34,20 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     Page<Order> findOrdersDynamically(
             @Param("customerId") Integer customerId,
             @Param("orderDate") LocalDate orderDate,
+            @Param("status") Order.OrderStatus status,
+            Pageable pageable);
+    
+    @Query("SELECT o FROM Order o " +
+            "WHERE (:customerId IS NULL OR o.customer.id = :customerId) " +
+            "AND (:status IS NULL OR o.status = :status) " +
+            "AND ((:fromDate IS NULL AND :toDate IS NULL) OR " +
+            "     (:fromDate IS NOT NULL AND :toDate IS NULL AND o.orderDate = :fromDate) OR " +
+            "     (:fromDate IS NULL AND :toDate IS NOT NULL AND o.orderDate = :toDate) OR " +
+            "     (:fromDate IS NOT NULL AND :toDate IS NOT NULL AND o.orderDate BETWEEN :fromDate AND :toDate))")
+    Page<Order> findOrdersByDateRange(
+            @Param("customerId") Integer customerId,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
             @Param("status") Order.OrderStatus status,
             Pageable pageable);
     @Query("SELECT COUNT(o) FROM Order o")

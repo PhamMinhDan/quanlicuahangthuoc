@@ -24,22 +24,29 @@ public class PaymentController {
     @GetMapping("/view-payments")
     public String listPayments(
             @RequestParam(value = "orderId", required = false) Integer orderId,
-            @RequestParam(value = "paymentDate", required = false) LocalDate paymentDate,
+            @RequestParam(value = "fromDate", required = false) String fromDateStr,
+            @RequestParam(value = "toDate", required = false) String toDateStr,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortField", defaultValue = "id") String sortField,
             @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir,
             Model model, Authentication authentication) {
         try {
-            Page<Payment> paymentPage = paymentService.getPaymentsPaged(orderId, paymentDate, page, size, sortField, sortDir);
+            // Parse dates from dd/MM/yyyy format
+            LocalDate fromDate = paymentService.parseDate(fromDateStr);
+            LocalDate toDate = paymentService.parseDate(toDateStr);
+            
+            Page<Payment> paymentPage = paymentService.getPaymentsPaged(orderId, fromDate, toDate, page, size, sortField, sortDir);
             model.addAttribute("payments", paymentPage.getContent());
+            model.addAttribute("totalItems", paymentPage.getTotalElements());
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", paymentPage.getTotalPages());
             model.addAttribute("pageSize", size);
             model.addAttribute("sortField", sortField);
             model.addAttribute("sortDir", sortDir);
             model.addAttribute("orderId", orderId);
-            model.addAttribute("paymentDate", paymentDate);
+            model.addAttribute("fromDate", fromDateStr);
+            model.addAttribute("toDate", toDateStr);
             model.addAttribute("totalPayments", paymentService.getTotalPayments());
             model.addAttribute("totalAmount", paymentService.getTotalAmount());
             model.addAttribute("totalCashPayments", paymentService.getTotalCashPayments());
@@ -126,7 +133,10 @@ public class PaymentController {
             model.addAttribute("totalTransferPayments", paymentService.getTotalTransferPayments());
             model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
-            return listPayments(orderId, paymentDate, page, size, sortField, sortDir, model, authentication);
+            // Format paymentDate to String matching parseDate format
+            String fromDateStr = paymentDate != null ? paymentDate.format(paymentService.getDateFormatter()) : null;
+            String toDateStr = paymentDate != null ? paymentDate.format(paymentService.getDateFormatter()) : null;
+            return listPayments(orderId, fromDateStr, toDateStr, page, size, sortField, sortDir, model, authentication);
         }
     }
 
