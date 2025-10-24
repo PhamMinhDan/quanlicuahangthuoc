@@ -10,7 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
+import org.springframework.security.core.Authentication;
 import java.util.List;
 
 @Controller
@@ -19,31 +19,31 @@ public class PromotionController {
     
     @Autowired
     private PromotionService promotionService;
-    
+
     @GetMapping
     public String listPromotions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
             @RequestParam(defaultValue = "asc") String sortOrder,
-            Model model) {
-        
+            Model model, Authentication authentication) {
+
         List<Promotion> allPromotions;
-        
+
         Page<Promotion> promotionPage;
         if (sortBy != null && !sortBy.isEmpty()) {
             promotionPage = promotionService.getAllPromotionsPaginatedAndSorted(page, size, sortBy, sortOrder);
         } else {
             promotionPage = promotionService.getAllPromotionsPaginated(page, size);
         }
-        
+
         allPromotions = promotionPage.getContent();
         model.addAttribute("promotions", allPromotions);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", promotionPage.getTotalPages());
         model.addAttribute("totalItems", promotionPage.getTotalElements());
         model.addAttribute("pageSize", size);
-        
+
         List<Promotion> allPromotionsForStats = promotionService.getAllPromotions();
         long activeCount = allPromotionsForStats.stream()
                 .filter(p -> p.getExpiredDate() != null && p.getExpiredDate().isAfter(java.time.LocalDate.now()))
@@ -51,23 +51,27 @@ public class PromotionController {
         long expiredCount = allPromotionsForStats.stream()
                 .filter(p -> p.getExpiredDate() != null && (p.getExpiredDate().isBefore(java.time.LocalDate.now()) || p.getExpiredDate().isEqual(java.time.LocalDate.now())))
                 .count();
-        
+
         model.addAttribute("totalPromotions", allPromotionsForStats.size());
         model.addAttribute("activePromotions", activeCount);
         model.addAttribute("expiredPromotions", expiredCount);
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("sortOrder", sortOrder);
+        model.addAttribute("isManager", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
         model.addAttribute("activeNav", "promotions");
-        
+
         return "promotion/list";
     }
-    
+
 
     @GetMapping("/{id}")
-    public String viewPromotion(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
+    public String viewPromotion(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes, Authentication authentication) {
         try {
             Promotion promotion = promotionService.getPromotionById(id);
             model.addAttribute("promotion", promotion);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("activeNav", "promotions");
             return "promotion/view";
         } catch (IllegalArgumentException e) {
@@ -75,9 +79,9 @@ public class PromotionController {
             return "redirect:/promotions";
         }
     }
-    
+
     @GetMapping("/delete/{id}")
-    public String deletePromotion(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+    public String deletePromotion(@PathVariable Integer id, RedirectAttributes redirectAttributes, Authentication authentication) {
         boolean deleted = promotionService.deletePromotion(id);
         if (deleted) {
             redirectAttributes.addFlashAttribute("message", "Đã xóa khuyến mãi có ID: " + id);
@@ -87,10 +91,12 @@ public class PromotionController {
         return "redirect:/promotions";
     }
     @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
+    public String showEditForm(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes, Authentication authentication) {
         try {
             Promotion promotion = promotionService.getPromotionById(id);
             model.addAttribute("promotion", promotion);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("activeNav", "promotions");
             return "promotion/edit";
         } catch (IllegalArgumentException e) {
@@ -124,8 +130,10 @@ public class PromotionController {
         }
     }
     @GetMapping("/new")
-    public String showAddForm(Model model) {
+    public String showAddForm(Model model, Authentication authentication) {
         model.addAttribute("promotion", new Promotion());
+        model.addAttribute("isManager", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
         model.addAttribute("activeNav", "promotions");
         return "promotion/add";
     }
@@ -153,17 +161,17 @@ public class PromotionController {
             return "promotion/add";
         }
     }
-    
+
     @GetMapping("/search")
     public String search(
             @RequestParam(required = false, defaultValue = "") String searchName,
             @RequestParam(required = false, defaultValue = "") String searchType,
-            Model model) {
-        
+            Model model, Authentication authentication) {
+
         List<Promotion> promotions;
         boolean hasName = searchName != null && !searchName.trim().isEmpty();
         boolean hasType = searchType != null && !searchType.trim().isEmpty();
-        
+
         if (!hasName && !hasType) {
             promotions = promotionService.getAllPromotions();
         } else if (hasName && hasType) {
@@ -173,90 +181,101 @@ public class PromotionController {
         } else {
             promotions = promotionService.searchByType(searchType.trim());
         }
-        
+
         long activeCount = promotions.stream()
                 .filter(p -> p.getExpiredDate() != null && p.getExpiredDate().isAfter(java.time.LocalDate.now()))
                 .count();
         long expiredCount = promotions.stream()
                 .filter(p -> p.getExpiredDate() != null && (p.getExpiredDate().isBefore(java.time.LocalDate.now()) || p.getExpiredDate().isEqual(java.time.LocalDate.now())))
                 .count();
-        
+
         model.addAttribute("promotions", promotions);
         model.addAttribute("totalPromotions", promotions.size());
         model.addAttribute("activePromotions", activeCount);
         model.addAttribute("expiredPromotions", expiredCount);
         model.addAttribute("searchName", searchName);
         model.addAttribute("searchType", searchType);
+        model.addAttribute("isManager", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
         model.addAttribute("activeNav", "promotions");
         return "promotion/list";
     }
-    
+
     @GetMapping("/search/name")
-    public String searchByName(@RequestParam String name, Model model) {
+    public String searchByName(@RequestParam String name, Model model, Authentication authentication) {
         List<Promotion> promotions = promotionService.searchByName(name);
-        
+
         long activeCount = promotions.stream()
                 .filter(p -> p.getExpiredDate() != null && p.getExpiredDate().isAfter(java.time.LocalDate.now()))
                 .count();
         long expiredCount = promotions.stream()
                 .filter(p -> p.getExpiredDate() != null && (p.getExpiredDate().isBefore(java.time.LocalDate.now()) || p.getExpiredDate().isEqual(java.time.LocalDate.now())))
                 .count();
-        
+
         model.addAttribute("promotions", promotions);
         model.addAttribute("totalPromotions", promotions.size());
         model.addAttribute("activePromotions", activeCount);
         model.addAttribute("expiredPromotions", expiredCount);
         model.addAttribute("searchType", "name");
         model.addAttribute("searchValue", name);
+        model.addAttribute("isManager", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
         model.addAttribute("activeNav", "promotions");
         return "promotion/list";
     }
-    
+
     @GetMapping("/search/type")
-    public String searchByType(@RequestParam String type, Model model) {
+    public String searchByType(@RequestParam String type, Model model, Authentication authentication) {
         List<Promotion> promotions = promotionService.searchByType(type);
-        
+
         long activeCount = promotions.stream()
                 .filter(p -> p.getExpiredDate() != null && p.getExpiredDate().isAfter(java.time.LocalDate.now()))
                 .count();
         long expiredCount = promotions.stream()
                 .filter(p -> p.getExpiredDate() != null && (p.getExpiredDate().isBefore(java.time.LocalDate.now()) || p.getExpiredDate().isEqual(java.time.LocalDate.now())))
                 .count();
-        
+
         model.addAttribute("promotions", promotions);
         model.addAttribute("totalPromotions", promotions.size());
         model.addAttribute("activePromotions", activeCount);
         model.addAttribute("expiredPromotions", expiredCount);
         model.addAttribute("searchType", "type");
         model.addAttribute("searchValue", type);
+        model.addAttribute("isManager", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
         model.addAttribute("activeNav", "promotions");
         return "promotion/list";
     }
-    
+
+
     @GetMapping("/search/name-and-type")
     public String searchByNameAndType(
-            @RequestParam String name, 
+            @RequestParam String name,
             @RequestParam String type,
-            Model model) {
+            Model model, Authentication authentication) {
         List<Promotion> promotions = promotionService.searchByNameAndType(name, type);
         model.addAttribute("promotions", promotions);
         model.addAttribute("searchType", "name-and-type");
         model.addAttribute("searchName", name);
         model.addAttribute("searchTypeValue", type);
+        model.addAttribute("isManager", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
         model.addAttribute("activeNav", "promotions");
         return "promotion/list";
     }
-    
+
     @GetMapping("/search/name-or-type")
     public String searchByNameOrType(
-            @RequestParam String name, 
+            @RequestParam String name,
             @RequestParam String type,
-            Model model) {
+            Model model, Authentication authentication) {
         List<Promotion> promotions = promotionService.searchByNameOrType(name, type);
         model.addAttribute("promotions", promotions);
         model.addAttribute("searchType", "name-or-type");
         model.addAttribute("searchName", name);
         model.addAttribute("searchTypeValue", type);
+        model.addAttribute("isManager", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
         model.addAttribute("activeNav", "promotions");
         return "promotion/list";
     }

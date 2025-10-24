@@ -9,7 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.security.core.Authentication;
 import java.time.LocalDate;
 import java.util.NoSuchElementException;
 
@@ -30,7 +30,7 @@ public class OrderController {
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
             @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
-            Model model) {
+            Model model, Authentication authentication) {
         try {
             Order.OrderStatus orderStatus = (status != null && !status.trim().isEmpty()) ?
                     Order.OrderStatus.valueOf(status) : null;
@@ -45,24 +45,30 @@ public class OrderController {
             model.addAttribute("customerId", customerId);
             model.addAttribute("orderDate", orderDate);
             model.addAttribute("status", status);
-            model.addAttribute("totalOrders", orderService.getTotalOrders());
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
             model.addAttribute("activeNav", "orders");
-            return "order";
-        } catch (IllegalArgumentException e) {
-            model.addAttribute("error", "Trạng thái không hợp lệ: " + e.getMessage());
-            model.addAttribute("totalOrders", orderService.getTotalOrders());
             return "order";
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi khi tải danh sách đơn hàng: " + e.getMessage());
-            model.addAttribute("totalOrders", orderService.getTotalOrders());
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
             return "order";
         }
     }
 
     // Hiển thị form thêm đơn hàng
     @GetMapping("/add")
-    public String showAddOrderForm(Model model) {
+    public String showAddOrderForm(Model model, Authentication authentication) {
         model.addAttribute("order", new Order());
+        model.addAttribute("isManager", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+        model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
         model.addAttribute("activeNav", "orders");
         return "order-form";
     }
@@ -72,13 +78,17 @@ public class OrderController {
     public String createOrder(
             @Valid @ModelAttribute Order order,
             BindingResult bindingResult,
-            Model model) {
+            Model model, Authentication authentication) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("error", bindingResult.getAllErrors().stream()
                     .map(error -> error.getDefaultMessage())
                     .reduce((e1, e2) -> e1 + "; " + e2)
                     .orElse("Lỗi nhập liệu"));
             model.addAttribute("order", order);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
             model.addAttribute("activeNav", "orders");
             return "order-form";
         }
@@ -89,6 +99,10 @@ public class OrderController {
         } catch (IllegalStateException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("order", order);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
             model.addAttribute("activeNav", "orders");
             return "order-form";
         }
@@ -105,7 +119,7 @@ public class OrderController {
             @RequestParam(value = "customerId", required = false) Integer customerId,
             @RequestParam(value = "orderDate", required = false) LocalDate orderDate,
             @RequestParam(value = "status", required = false) String status,
-            Model model) {
+            Model model, Authentication authentication) {
         try {
             Order order = orderService.getOrderById(id);
             model.addAttribute("order", order);
@@ -116,12 +130,19 @@ public class OrderController {
             model.addAttribute("customerId", customerId);
             model.addAttribute("orderDate", orderDate);
             model.addAttribute("status", status);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
             model.addAttribute("activeNav", "orders");
             return "order-form";
         } catch (NoSuchElementException e) {
             model.addAttribute("error", "Đơn hàng không tồn tại: " + e.getMessage());
-            model.addAttribute("totalOrders", orderService.getTotalOrders());
-            return viewOrders(customerId, orderDate, status, page, size, sortBy, sortDirection, model);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
+            return "order";
         }
     }
 
@@ -131,13 +152,17 @@ public class OrderController {
             @PathVariable Integer id,
             @Valid @ModelAttribute Order order,
             BindingResult bindingResult,
-            Model model) {
+            Model model, Authentication authentication) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("error", bindingResult.getAllErrors().stream()
                     .map(error -> error.getDefaultMessage())
                     .reduce((e1, e2) -> e1 + "; " + e2)
                     .orElse("Lỗi nhập liệu"));
             model.addAttribute("order", order);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
             model.addAttribute("activeNav", "orders");
             return "order-form";
         }
@@ -149,6 +174,10 @@ public class OrderController {
         } catch (IllegalStateException | NoSuchElementException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("order", order);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
             model.addAttribute("activeNav", "orders");
             return "order-form";
         }

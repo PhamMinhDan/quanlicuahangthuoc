@@ -81,7 +81,7 @@
                                 <li><a class="dropdown-item" th:href="@{/orders/view-orders(page=${currentPage}, size=${pageSize}, sortBy='totalAmount', sortDirection='desc', customerId=${customerId}, orderDate=${orderDate}, status=${status})}">Tổng tiền giảm dần</a></li>
                             </ul>
                         </div>
-                        <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/orders/add}">
+                        <a th:if="${isManagerOrEmployee}" class="btn btn-success d-flex align-items-center gap-2" th:href="@{/orders/add}">
                             <i class="bi bi-plus"></i> Thêm mới đơn hàng
                         </a>
                     </div>
@@ -112,7 +112,7 @@
                                     <i th:class="${sortBy == 'totalAmount'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                                 </a>
                             </th>
-                            <th>Hành động</th>
+                            <th th:if="${isManagerOrEmployee}">Hành động</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -126,17 +126,17 @@
                             <td th:text="${order.totalAmount != null ? #numbers.formatDecimal(order.totalAmount, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/orders/edit/{id}(id=${order.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}">
+                                    <a th:if="${isManagerOrEmployee}" class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/orders/edit/{id}(id=${order.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, customerId=${customerId}, orderDate=${orderDate}, status=${status})}">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <button class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deleteOrder(' + ${order.id} + ')'">
+                                    <button th:if="${isManager}" class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deleteOrder(' + ${order.id} + ')'">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
                             </td>
                         </tr>
                         <tr th:if="${orders == null or orders.isEmpty()}">
-                            <td colspan="8" class="text-center">Không tìm thấy dữ liệu đơn hàng nào.</td>
+                            <td colspan="${isManager} ? 8 : 7" class="text-center">Không tìm thấy dữ liệu đơn hàng nào.</td>
                         </tr>
                         </tbody>
                     </table>

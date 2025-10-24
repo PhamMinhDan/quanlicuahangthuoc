@@ -98,7 +98,7 @@
                 <li><a class="dropdown-item" th:href="@{/payments/view-payments(page=${currentPage}, size=${pageSize}, sortField='amount', sortDir='desc', orderId=${orderId}, paymentDate=${paymentDate})}">Số tiền giảm dần</a></li>
               </ul>
             </div>
-            <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/payments/new}">
+            <a th:if="${isManager}" class="btn btn-success d-flex align-items-center gap-2" th:href="@{/payments/new}">
               <i class="bi bi-plus"></i> Thêm mới thanh toán
             </a>
           </div>
@@ -128,7 +128,7 @@
                   <i th:class="${sortField == 'paymentDate'} ? (${sortDir == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                 </a>
               </th>
-              <th>Hành động</th>
+              <th th:if="${isManager}">Hành động</th>
             </tr>
             </thead>
             <tbody>
@@ -139,7 +139,7 @@
               <td th:text="${payment.amount != null ? #numbers.formatDecimal(payment.amount, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
               <td th:text="${payment.change != null ? #numbers.formatDecimal(payment.change, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
               <td th:text="${payment.paymentDate != null ? #temporals.format(payment.paymentDate, 'dd/MM/yyyy') : 'N/A'}"></td>
-              <td>
+              <td th:if="${isManager}">
                 <div class="d-flex gap-2">
                   <a class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/payments/edit/{id}(id=${payment.id}, page=${currentPage}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}">
                     <i class="bi bi-pencil"></i>
@@ -151,7 +151,7 @@
               </td>
             </tr>
             <tr th:if="${payments == null or payments.isEmpty()}">
-              <td colspan="7" class="text-center">Không tìm thấy dữ liệu thanh toán nào.</td>
+              <td colspan="${isManager} ? 7 : 6" class="text-center">Không tìm thấy dữ liệu thanh toán nào.</td>
             </tr>
             </tbody>
           </table>

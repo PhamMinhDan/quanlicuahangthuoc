@@ -93,7 +93,7 @@
                                 <li><a class="dropdown-item" th:href="@{/api/staff/view-staff(page=${currentPage}, size=${pageSize}, sortBy='salary', sortDirection='desc', name=${name}, role=${role})}">Lương từ lớn đến bé</a></li>
                             </ul>
                         </div>
-                        <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/api/staff/add}">
+                        <a th:if="${isManager}" class="btn btn-success d-flex align-items-center gap-2" th:href="@{/api/staff/add}">
                             <i class="bi bi-plus"></i> Thêm nhân viên mới
                         </a>
                     </div>
@@ -119,7 +119,7 @@
                                     <i th:class="${sortBy == 'salary'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                                 </a>
                             </th>
-                            <th>Hành động</th>
+                            <th th:if="${isManager}">Hành động</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -131,7 +131,7 @@
                             <td th:text="${staff.role != null ? staff.role.displayName : 'N/A'}"></td>
                             <td th:text="${staff.workShift != null ? staff.workShift.displayName : 'N/A'}"></td>
                             <td th:text="${staff.salary != null ? #numbers.formatDecimal(staff.salary, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
-                            <td>
+                            <td th:if="${isManager}">
                                 <div class="d-flex gap-2">
                                     <a class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/api/staff/edit/{id}(id=${staff.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}"><i class="bi bi-pencil"></i></a>
                                     <button class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deleteStaff(' + ${staff.id} + ')'"><i class="bi bi-trash"></i></button>
@@ -139,7 +139,7 @@
                             </td>
                         </tr>
                         <tr th:if="${staffs == null or staffs.isEmpty()}">
-                            <td colspan="8" class="text-center">Không tìm thấy dữ liệu nhân viên nào.</td>
+                            <td colspan="${isManager} ? 8 : 7" class="text-center">Không tìm thấy dữ liệu nhân viên nào.</td>
                         </tr>
                         </tbody>
                     </table>

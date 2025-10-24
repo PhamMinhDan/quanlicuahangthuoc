@@ -10,7 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
+import org.springframework.security.core.Authentication;
 import java.time.LocalDate;
 import java.util.NoSuchElementException;
 
@@ -29,7 +29,7 @@ public class PaymentController {
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortField", defaultValue = "id") String sortField,
             @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir,
-            Model model) {
+            Model model, Authentication authentication) {
         try {
             Page<Payment> paymentPage = paymentService.getPaymentsPaged(orderId, paymentDate, page, size, sortField, sortDir);
             model.addAttribute("payments", paymentPage.getContent());
@@ -44,6 +44,8 @@ public class PaymentController {
             model.addAttribute("totalAmount", paymentService.getTotalAmount());
             model.addAttribute("totalCashPayments", paymentService.getTotalCashPayments());
             model.addAttribute("totalTransferPayments", paymentService.getTotalTransferPayments());
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("activeNav", "payments");
             return "payment";
         } catch (Exception e) {
@@ -52,13 +54,17 @@ public class PaymentController {
             model.addAttribute("totalAmount", paymentService.getTotalAmount());
             model.addAttribute("totalCashPayments", paymentService.getTotalCashPayments());
             model.addAttribute("totalTransferPayments", paymentService.getTotalTransferPayments());
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             return "payment";
         }
     }
 
     @GetMapping("/new")
-    public String showAddPaymentForm(Model model) {
+    public String showAddPaymentForm(Model model, Authentication authentication) {
         model.addAttribute("payment", new Payment());
+        model.addAttribute("isManager", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
         model.addAttribute("activeNav", "payments");
         return "payment-add";
     }
@@ -98,7 +104,7 @@ public class PaymentController {
             @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir,
             @RequestParam(value = "orderId", required = false) Integer orderId,
             @RequestParam(value = "paymentDate", required = false) LocalDate paymentDate,
-            Model model) {
+            Model model, Authentication authentication) {
         try {
             Payment payment = paymentService.getPaymentById(id);
             model.addAttribute("payment", payment);
@@ -108,6 +114,8 @@ public class PaymentController {
             model.addAttribute("sortDir", sortDir);
             model.addAttribute("orderId", orderId);
             model.addAttribute("paymentDate", paymentDate);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("activeNav", "payments");
             return "payment-edit";
         } catch (NoSuchElementException e) {
@@ -116,7 +124,9 @@ public class PaymentController {
             model.addAttribute("totalAmount", paymentService.getTotalAmount());
             model.addAttribute("totalCashPayments", paymentService.getTotalCashPayments());
             model.addAttribute("totalTransferPayments", paymentService.getTotalTransferPayments());
-            return listPayments(orderId, paymentDate, page, size, sortField, sortDir, model);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            return listPayments(orderId, paymentDate, page, size, sortField, sortDir, model, authentication);
         }
     }
 

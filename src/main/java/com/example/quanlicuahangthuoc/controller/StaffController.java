@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.NoSuchElementException;
 
@@ -27,7 +28,7 @@ public class StaffController {
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
             @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
-            Model model) {
+            Model model, Authentication authentication) {
         try {
             Page<Staff> staffPage;
             if (name != null && !name.trim().isEmpty() && role != null && !role.trim().isEmpty()) {
@@ -50,17 +51,23 @@ public class StaffController {
             model.addAttribute("sortDirection", sortDirection);
             model.addAttribute("name", name);
             model.addAttribute("role", role);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("activeNav", "staff");
             return "staff";
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi khi tải danh sách nhân viên: " + e.getMessage());
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             return "staff";
         }
     }
 
     @GetMapping("/add")
-    public String showAddStaffForm(Model model) {
+    public String showAddStaffForm(Model model, Authentication authentication) {
         model.addAttribute("staff", new Staff());
+        model.addAttribute("isManager", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
         model.addAttribute("activeNav", "staff");
         return "staff-form";
     }
@@ -118,7 +125,7 @@ public class StaffController {
             @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "role", required = false) String role,
-            Model model) {
+            Model model, Authentication authentication) {
         try {
             Staff staff = staffService.getStaffById(id);
             model.addAttribute("staff", staff);
@@ -128,11 +135,15 @@ public class StaffController {
             model.addAttribute("sortDirection", sortDirection);
             model.addAttribute("name", name);
             model.addAttribute("role", role);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("activeNav", "staff");
             return "staff-form";
         } catch (NoSuchElementException e) {
             model.addAttribute("error", "Nhân viên không tồn tại: " + e.getMessage());
-            return viewStaff(name, role, page, size, sortBy, sortDirection, model);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            return viewStaff(name, role, page, size, sortBy, sortDirection, model, authentication);
         }
     }
 

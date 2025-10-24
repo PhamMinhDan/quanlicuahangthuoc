@@ -107,7 +107,7 @@
                                 <li><a class="dropdown-item" th:href="@{/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='price', sortDirection='desc', searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">Giá từ lớn đến bé</a></li>
                             </ul>
                         </div>
-                        <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/medicines/add}">
+                        <a th:if="${isManager}" class="btn btn-success d-flex align-items-center gap-2" th:href="@{/medicines/add}">
                             <i class="bi bi-plus"></i> Thêm mới thuốc
                         </a>
                     </div>
@@ -134,7 +134,7 @@
                             </th>
                             <th>Số lượng tồn kho</th>
                             <th>Nhà cung cấp</th>
-                            <th>Hành động</th>
+                            <th th:if="${isManager}">Hành động</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -150,7 +150,7 @@
                             <td th:text="${medicine.price != null ? #numbers.formatDecimal(medicine.price, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
                             <td class="text-center" th:text="${medicine.stockQuantity != null ? medicine.stockQuantity : '0'}"></td>
                             <td class="text-center" th:text="${medicine.supplier != null ? medicine.supplier.displayName : 'N/A'}"></td>
-                            <td>
+                            <td th:if="${isManager}">
                                 <div class="d-flex gap-2">
                                     <a class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/medicines/edit/{id}(id=${medicine.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}"><i class="bi bi-pencil"></i></a>
                                     <button class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deleteMedicine(' + ${medicine.id} + ')'"><i class="bi bi-trash"></i></button>
@@ -158,7 +158,7 @@
                             </td>
                         </tr>
                         <tr th:if="${medicines == null or medicines.isEmpty()}">
-                            <td colspan="9" class="text-center">Không tìm thấy dữ liệu thuốc nào.</td>
+                            <td colspan="${isManager} ? 9 : 8" class="text-center">Không tìm thấy dữ liệu thuốc nào.</td>
                         </tr>
                         </tbody>
                     </table>

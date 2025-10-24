@@ -8,7 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.security.core.Authentication;
 import java.util.NoSuchElementException;
 
 @Controller
@@ -30,12 +30,13 @@ public class CustomerController {
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
             @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
-            Model model) {
+            Model model,
+            Authentication authentication) {
         try {
             Page<Customer> customerPage;
-            if ((keyword != null && !keyword.trim().isEmpty()) || 
-                (phone != null && !phone.trim().isEmpty()) || 
-                (customerType != null && !customerType.trim().isEmpty())) {
+            if ((keyword != null && !keyword.trim().isEmpty()) ||
+                    (phone != null && !phone.trim().isEmpty()) ||
+                    (customerType != null && !customerType.trim().isEmpty())) {
                 customerPage = customerService.searchWithPagingAndSort(keyword, phone, customerType, page, size, sortBy, sortDirection);
             } else {
                 customerPage = customerService.getAllCustomersWithPagingAndSort(page, size, sortBy, sortDirection);
@@ -51,17 +52,23 @@ public class CustomerController {
             model.addAttribute("phone", phone);
             model.addAttribute("customerType", customerType);
             model.addAttribute("totalCustomers", customerService.getTotalCustomers());
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("activeNav", "customers");
             return "customers";
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi khi tải danh sách khách hàng: " + e.getMessage());
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             return "customers";
         }
     }
 
     @GetMapping("/add")
-    public String showAddCustomerForm(Model model) {
+    public String showAddCustomerForm(Model model, Authentication authentication) {
         model.addAttribute("customer", new Customer());
+        model.addAttribute("isManager", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
         model.addAttribute("activeNav", "customers");
         return "customer-form";
     }
@@ -111,7 +118,8 @@ public class CustomerController {
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam(value = "customerType", required = false) String customerType,
-            Model model) {
+            Model model,
+            Authentication authentication) {
         try {
             Customer customer = customerService.getCustomerById(id);
             model.addAttribute("customer", customer);
@@ -122,11 +130,15 @@ public class CustomerController {
             model.addAttribute("keyword", keyword);
             model.addAttribute("phone", phone);
             model.addAttribute("customerType", customerType);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("activeNav", "customers");
             return "customer-form";
         } catch (NoSuchElementException e) {
             model.addAttribute("error", "Khách hàng không tồn tại: " + e.getMessage());
-            return viewCustomers(keyword, phone, customerType, page, size, sortBy, sortDirection, model);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            return viewCustomers(keyword, phone, customerType, page, size, sortBy, sortDirection, model, authentication);
         }
     }
 
