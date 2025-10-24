@@ -66,7 +66,7 @@
                         <span>nhân viên</span>
                     </div>
                     <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/api/staff/add}">
-                        <i class="bi bi-plus"></i> Thêm nhân viên mới
+                        <i th:if="${isManager}" class="bi bi-plus"></i> Thêm nhân viên mới
                     </a>
                 </div>
                 <div class="table-responsive">
@@ -90,7 +90,7 @@
                                     <i th:class="${sortBy == 'salary'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                                 </a>
                             </th>
-                            <th style="white-space: nowrap;">Hành động</th>
+                            <th th:if="${isManager}" style="white-space: nowrap;">Hành động</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -104,8 +104,8 @@
                             <td style="white-space: nowrap;" th:text="${staff.salary != null ? #numbers.formatDecimal(staff.salary, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
                             <td style="white-space: nowrap;">
                                 <div class="d-flex gap-2">
-                                    <a class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/api/staff/edit/{id}(id=${staff.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}"><i class="bi bi-pencil"></i></a>
-                                    <button class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deleteStaff(' + ${staff.id} + ')'"><i class="bi bi-trash"></i></button>
+                                    <a th:if="${isManager}" class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/api/staff/edit/{id}(id=${staff.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}"><i class="bi bi-pencil"></i></a>
+                                    <button th:if="${isManager}" class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deleteStaff(' + ${staff.id} + ')'"><i class="bi bi-trash"></i></button>
                                 </div>
                             </td>
                         </tr>

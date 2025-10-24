@@ -77,14 +77,18 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div class="d-flex gap-2 mt-4">
+                        <div th:if="${isManager}" class="d-flex gap-2 mt-4">
                             <a th:href="@{/promotions/edit/{id}(id=${promotion.id})}" class="btn btn-primary">
                                 <i class="bi bi-pencil"></i> Chỉnh sửa
                             </a>
                             <a th:href="@{/promotions/delete/{id}(id=${promotion.id})}" class="btn btn-danger" onclick="return confirm('Bạn có chắc muốn xóa khuyến mãi này?')">
                                 <i class="bi bi-trash"></i> Xóa
                             </a>
+                            <a th:href="@{/promotions}" class="btn btn-secondary">
+                                <i class="bi bi-x"></i> Đóng
+                            </a>
+                        </div>
+                        <div th:unless="${isManager}" class="d-flex gap-2 mt-4">
                             <a th:href="@{/promotions}" class="btn btn-secondary">
                                 <i class="bi bi-x"></i> Đóng
                             </a>

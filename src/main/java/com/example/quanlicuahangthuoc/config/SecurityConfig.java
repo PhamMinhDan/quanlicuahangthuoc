@@ -51,15 +51,17 @@ public class SecurityConfig {
                         // Cho phép truy cập công khai vào trang đăng nhập, từ chối truy cập và dashboard
                         .requestMatchers("/", "/login", "/access-denied").permitAll()
                         // Chỉ quản lý mới được thêm, sửa, xóa trên các trang quản lý (trừ đơn hàng)
-                        .requestMatchers("/medicines/new", "/medicines/edit/**", "/medicines/delete/**").hasRole("quan_ly")
-                        .requestMatchers("/customers/new", "/customers/edit/**", "/customers/delete/**").hasRole("quan_ly")
+                        .requestMatchers("/medicines/add", "/medicines/edit/**", "/medicines/delete/**").hasRole("quan_ly")
+                        .requestMatchers("/customers/add", "/customers/edit/**").hasAnyRole("quan_ly", "nhan_vien")
+                        .requestMatchers("/medicines/delete/**").hasRole("quan_ly")
                         .requestMatchers("/payments/new", "/payments/edit/**", "/payments/delete/**").hasRole("quan_ly")
                         .requestMatchers("/promotions/new", "/promotions/edit/**", "/promotions/delete/**").hasRole("quan_ly")
-                        .requestMatchers("/staff/new", "/staff/edit/**", "/staff/delete/**").hasRole("quan_ly")
+                        .requestMatchers("/api/staff/add", "/api/staff/edit/**", "/api/staff/delete/**").hasRole("quan_ly")
                         // Chỉ quản lý mới được xóa đơn hàng
                         .requestMatchers("/orders/delete/**").hasRole("quan_ly")
+                        .requestMatchers("/dashboard").hasRole("quan_ly")
                         // Cả quản lý và nhân viên được xem, tìm kiếm, thêm và sửa đơn hàng
-                        .requestMatchers("/orders/**", "/medicines/**", "/customers/**", "/payments/**", "/promotions/**", "/staff/**", "/dashboard").hasAnyRole("quan_ly", "nhan_vien")
+                        .requestMatchers("/orders/**", "/medicines/**", "/customers/**", "/payments/**", "/promotions/**").hasAnyRole("quan_ly", "nhan_vien")
                         // Các yêu cầu khác cần xác thực
                         .anyRequest().authenticated()
                 )

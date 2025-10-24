@@ -67,7 +67,7 @@
             <span>thanh toán</span>
           </div>
           <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/payments/new}">
-            <i class="bi bi-plus"></i> Thêm mới thanh toán
+            <i th:if="${isManager}" class="bi bi-plus"></i> Thêm mới thanh toán
           </a>
         </div>
         <div class="table-responsive">
@@ -90,7 +90,7 @@
                   <i th:class="${sortField == 'paymentDate'} ? (${sortDir == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                 </a>
               </th>
-              <th style="white-space: nowrap;">Hành động</th>
+              <th th:if="${isManager}" style="white-space: nowrap;">Hành động</th>
             </tr>
             </thead>
             <tbody>
@@ -103,10 +103,10 @@
               <td style="white-space: nowrap;" th:text="${payment.paymentDate != null ? #temporals.format(payment.paymentDate, 'dd/MM/yyyy') : 'N/A'}"></td>
               <td style="white-space: nowrap;">
                 <div class="d-flex gap-2">
-                  <a class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/payments/edit/{id}(id=${payment.id}, page=${currentPage}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}">
+                  <a th:if="${isManager}" class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/payments/edit/{id}(id=${payment.id}, page=${currentPage}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}">
                     <i class="bi bi-pencil"></i>
                   </a>
-                  <button class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deletePayment(' + ${payment.id} + ')'">
+                  <button th:if="${isManager}" class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deletePayment(' + ${payment.id} + ')'">
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>

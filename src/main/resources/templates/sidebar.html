@@ -26,7 +26,7 @@
                 <a class="nav-link" th:classappend="${activeNav == 'customers'} ? 'active'" th:href="@{/customers/view-customers}">
                     <i class="bi bi-people"></i> Quản lí khách hàng
                 </a>
-                <a class="nav-link" th:classappend="${activeNav == 'staff'} ? 'active'" th:href="@{/api/staff/view-staff}">
+                <a th:if="${isManager}" class="nav-link" th:classappend="${activeNav == 'staff'} ? 'active'" th:href="@{/api/staff/view-staff}">
                     <i class="bi bi-person"></i> Quản lí nhân viên
                 </a>
                 <a class="nav-link" th:classappend="${activeNav == 'promotions'} ? 'active'" th:href="@{/promotions}">

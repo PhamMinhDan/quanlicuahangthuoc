@@ -65,7 +65,7 @@
                             <span class="fw-bold" th:text="${totalItems}">0</span>
                             <span>khuyến mãi</span>
                         </div>
-                        <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/promotions/new}">
+                        <a th:if="${isManager}" class="btn btn-success d-flex align-items-center gap-2" th:href="@{/promotions/new}">
                             <i class="bi bi-plus"></i> Thêm mới khuyến mãi
                         </a>
                     </div>
@@ -89,7 +89,7 @@
                                     </th>
                                     <th style="white-space: nowrap;">Ngày hết hạn</th>
                                     <th style="white-space: nowrap;">Trạng thái</th>
-                                    <th style="white-space: nowrap;">Hành động</th>
+                                    <th th:if="${isManager}" style="white-space: nowrap;">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -107,7 +107,7 @@
                                         <span th:if="${promotion.expiredDate != null and promotion.expiredDate.isAfter(#temporals.createToday())}" class="badge bg-success">Còn hạn</span>
                                         <span th:if="${promotion.expiredDate != null and (promotion.expiredDate.isBefore(#temporals.createToday()) or promotion.expiredDate.isEqual(#temporals.createToday()))}" class="badge bg-danger">Hết hạn</span>
                                     </td>
-                                    <td style="white-space: nowrap;">
+                                    <td th:if="${isManager}" style="white-space: nowrap;">
                                         <div class="d-flex gap-2">
                                             <a class="btn btn-action-edit btn-sm text-white" th:href="@{/promotions/edit/{id}(id=${promotion.id})}">
                                                 <i class="bi bi-pencil"></i>

@@ -106,7 +106,7 @@
                             <th style="white-space: nowrap;">Số lượng tồn kho</th>
                             <th style="white-space: nowrap;">Nhà cung cấp</th>
                             <th style="white-space: nowrap; min-width: 200px;">Hướng dẫn sử dụng</th>
-                            <th style="white-space: nowrap;">Hành động</th>
+                            <th th:if="${isManager}" style="white-space: nowrap;">Hành động</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -129,8 +129,8 @@
                             </td>
                             <td style="white-space: nowrap;">
                                 <div class="d-flex gap-2">
-                                    <a class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/medicines/edit/{id}(id=${medicine.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}"><i class="bi bi-pencil"></i></a>
-                                    <button class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deleteMedicine(' + ${medicine.id} + ')'"><i class="bi bi-trash"></i></button>
+                                    <a th:if="${isManager}" class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/medicines/edit/{id}(id=${medicine.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}"><i class="bi bi-pencil"></i></a>
+                                    <button th:if="${isManager}" class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deleteMedicine(' + ${medicine.id} + ')'"><i class="bi bi-trash"></i></button>
                                 </div>
                             </td>
                         </tr>
