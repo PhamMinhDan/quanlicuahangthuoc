@@ -283,4 +283,55 @@ body {
     50% {
         transform: scale(1.1);
     }
+
+}
+.status-select {
+    transition: all 0.3s ease;
+}
+
+/* Màu ĐẬM HƠN cho select box */
+.status-select.status-paid {
+    background-color: #28a745 !important;  /* Xanh đậm */
+    color: #ffffff !important;
+    border-color: #28a745 !important;
+}
+
+.status-select.status-unpaid {
+    background-color: #6c757d !important;  /* Xám đậm */
+    color: #ffffff !important;
+    border-color: #6c757d !important;
+}
+
+.status-select.status-cancelled {
+    background-color: #dc3545 !important;  /* Đỏ đậm */
+    color: #ffffff !important;
+    border-color: #dc3545 !important;
+}
+
+.status-select:disabled {
+    opacity: 0.6;
+}
+
+/* Màu ĐẬM HƠN cho từng option trong dropdown */
+.status-select option[value="da_thanh_toan"] {
+    background-color: #28a745;
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.status-select option[value="chua_thanh_toan"] {
+    background-color: #6c757d;
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.status-select option[value="da_huy"] {
+    background-color: #dc3545;
+    color: #ffffff;
+    font-weight: 500;
+}
+
+/* Thêm padding cho options để dễ nhìn hơn */
+.status-select option {
+    padding: 8px;
 }

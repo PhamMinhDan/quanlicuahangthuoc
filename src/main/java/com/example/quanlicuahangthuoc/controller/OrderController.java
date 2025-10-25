@@ -287,4 +287,21 @@ public class OrderController {
                 (orderDate != null ? "&orderDate=" + orderDate : "") +
                 (status != null ? "&status=" + status : "");
     }
+    @PostMapping("/update-status/{id}")
+    @ResponseBody
+    public String updateOrderStatus(
+            @PathVariable Integer id,
+            @RequestParam("status") String status) {
+        try {
+            Order.OrderStatus orderStatus = Order.OrderStatus.valueOf(status);
+            orderService.updateOrderStatus(id, orderStatus);
+            return "success";
+        } catch (IllegalArgumentException e) {
+            return "Trạng thái không hợp lệ";
+        } catch (NoSuchElementException e) {
+            return "Đơn hàng không tồn tại";
+        } catch (Exception e) {
+            return "Lỗi: " + e.getMessage();
+        }
+    }
 }

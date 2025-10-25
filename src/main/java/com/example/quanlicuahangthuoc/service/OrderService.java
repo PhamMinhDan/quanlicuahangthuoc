@@ -121,4 +121,10 @@ public class OrderService {
         }
         return customersByMonth;
     }
+    public void updateOrderStatus(Integer orderId, Order.OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new NoSuchElementException("Không tìm thấy đơn hàng"));
+        order.setStatus(newStatus);
+        orderRepository.save(order);
+    }
 }
