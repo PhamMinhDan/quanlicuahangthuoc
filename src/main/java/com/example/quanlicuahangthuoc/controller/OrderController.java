@@ -1,7 +1,10 @@
 package com.example.quanlicuahangthuoc.controller;
 
 import com.example.quanlicuahangthuoc.entity.Order;
+import com.example.quanlicuahangthuoc.entity.Promotion;
+import com.example.quanlicuahangthuoc.service.CustomerService;
 import com.example.quanlicuahangthuoc.service.OrderService;
+import com.example.quanlicuahangthuoc.service.PromotionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.core.Authentication;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Controller
@@ -21,7 +25,12 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    // Hiển thị danh sách đơn hàng với tìm kiếm bằng GET
+    @Autowired
+    private PromotionService promotionService;
+
+    @Autowired
+    private CustomerService customerService;
+
     @GetMapping("/view-orders")
     public String viewOrders(
             @RequestParam(value = "customerId", required = false) Integer customerId,
@@ -31,14 +40,12 @@ public class OrderController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             Model model, Authentication authentication) {
-       
         try {
-            // Parse dates from dd/MM/yyyy format
             LocalDate fromDate = orderService.parseDate(fromDateStr);
             LocalDate toDate = orderService.parseDate(toDateStr);
-            
+
             Order.OrderStatus orderStatus = (status != null && !status.trim().isEmpty()) ?
                     Order.OrderStatus.valueOf(status) : null;
             Page<Order> orderPage = orderService.getOrderPage(customerId, fromDate, toDate, orderStatus, page, size, sortBy, sortDirection);
@@ -55,8 +62,7 @@ public class OrderController {
             model.addAttribute("toDate", toDateStr);
             model.addAttribute("status", status);
             model.addAttribute("totalOrders", orderService.getTotalOrders());
-            model.addAttribute("activeNav", "orders");
-             model.addAttribute("isManager", authentication.getAuthorities().stream()
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
@@ -76,14 +82,13 @@ public class OrderController {
         }
     }
 
-    // Hiển thị chi tiết đơn hàng
     @GetMapping("/detail/{id}")
     public String viewOrderDetail(
             @PathVariable("id") int id,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             @RequestParam(value = "customerId", required = false) Integer customerId,
             @RequestParam(value = "fromDate", required = false) String fromDateStr,
             @RequestParam(value = "toDate", required = false) String toDateStr,
@@ -94,7 +99,6 @@ public class OrderController {
             Order order = orderService.getOrderById(id);
             model.addAttribute("order", order);
             model.addAttribute("activeNav", "orders");
-            // Truyền các tham số phân trang và filter để sử dụng khi quay lại
             model.addAttribute("page", page);
             model.addAttribute("size", size);
             model.addAttribute("sortBy", sortBy);
@@ -113,10 +117,9 @@ public class OrderController {
             return buildRedirectUrl(page, size, sortBy, sortDirection, customerId, fromDateStr, toDateStr, status);
         }
     }
-    
-    // Helper method để build redirect URL với tất cả parameters
-    private String buildRedirectUrl(int page, int size, String sortBy, String sortDirection, 
-                                     Integer customerId, String fromDateStr, String toDateStr, String status) {
+
+    private String buildRedirectUrl(int page, int size, String sortBy, String sortDirection,
+                                    Integer customerId, String fromDateStr, String toDateStr, String status) {
         StringBuilder url = new StringBuilder("redirect:/orders/view-orders?page=");
         url.append(page);
         url.append("&size=").append(size);
@@ -137,10 +140,11 @@ public class OrderController {
         return url.toString();
     }
 
-    // Hiển thị form thêm đơn hàng
     @GetMapping("/add")
     public String showAddOrderForm(Model model, Authentication authentication) {
         model.addAttribute("order", new Order());
+        List<Promotion> promotions = promotionService.getAllPromotions();
+        model.addAttribute("promotions", promotions);
         model.addAttribute("isManager", authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
         model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
@@ -149,7 +153,6 @@ public class OrderController {
         return "order-form";
     }
 
-    // Xử lý thêm đơn hàng
     @PostMapping("/add")
     public String createOrder(
             @Valid @ModelAttribute Order order,
@@ -161,6 +164,7 @@ public class OrderController {
                     .reduce((e1, e2) -> e1 + "; " + e2)
                     .orElse("Lỗi nhập liệu"));
             model.addAttribute("order", order);
+            model.addAttribute("promotions", promotionService.getAllPromotions());
             model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
@@ -170,11 +174,11 @@ public class OrderController {
         }
         try {
             orderService.addOrder(order);
-            model.addAttribute("message", "Thêm đơn hàng thành công");
-            return "redirect:/orders/view-orders";
+            return "redirect:/orders/view-orders?page=0&sortDirection=desc&addSuccess=true";
         } catch (IllegalStateException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("order", order);
+            model.addAttribute("promotions", promotionService.getAllPromotions());
             model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
@@ -184,20 +188,27 @@ public class OrderController {
         }
     }
 
-    // Hiển thị form sửa đơn hàng
     @GetMapping("/edit/{id}")
     public String showEditOrderForm(
             @PathVariable Integer id,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             @RequestParam(value = "customerId", required = false) Integer customerId,
             @RequestParam(value = "orderDate", required = false) LocalDate orderDate,
             @RequestParam(value = "status", required = false) String status,
             Model model, Authentication authentication) {
         try {
             Order order = orderService.getOrderById(id);
+            if (order.getCustomer() != null) {
+                order.setCustomerPhone(order.getCustomer().getPhone());
+            }
+            if (order.getPromotion() != null) {
+                order.setPromotionName(order.getPromotion().getName());
+            }
+            List<Promotion> promotions = promotionService.getAllPromotions();
+            model.addAttribute("promotions", promotions);
             model.addAttribute("order", order);
             model.addAttribute("page", page);
             model.addAttribute("size", size);
@@ -222,7 +233,6 @@ public class OrderController {
         }
     }
 
-    // Xử lý sửa đơn hàng
     @PostMapping("/update/{id}")
     public String updateOrder(
             @PathVariable Integer id,
@@ -235,6 +245,7 @@ public class OrderController {
                     .reduce((e1, e2) -> e1 + "; " + e2)
                     .orElse("Lỗi nhập liệu"));
             model.addAttribute("order", order);
+            model.addAttribute("promotions", promotionService.getAllPromotions());
             model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
@@ -245,11 +256,11 @@ public class OrderController {
         try {
             order.setId(id);
             orderService.updateOrder(order);
-            model.addAttribute("message", "Cập nhật đơn hàng thành công");
-            return "redirect:/orders/view-orders";
+            return "redirect:/orders/view-orders?page=0&sortDirection=desc&updateSuccess=true";
         } catch (IllegalStateException | NoSuchElementException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("order", order);
+            model.addAttribute("promotions", promotionService.getAllPromotions());
             model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
@@ -259,34 +270,31 @@ public class OrderController {
         }
     }
 
-    // Xử lý xóa đơn hàng
     @PostMapping("/delete/{id}")
     public String deleteOrder(
             @PathVariable Integer id,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             @RequestParam(value = "customerId", required = false) Integer customerId,
-            @RequestParam(value = "orderDate", required = false) LocalDate orderDate,
+            @RequestParam(value = "fromDate", required = false) String fromDate,
+            @RequestParam(value = "toDate", required = false) String toDate,
             @RequestParam(value = "status", required = false) String status,
-            Model model) {
+            RedirectAttributes redirectAttributes) {
         try {
             orderService.deleteOrder(id);
-            model.addAttribute("message", "Xóa đơn hàng thành công");
+            redirectAttributes.addFlashAttribute("message", "Đơn hàng đã được xóa thành công.");
+            return buildRedirectUrl(page, size, sortBy, sortDirection, customerId, fromDate, toDate, status) + "&deleteSuccess=true";
         } catch (NoSuchElementException e) {
-            model.addAttribute("error", "Đơn hàng không tồn tại: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Đơn hàng không tồn tại: " + e.getMessage());
+            return buildRedirectUrl(page, size, sortBy, sortDirection, customerId, fromDate, toDate, status);
         } catch (Exception e) {
-            model.addAttribute("error", "Lỗi server: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Lỗi server khi xóa đơn hàng: " + e.getMessage());
+            return buildRedirectUrl(page, size, sortBy, sortDirection, customerId, fromDate, toDate, status);
         }
-        return "redirect:/orders/view-orders?page=" + page +
-                "&size=" + size +
-                "&sortBy=" + sortBy +
-                "&sortDirection=" + sortDirection +
-                (customerId != null ? "&customerId=" + customerId : "") +
-                (orderDate != null ? "&orderDate=" + orderDate : "") +
-                (status != null ? "&status=" + status : "");
     }
+
     @PostMapping("/update-status/{id}")
     @ResponseBody
     public String updateOrderStatus(

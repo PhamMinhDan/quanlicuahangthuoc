@@ -1,7 +1,11 @@
 package com.example.quanlicuahangthuoc.service;
 
+import com.example.quanlicuahangthuoc.entity.Customer;
 import com.example.quanlicuahangthuoc.entity.Order;
+import com.example.quanlicuahangthuoc.entity.Promotion;
+import com.example.quanlicuahangthuoc.repository.CustomerRepository;
 import com.example.quanlicuahangthuoc.repository.OrderRepository;
+import com.example.quanlicuahangthuoc.repository.PromotionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,13 +27,17 @@ public class OrderService {
     @Autowired
     private OrderRepository orderRepository;
 
-    // Lấy đơn hàng theo ID
+    @Autowired
+    private CustomerRepository customerRepository;
+
+    @Autowired
+    private PromotionRepository promotionRepository;
+
     public Order getOrderById(Integer id) {
         return orderRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new NoSuchElementException("Không tìm thấy đơn hàng với ID: " + id));
     }
 
-    // Parse date từ string dd/MM/yyyy
     public LocalDate parseDate(String dateStr) {
         if (dateStr == null || dateStr.trim().isEmpty()) {
             return null;
@@ -42,9 +50,13 @@ public class OrderService {
         }
     }
 
-    // Phân trang và tìm kiếm động với khoảng thời gian
     public Page<Order> getOrderPage(Integer customerId, LocalDate fromDate, LocalDate toDate, Order.OrderStatus status, int page, int size, String sortBy, String sortDirection) {
         Sort.Direction direction = "desc".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        // Mặc định sắp xếp theo id giảm dần nếu không có sortBy hợp lệ
+        if (sortBy == null || sortBy.trim().isEmpty()) {
+            sortBy = "id";
+            direction = Sort.Direction.DESC; // Ưu tiên sắp xếp giảm dần theo ID
+        }
 
         Sort sort;
         if ("orderDate".equalsIgnoreCase(sortBy)) {
@@ -60,23 +72,35 @@ public class OrderService {
         } else if ("promotion.id".equalsIgnoreCase(sortBy)) {
             sort = Sort.by(direction, "promotion.id");
         } else {
-            sort = Sort.by(direction, "id");
+            sort = Sort.by(direction, "id"); // Mặc định theo id
         }
 
         Pageable pageable = PageRequest.of(page, size, sort);
         return orderRepository.findOrdersByDateRange(customerId, fromDate, toDate, status, pageable);
     }
 
-    // Tính tổng số đơn hàng
     public long getTotalOrders() {
         return orderRepository.countOrders();
     }
 
     @Transactional
     public Order addOrder(Order order) {
-        if (orderRepository.findByCustomerId(order.getCustomer().getId()).isPresent()) {
-            throw new IllegalStateException("Đơn hàng với mã khách hàng " + order.getCustomer().getId() + " đã tồn tại.");
+        if (order.getCustomerPhone() != null && !order.getCustomerPhone().trim().isEmpty()) {
+            Customer customer = customerRepository.findByPhone(order.getCustomerPhone())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Không tìm thấy khách hàng với số điện thoại: " + order.getCustomerPhone()));
+            order.setCustomer(customer);
+        } else if (order.getCustomer() == null || order.getCustomer().getId() == null) {
+            throw new IllegalArgumentException("Vui lòng nhập số điện thoại khách hàng");
         }
+
+        if (order.getPromotionName() != null && !order.getPromotionName().trim().isEmpty()) {
+            Promotion promotion = promotionRepository.findByName(order.getPromotionName())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Không tìm thấy khuyến mãi: " + order.getPromotionName()));
+            order.setPromotion(promotion);
+        }
+
         return orderRepository.save(order);
     }
 
@@ -93,8 +117,24 @@ public class OrderService {
         if (!orderRepository.existsById(order.getId())) {
             throw new NoSuchElementException("Không tìm thấy đơn hàng với ID: " + order.getId());
         }
+
+        if (order.getCustomerPhone() != null && !order.getCustomerPhone().trim().isEmpty()) {
+            Customer customer = customerRepository.findByPhone(order.getCustomerPhone())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Không tìm thấy khách hàng với số điện thoại: " + order.getCustomerPhone()));
+            order.setCustomer(customer);
+        }
+
+        if (order.getPromotionName() != null && !order.getPromotionName().trim().isEmpty()) {
+            Promotion promotion = promotionRepository.findByName(order.getPromotionName())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Không tìm thấy khuyến mãi: " + order.getPromotionName()));
+            order.setPromotion(promotion);
+        }
+
         return orderRepository.save(order);
     }
+
     @Transactional(readOnly = true)
     public long countOrdersInPeriod(LocalDate startDate, LocalDate endDate) {
         return orderRepository.countByOrderDateBetween(startDate, endDate);
@@ -121,10 +161,12 @@ public class OrderService {
         }
         return customersByMonth;
     }
+
+    @Transactional
     public void updateOrderStatus(Integer orderId, Order.OrderStatus newStatus) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new NoSuchElementException("Không tìm thấy đơn hàng"));
-        order.setStatus(newStatus);
-        orderRepository.save(order);
+        if (!orderRepository.existsById(orderId)) {
+            throw new NoSuchElementException("Không tìm thấy đơn hàng với ID: " + orderId);
+        }
+        orderRepository.updateStatus(orderId, newStatus);
     }
 }

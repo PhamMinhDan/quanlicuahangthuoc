@@ -8,12 +8,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/medicine.css}">
+    <link rel="stylesheet" th:href="@{/notification.css}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-
 </head>
 <body>
 <div class="d-flex">
-
     <div th:replace="~{sidebar :: sidebar}"></div>
 
     <div class="main-content flex-grow-1 bg-light p-4">
@@ -89,6 +88,8 @@
                         <thead>
                         <tr>
                             <th style="white-space: nowrap;">STT</th>
+                            <!-- THÊM CỘT MỚI: Mã đơn -->
+                            <th style="white-space: nowrap;">Mã đơn</th>
                             <th style="white-space: nowrap;">Mã KH</th>
                             <th style="white-space: nowrap;">Mã NV</th>
                             <th style="white-space: nowrap;">Mã KM</th>
@@ -111,6 +112,10 @@
                         <tbody>
                         <tr th:each="order, iterStat : ${orders}">
                             <td style="white-space: nowrap;" th:text="${currentPage * pageSize + iterStat.index + 1}"></td>
+                            <!-- THÊM CỘT MỚI: Hiển thị ID order -->
+                            <td style="white-space: nowrap;">
+                                <strong th:text="'#' + ${order.id}"></strong>
+                            </td>
                             <td style="white-space: nowrap;" th:text="${order.customer != null ? order.customer.id : 'N/A'}"></td>
                             <td style="white-space: nowrap;" th:text="${order.staff != null ? order.staff.id : 'N/A'}"></td>
                             <td style="white-space: nowrap; text-align: center;">
@@ -146,11 +151,28 @@
                                        title="Chỉnh sửa">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <button th:if="${isManager}" class="btn btn-danger btn-sm btn-action-delete text-white"
-                                            th:onclick="'deleteOrder(' + ${order.id} + ')'"
+                                    <!-- SỬA NÚT XÓA - Dùng modal thay vì onclick -->
+                                    <button th:if="${isManager}"
+                                            type="button"
+                                            class="btn btn-danger btn-sm btn-action-delete text-white"
+                                            th:attr="data-bs-toggle='modal', data-bs-target='#deleteConfirmModal'+${order.id}"
                                             title="Xóa">
                                         <i class="bi bi-trash"></i>
                                     </button>
+                                    <!-- THÊM FORM ẨN -->
+                                    <form th:action="@{/orders/delete/{id}(id=${order.id})}"
+                                          method="post"
+                                          th:id="'deleteForm'+${order.id}"
+                                          style="display:none;">
+                                        <input type="hidden" name="page" th:value="${currentPage}">
+                                        <input type="hidden" name="size" th:value="${pageSize}">
+                                        <input type="hidden" name="sortBy" th:value="${sortBy}">
+                                        <input type="hidden" name="sortDirection" th:value="${sortDirection}">
+                                        <input type="hidden" name="customerId" th:value="${customerId}">
+                                        <input type="hidden" name="fromDate" th:value="${fromDate}">
+                                        <input type="hidden" name="toDate" th:value="${toDate}">
+                                        <input type="hidden" name="status" th:value="${status}">
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -234,6 +256,45 @@
                     </nav>
                 </div>
             </div>
+            <div th:each="order : ${orders}">
+                <div class="modal fade"
+                     th:id="'deleteConfirmModal'+${order.id}"
+                     tabindex="-1"
+                     aria-labelledby="deleteConfirmModalLabel"
+                     aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deleteConfirmModalLabel">
+                                    <i class="bi bi-exclamation-triangle text-danger"></i> Xác nhận xóa đơn hàng
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Bạn có chắc chắn muốn xóa đơn hàng <strong>#<span th:text="${order.id}"></span></strong> không?</p>
+                                <div class="alert alert-warning" role="alert">
+                                    <i class="bi bi-info-circle"></i> Hành động này không thể hoàn tác!
+                                </div>
+                                <ul class="list-unstyled mb-0">
+                                    <li><strong>Khách hàng:</strong> <span th:text="${order.customer != null ? order.customer.name : 'N/A'}"></span></li>
+                                    <li><strong>Ngày đặt:</strong> <span th:text="${order.orderDate != null ? #temporals.format(order.orderDate, 'dd/MM/yyyy') : 'N/A'}"></span></li>
+                                    <li><strong>Tổng tiền:</strong> <span th:text="${order.totalAmount != null ? #numbers.formatDecimal(order.totalAmount, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></span></li>
+                                </ul>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="bi bi-x-circle"></i> Hủy
+                                </button>
+                                <button type="button"
+                                        class="btn btn-danger"
+                                        th:onclick="'document.getElementById(\'deleteForm\' + ' + ${order.id} + ').submit();'">
+                                    <i class="bi bi-trash"></i> Xóa
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -241,9 +302,10 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
+<script th:src="@{/notification.js}"></script>
 <script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', () => {
-        // Khởi tạo Flatpickr cho ngày đặt hàng
+        // Khởi tạo Flatpickr
         flatpickr("#fromDate", {
             dateFormat: "d/m/Y",
             locale: "vn",
@@ -256,16 +318,6 @@
             allowInput: true
         });
 
-        const navLinks = document.querySelectorAll('.nav-link');
-        navLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                navLinks.forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-                window.location.href = link.getAttribute('href');
-            });
-        });
-
         // Xử lý nút xóa lọc
         const clearFiltersBtn = document.getElementById('clearFilters');
         if (clearFiltersBtn) {
@@ -274,64 +326,45 @@
             });
         }
 
-        // CHỨC NĂNG MỚI: Tự động submit form khi thay đổi trạng thái
+        // Xử lý thay đổi trạng thái trong filter
         const statusSelect = document.getElementById('status');
         const filterForm = document.getElementById('filterForm');
 
         if (statusSelect && filterForm) {
             statusSelect.addEventListener('change', function() {
-                // Kiểm tra xem có các filter khác không
-                const customerId = document.getElementById('customerId').value;
-                const fromDate = document.getElementById('fromDate').value;
-                const toDate = document.getElementById('toDate').value;
-
-                // Nếu chỉ thay đổi trạng thái mà không có filter khác, tự động submit
-                // Hoặc nếu có filter khác, cũng tự động submit để cập nhật kết quả
                 filterForm.submit();
             });
         }
 
-        const currentPage = [[${currentPage}]];
-        const pageSize = [[${pageSize}]];
-        const sortBy = [[${sortBy}]];
-        const sortDirection = [[${sortDirection}]];
-        const customerId = [[${customerId}]] || '';
-        const fromDate = [[${fromDate}]] || '';
-        const toDate = [[${toDate}]] || '';
-        const status = [[${status}]] || '';
-
-        window.deleteOrder = function(id) {
-            if (confirm('Bạn có chắc muốn xóa đơn hàng này?')) {
-                fetch(`/orders/delete/${id}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({
-                        page: currentPage,
-                        size: pageSize,
-                        sortBy: sortBy,
-                        sortDirection: sortDirection,
-                        customerId: customerId,
-                        fromDate: fromDate,
-                        toDate: toDate,
-                        status: status
-                    })
-                })
-                    .then(response => {
-                        if (response.ok) {
-                            window.location.reload();
-                        } else {
-                            response.text().then(text => alert('Xóa thất bại: ' + (text || 'Lỗi không xác định')));
-                        }
-                    })
-                    .catch(error => alert('Lỗi khi xóa đơn hàng: ' + error.message));
+        // Kiểm tra và hiển thị thông báo khi thêm, sửa, xóa thành công
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('deleteSuccess') === 'true') {
+            if (typeof notification !== 'undefined') {
+                notification.showSuccess('Đơn hàng đã được xóa thành công!');
             }
-        };
+            const newUrl = window.location.pathname + window.location.search.replace(/[?&]deleteSuccess=true/, '').replace(/^&/, '?');
+            window.history.replaceState({}, document.title, newUrl);
+        }
+        if (urlParams.get('addSuccess') === 'true') {
+            if (typeof notification !== 'undefined') {
+                notification.showSuccess('Đơn hàng đã được thêm thành công!');
+            }
+            const newUrl = window.location.pathname + window.location.search.replace(/[?&]addSuccess=true/, '').replace(/^&/, '?');
+            window.history.replaceState({}, document.title, newUrl);
+        }
+        if (urlParams.get('updateSuccess') === 'true') {
+            if (typeof notification !== 'undefined') {
+                notification.showSuccess('Đơn hàng đã được cập nhật thành công!');
+            }
+            const newUrl = window.location.pathname + window.location.search.replace(/[?&]updateSuccess=true/, '').replace(/^&/, '?');
+            window.history.replaceState({}, document.title, newUrl);
+        }
+
+        // Hàm set màu cho status select
         function setStatusColor(selectElement) {
             const status = selectElement.value;
-            // Remove all status classes
             selectElement.classList.remove('status-paid', 'status-unpaid', 'status-cancelled');
 
-            // Add appropriate class based on status
             if (status === 'da_thanh_toan') {
                 selectElement.classList.add('status-paid');
             } else if (status === 'chua_thanh_toan') {
@@ -341,16 +374,12 @@
             }
         }
 
-        // THÊM: Xử lý thay đổi trạng thái
+        // Xử lý thay đổi trạng thái đơn hàng
         const statusSelects = document.querySelectorAll('.status-select');
 
-        // Set màu ban đầu cho tất cả select
         statusSelects.forEach(select => {
             setStatusColor(select);
-        });
 
-        statusSelects.forEach(select => {
-            // Lưu giá trị ban đầu
             const originalValue = select.value;
 
             select.addEventListener('change', function() {
@@ -358,10 +387,8 @@
                 const newStatus = this.value;
                 const selectElement = this;
 
-                // Hiển thị loading
                 selectElement.disabled = true;
 
-                // Gửi request cập nhật
                 fetch(`/orders/update-status/${orderId}`, {
                     method: 'POST',
                     headers: {
@@ -372,12 +399,9 @@
                     .then(response => response.text())
                     .then(data => {
                         if (data === 'success') {
-                            // Cập nhật màu mới
                             setStatusColor(selectElement);
-                            // Hiển thị thông báo thành công
                             showToast('Cập nhật trạng thái thành công!', 'success');
                         } else {
-                            // Hiển thị lỗi và khôi phục giá trị cũ
                             showToast('Lỗi: ' + data, 'error');
                             selectElement.value = originalValue;
                             setStatusColor(selectElement);
@@ -394,7 +418,7 @@
             });
         });
 
-        // Hàm hiển thị thông báo toast
+        // Hàm hiển thị toast
         function showToast(message, type) {
             const toastContainer = document.getElementById('toastContainer') || createToastContainer();
 
@@ -402,9 +426,9 @@
             toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
             toast.style.cssText = 'position: relative; margin-bottom: 10px;';
             toast.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
 
             toastContainer.appendChild(toast);
 
@@ -421,7 +445,6 @@
             document.body.appendChild(container);
             return container;
         }
-
     });
 </script>
 <div th:replace="~{footer :: footer}"></div>

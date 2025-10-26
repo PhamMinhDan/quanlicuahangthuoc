@@ -29,13 +29,13 @@ public class PaymentController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortField", defaultValue = "id") String sortField,
-            @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir,
+            @RequestParam(value = "sortDir", defaultValue = "desc") String sortDir, // Mặc định là desc
             Model model, Authentication authentication) {
         try {
             // Parse dates from dd/MM/yyyy format
             LocalDate fromDate = paymentService.parseDate(fromDateStr);
             LocalDate toDate = paymentService.parseDate(toDateStr);
-            
+
             Page<Payment> paymentPage = paymentService.getPaymentsPaged(orderId, fromDate, toDate, page, size, sortField, sortDir);
             model.addAttribute("payments", paymentPage.getContent());
             model.addAttribute("totalItems", paymentPage.getTotalElements());
@@ -93,7 +93,8 @@ public class PaymentController {
         try {
             paymentService.savePayment(payment);
             model.addAttribute("message", "Thêm thanh toán thành công");
-            return "redirect:/payments/view-payments";
+            // Quay về trang đầu tiên với sortDir=desc
+            return "redirect:/payments/view-payments?page=0&size=10&sortField=id&sortDir=desc";
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi khi thêm thanh toán: " + e.getMessage());
             model.addAttribute("payment", payment);
@@ -108,7 +109,7 @@ public class PaymentController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortField", defaultValue = "id") String sortField,
-            @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir,
+            @RequestParam(value = "sortDir", defaultValue = "desc") String sortDir, // Mặc định là desc
             @RequestParam(value = "orderId", required = false) Integer orderId,
             @RequestParam(value = "paymentDate", required = false) LocalDate paymentDate,
             Model model, Authentication authentication) {
@@ -133,7 +134,6 @@ public class PaymentController {
             model.addAttribute("totalTransferPayments", paymentService.getTotalTransferPayments());
             model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
-            // Format paymentDate to String matching parseDate format
             String fromDateStr = paymentDate != null ? paymentDate.format(paymentService.getDateFormatter()) : null;
             String toDateStr = paymentDate != null ? paymentDate.format(paymentService.getDateFormatter()) : null;
             return listPayments(orderId, fromDateStr, toDateStr, page, size, sortField, sortDir, model, authentication);
@@ -173,37 +173,28 @@ public class PaymentController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortField", defaultValue = "id") String sortField,
-            @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir,
+            @RequestParam(value = "sortDir", defaultValue = "desc") String sortDir,
             @RequestParam(value = "orderId", required = false) Integer orderId,
             @RequestParam(value = "fromDate", required = false) String fromDateStr,
             @RequestParam(value = "toDate", required = false) String toDateStr,
             RedirectAttributes redirectAttributes,
             Authentication authentication) {
-        // Kiểm tra vai trò quan_ly
+
         if (!authentication.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly"))) {
             redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xóa thanh toán.");
-            return "redirect:/payments/view-payments?page=" + page +
-                    "&size=" + size +
-                    "&sortField=" + sortField +
-                    "&sortDir=" + sortDir +
-                    (orderId != null ? "&orderId=" + orderId : "") +
-                    (fromDateStr != null ? "&fromDate=" + fromDateStr : "") +
-                    (toDateStr != null ? "&toDate=" + toDateStr : "");
+            return buildRedirectUrl(page, size, sortField, sortDir, orderId, fromDateStr, toDateStr, null);
         }
 
         try {
             paymentService.deletePayment(id);
             redirectAttributes.addFlashAttribute("message", "Xóa thanh toán thành công");
 
-            // Parse dates from dd/MM/yyyy format
             LocalDate fromDate = paymentService.parseDate(fromDateStr);
             LocalDate toDate = paymentService.parseDate(toDateStr);
 
-            // Tính tổng số thanh toán sau khi xóa với bộ lọc
             long totalItems = paymentService.getTotalPaymentsWithFilters(orderId, fromDate, toDate);
             int totalPages = (int) Math.ceil((double) totalItems / size);
 
-            // Điều chỉnh page nếu trang hiện tại lớn hơn hoặc bằng tổng số trang
             int adjustedPage = page;
             if (page >= totalPages && totalPages > 0) {
                 adjustedPage = totalPages - 1;
@@ -211,24 +202,36 @@ public class PaymentController {
                 adjustedPage = 0;
             }
 
-            return "redirect:/payments/view-payments?page=" + adjustedPage +
-                    "&size=" + size +
-                    "&sortField=" + sortField +
-                    "&sortDir=" + sortDir +
-                    (orderId != null ? "&orderId=" + orderId : "") +
-                    (fromDateStr != null ? "&fromDate=" + fromDateStr : "") +
-                    (toDateStr != null ? "&toDate=" + toDateStr : "");
+            return buildRedirectUrl(adjustedPage, size, sortField, sortDir, orderId, fromDateStr, toDateStr, "deleteSuccess");
         } catch (NoSuchElementException e) {
             redirectAttributes.addFlashAttribute("error", "Thanh toán không tồn tại: " + e.getMessage());
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi server: " + e.getMessage());
         }
-        return "redirect:/payments/view-payments?page=" + page +
-                "&size=" + size +
-                "&sortField=" + sortField +
-                "&sortDir=" + sortDir +
-                (orderId != null ? "&orderId=" + orderId : "") +
-                (fromDateStr != null ? "&fromDate=" + fromDateStr : "") +
-                (toDateStr != null ? "&toDate=" + toDateStr : "");
+
+        return buildRedirectUrl(page, size, sortField, sortDir, orderId, fromDateStr, toDateStr, null);
+    }
+
+    private String buildRedirectUrl(int page, int size, String sortField, String sortDir,
+                                    Integer orderId, String fromDate, String toDate, String successParam) {
+        StringBuilder url = new StringBuilder("redirect:/payments/view-payments?page=" + page);
+        url.append("&size=").append(size);
+        url.append("&sortField=").append(sortField);
+        url.append("&sortDir=").append(sortDir);
+
+        if (orderId != null) {
+            url.append("&orderId=").append(orderId);
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            url.append("&fromDate=").append(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            url.append("&toDate=").append(toDate);
+        }
+        if (successParam != null) {
+            url.append("&").append(successParam).append("=true");
+        }
+
+        return url.toString();
     }
 }

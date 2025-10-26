@@ -8,25 +8,17 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "order_table")
@@ -41,10 +33,15 @@ public class Order {
     private Integer id;
 
     @JsonBackReference(value = "customer-order")
-    @NotNull(message = "Customer ID cannot be null")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
+
+    // THÊM MỚI: Trường phone để tìm customer
+    @Transient // Không lưu vào database, chỉ dùng để tìm customer
+    @NotBlank(message = "Số điện thoại không được để trống")
+    @Pattern(regexp = "^[0-9]{9,11}$", message = "Số điện thoại phải từ 9 đến 11 chữ số")
+    private String customerPhone;
 
     @JsonBackReference(value = "staff-order")
     @NotNull(message = "Staff ID cannot be null")
@@ -53,12 +50,14 @@ public class Order {
     private Staff staff;
 
     @JsonBackReference(value = "promotion-order")
-    @NotNull(message = "Promotion ID cannot be null")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "promo_id")
     private Promotion promotion;
 
-    // Các trường còn lại không thay đổi
+    // THÊM MỚI: Trường promotionName để chọn từ dropdown
+    @Transient // Không lưu vào database
+    private String promotionName;
+
     @NotNull(message = "Order date cannot be null")
     @Column(name = "order_date", nullable = false)
     private LocalDate orderDate;
@@ -72,10 +71,12 @@ public class Order {
     @DecimalMin(value = "0.0", inclusive = true, message = "Total amount must be greater than or equal to 0")
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
-
-    @JsonManagedReference
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<OrderDetail> orderDetails = new ArrayList<>();
+    
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderDetail> orderDetails;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OnDelete(action = OnDeleteAction.CASCADE) // Định nghĩa hành vi cascade trên CSDL
+    private List<Payment> payments;
 
     public enum OrderStatus {
         da_thanh_toan("Đã thanh toán"),
@@ -103,70 +104,8 @@ public class Order {
         this.totalAmount = totalAmount;
     }
 
-    // Manual getters and setters (following the pattern from other entities)
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Customer getCustomer() {
-        return customer;
-    }
-
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
-    }
-
-    public Staff getStaff() {
-        return staff;
-    }
-
-    public void setStaff(Staff staff) {
-        this.staff = staff;
-    }
-
-    public Promotion getPromotion() {
-        return promotion;
-    }
-
-    public void setPromotion(Promotion promotion) {
-        this.promotion = promotion;
-    }
-
-    public LocalDate getOrderDate() {
-        return orderDate;
-    }
-
-    public void setOrderDate(LocalDate orderDate) {
-        this.orderDate = orderDate;
-    }
-
-    public OrderStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(OrderStatus status) {
-        this.status = status;
-    }
-
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
-
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
-    }
-
-    public List<OrderDetail> getOrderDetails() {
-        return orderDetails;
-    }
-
-    public void setOrderDetails(List<OrderDetail> orderDetails) {
-        this.orderDetails = orderDetails;
-    }
+    // Getters and Setters đã có từ Lombok
+    // Thêm getter/setter cho customerPhone và promotionName nếu cần custom logic
 
     @Override
     public String toString() {

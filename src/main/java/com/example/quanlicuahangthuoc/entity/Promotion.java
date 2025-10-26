@@ -21,9 +21,10 @@ public class Promotion {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @NotBlank(message = "Promotion type must not be empty")
-    @Column(name = "type", nullable = false, length = 100)
-    private String type;
+    @NotNull(message = "Promotion type must not be null")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false, columnDefinition = "ENUM('giam_gia_truc_tiep', 'giam_gia_tong_hoa_don')")
+    private PromotionType type;
 
     @NotNull(message = "Discount percent must not be null")
     @DecimalMin(value = "0.0", message = "Discount percent must be >= 0")
@@ -40,7 +41,7 @@ public class Promotion {
     // Constructors
     public Promotion() {}
 
-    public Promotion(String name, String type, Double discountPercent, LocalDate expiredDate) {
+    public Promotion(String name, PromotionType type, Double discountPercent, LocalDate expiredDate) {
         this.name = name;
         this.type = type;
         this.discountPercent = discountPercent;
@@ -64,11 +65,11 @@ public class Promotion {
         this.name = name;
     }
 
-    public String getType() {
+    public PromotionType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(PromotionType type) {
         this.type = type;
     }
 
@@ -93,9 +94,25 @@ public class Promotion {
         return "Promotion{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", type='" + type + '\'' +
+                ", type=" + type +
                 ", discountPercent=" + discountPercent +
                 ", expiredDate=" + expiredDate +
                 '}';
+    }
+
+    // Enum cho loại khuyến mãi với displayName
+    public enum PromotionType {
+        giam_gia_truc_tiep("Giảm giá trực tiếp"),
+        giam_gia_tong_hoa_don("Giảm giá tổng hóa đơn");
+
+        private final String displayName;
+
+        PromotionType(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
     }
 }

@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,7 +17,14 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Integer> {
     Optional<Order> findByCustomerId(Integer customerId);
-    
+    // THÊM vào OrderRepository.java
+
+
+    // Thêm method này vào interface OrderRepository
+    @Modifying
+    @Transactional
+    @Query("UPDATE Order o SET o.status = :status WHERE o.id = :orderId")
+    void updateStatus(@Param("orderId") Integer orderId, @Param("status") Order.OrderStatus status);
     @Query("SELECT DISTINCT o FROM Order o " +
            "LEFT JOIN FETCH o.customer " +
            "LEFT JOIN FETCH o.staff " +

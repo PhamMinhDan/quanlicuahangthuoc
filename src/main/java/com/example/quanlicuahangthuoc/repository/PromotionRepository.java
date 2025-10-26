@@ -5,29 +5,29 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface PromotionRepository extends JpaRepository<Promotion, Integer> {
-
 
     // Tìm kiếm khuyến mãi theo tên (không phân biệt hoa thường)
     List<Promotion> findByNameContainingIgnoreCase(String name);
 
-    
     // Tìm kiếm theo tên (tìm kiếm gần đúng)
     @Query("SELECT p FROM Promotion p WHERE p.name LIKE %:name%")
     List<Promotion> findByNameContaining(@Param("name") String name);
-    
+
+    Optional<Promotion> findByName(String name);
     // Tìm kiếm theo loại
-    List<Promotion> findByType(String type);
-    
+    List<Promotion> findByType(Promotion.PromotionType type);
+
     // Tìm kiếm theo cả tên và loại
     @Query("SELECT p FROM Promotion p WHERE p.name LIKE %:name% AND p.type = :type")
-    List<Promotion> findByNameContainingAndType(@Param("name") String name, @Param("type") String type);
-    
+    List<Promotion> findByNameContainingAndType(@Param("name") String name, @Param("type") Promotion.PromotionType type);
+
     // Tìm kiếm theo tên hoặc loại
     @Query("SELECT p FROM Promotion p WHERE p.name LIKE %:name% OR p.type = :type")
-    List<Promotion> findByNameContainingOrType(@Param("name") String name, @Param("type") String type);
-
+    List<Promotion> findByNameContainingOrType(@Param("name") String name, @Param("type") Promotion.PromotionType type);
 }
-

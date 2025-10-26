@@ -48,7 +48,13 @@
           </div>
           <div class="col-md-6">
             <label for="paymentDate" class="form-label">Ngày thanh toán <span class="text-danger">*</span></label>
-            <input type="date" class="form-control" id="paymentDate" th:field="*{paymentDate}" required>
+            <!-- Sử dụng #temporals.format để format LocalDate sang yyyy-MM-dd -->
+            <input type="date"
+                   class="form-control"
+                   id="paymentDate"
+                   name="paymentDate"
+                   th:value="${payment.paymentDate != null ? #temporals.format(payment.paymentDate, 'yyyy-MM-dd') : ''}"
+                   required>
             <div class="invalid-feedback" th:errors="*{paymentDate}"></div>
           </div>
         </div>
@@ -70,14 +76,27 @@
 <script th:inline="javascript">
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('form');
+    const paymentDateInput = document.getElementById('paymentDate');
+
+    // Debug: Log giá trị ngày từ server
+    console.log('=== PAYMENT DATE DEBUG ===');
+    console.log('Payment Date from input:', paymentDateInput.value);
+
+    // Log giá trị từ Thymeleaf
+    /*[# th:if="${payment.paymentDate != null}"]*/
+    console.log('Payment Date from server:', /*[[${#temporals.format(payment.paymentDate, 'yyyy-MM-dd')}]]*/ 'N/A');
+    /*[/]*/
+
     form.addEventListener('submit', (e) => {
       if (!form.checkValidity()) {
         e.preventDefault();
         form.classList.add('was-validated');
+      } else {
+        console.log('Submitting payment date:', paymentDateInput.value);
       }
     });
   });
-  </script>
-  <div th:replace="~{footer :: footer}"></div>
+</script>
+<div th:replace="~{footer :: footer}"></div>
 </body>
 </html>
