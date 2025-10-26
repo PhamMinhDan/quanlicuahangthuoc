@@ -89,36 +89,16 @@
                     <table class="table table-hover">
                         <thead>
                         <tr>
-                            <th style="white-space: nowrap;">
-                                STT
-                                <a th:href="@{/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='id', sortDirection=${sortBy == 'id' and sortDirection == 'desc' ? 'asc' : 'desc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">
-                                    <i th:class="${sortBy == 'id'} ? (${sortDirection == 'desc'} ? 'bi bi-arrow-down' : 'bi bi-arrow-up') : 'bi bi-arrow-down-up'"></i>
-                                </a>
-                            </th>
+                            <th style="white-space: nowrap;">STT</th>
+                            <th style="white-space: nowrap;">Ảnh</th>
                             <th style="white-space: nowrap;">
                                 Tên
                                 <a th:href="@{/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='name', sortDirection=${sortBy == 'name' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">
                                     <i th:class="${sortBy == 'name'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                                 </a>
                             </th>
-                            <th style="white-space: nowrap;">
-                                Loại
-                                <a th:href="@{/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='type', sortDirection=${sortBy == 'type' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">
-                                    <i th:class="${sortBy == 'type'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
-                                </a>
-                            </th>
-                            <th style="white-space: nowrap;">
-                                Nhà cung cấp
-                                <a th:href="@{/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='supplier', sortDirection=${sortBy == 'supplier' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">
-                                    <i th:class="${sortBy == 'supplier'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
-                                </a>
-                            </th>
-                            <th style="white-space: nowrap;">
-                                Số lượng
-                                <a th:href="@{/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='stockQuantity', sortDirection=${sortBy == 'stockQuantity' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">
-                                    <i th:class="${sortBy == 'stockQuantity'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
-                                </a>
-                            </th>
+                            <th style="white-space: nowrap;">Loại</th>
+                            <th style="white-space: nowrap;">Hết hạn</th>
                             <th style="white-space: nowrap;">
                                 Giá
                                 <a th:href="@{/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='price', sortDirection=${sortBy == 'price' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">

@@ -27,6 +27,13 @@ public class MedicineService {
         Medicine.MedicineType type = null;
         Medicine.Supplier supplier = null;
 
+        // Trim khoảng trắng từ searchName nếu có và kiểm tra null/empty
+        // Note: searchName đã được trim ở Controller rồi
+        String cleanSearchName = null;
+        if (searchName != null && !searchName.isEmpty()) {
+            cleanSearchName = searchName;
+        }
+
         // Kiểm tra và chuyển đổi searchType
         if (searchType != null && !searchType.isEmpty()) {
             try {
@@ -47,7 +54,7 @@ public class MedicineService {
             }
         }
 
-        return medicineRepository.findByFilters(searchName, type, supplier, PageRequest.of(page, size, sort));
+        return medicineRepository.findByFilters(cleanSearchName, type, supplier, PageRequest.of(page, size, sort));
     }
 
     public List<Medicine> getAllMedicines() {

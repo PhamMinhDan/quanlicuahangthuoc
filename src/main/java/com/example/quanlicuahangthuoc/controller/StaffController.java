@@ -35,11 +35,17 @@ public class StaffController {
             @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             Model model, Authentication authentication) {
         try {
+            // Trim và loại bỏ khoảng trắng thừa từ name
+            String cleanName = null;
+            if (name != null && !name.trim().isEmpty()) {
+                cleanName = name.trim().replaceAll("\\s+", " ");
+            }
+            
             Page<Staff> staffPage;
-            if (name != null && !name.trim().isEmpty() && role != null && !role.trim().isEmpty()) {
-                staffPage = staffService.searchStaffByNameAndRole(name, Staff.Role.valueOf(role), page, size, sortBy, sortDirection);
-            } else if (name != null && !name.trim().isEmpty()) {
-                staffPage = staffService.searchStaffByName(name, page, size, sortBy, sortDirection);
+            if (cleanName != null && role != null && !role.trim().isEmpty()) {
+                staffPage = staffService.searchStaffByNameAndRole(cleanName, Staff.Role.valueOf(role), page, size, sortBy, sortDirection);
+            } else if (cleanName != null) {
+                staffPage = staffService.searchStaffByName(cleanName, page, size, sortBy, sortDirection);
             } else if (role != null && !role.trim().isEmpty()) {
                 staffPage = staffService.getStaffByRole(Staff.Role.valueOf(role), page, size, sortBy, sortDirection);
             } else {
@@ -54,7 +60,7 @@ public class StaffController {
             model.addAttribute("pageSize", size);
             model.addAttribute("sortBy", sortBy);
             model.addAttribute("sortDirection", sortDirection);
-            model.addAttribute("name", name);
+            model.addAttribute("name", cleanName);
             model.addAttribute("role", role);
             model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));

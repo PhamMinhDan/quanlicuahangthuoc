@@ -1,8 +1,7 @@
 package com.example.quanlicuahangthuoc.controller;
 
 
-import com.example.quanlicuahangthuoc.repository.MedicineRepository;
-import com.example.quanlicuahangthuoc.config.FileUploadConfig;
+    import com.example.quanlicuahangthuoc.config.FileUploadConfig;
 import com.example.quanlicuahangthuoc.entity.Medicine;
 import com.example.quanlicuahangthuoc.service.MedicineService;
 import jakarta.validation.Valid;
@@ -32,15 +31,25 @@ public class MedicineController {
     public String getMedicinesPage(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection, // Đổi từ "asc" thành "desc"
+            @RequestParam(value = "sortBy", defaultValue = "name") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
             @RequestParam(value = "searchName", required = false) String searchName,
             @RequestParam(value = "searchType", required = false) String searchType,
             @RequestParam(value = "searchSupplier", required = false) String searchSupplier,
             Model model, Authentication authentication) {
         try {
+            // Chỉ cho phép sắp xếp theo name hoặc price
+            if (!sortBy.equals("name") && !sortBy.equals("price")) {
+                sortBy = "name";
+            }
+            
+            // Trim khoảng trắng thừa từ searchName
+            if (searchName != null) {
+                searchName = searchName.trim();
+            }
+            
             Page<Medicine> medicinePage;
-            if (searchName != null || searchType != null || searchSupplier != null) {
+            if ((searchName != null && !searchName.isEmpty()) || searchType != null || searchSupplier != null) {
                 medicinePage = medicineService.searchByFiltersPaginated(searchName, searchType, searchSupplier, page, size, sortBy, sortDirection);
             } else {
                 medicinePage = medicineService.getAllMedicinesPaginated(page, size, sortBy, sortDirection);
@@ -85,8 +94,8 @@ public class MedicineController {
             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
+            @RequestParam(value = "sortBy", defaultValue = "name") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
             @RequestParam(value = "searchName", required = false) String searchName,
             @RequestParam(value = "searchType", required = false) String searchType,
             @RequestParam(value = "searchSupplier", required = false) String searchSupplier,
@@ -122,7 +131,7 @@ public class MedicineController {
             @PathVariable Integer id,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(value = "sortBy", defaultValue = "name") String sortBy,
             @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
             @RequestParam(value = "searchName", required = false) String searchName,
             @RequestParam(value = "searchType", required = false) String searchType,
@@ -166,8 +175,8 @@ public class MedicineController {
             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
+            @RequestParam(value = "sortBy", defaultValue = "name") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
             @RequestParam(value = "searchName", required = false) String searchName,
             @RequestParam(value = "searchType", required = false) String searchType,
             @RequestParam(value = "searchSupplier", required = false) String searchSupplier,
@@ -245,8 +254,8 @@ public class MedicineController {
             @PathVariable Integer id,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
+            @RequestParam(value = "sortBy", defaultValue = "name") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
             @RequestParam(value = "searchName", required = false) String searchName,
             @RequestParam(value = "searchType", required = false) String searchType,
             @RequestParam(value = "searchSupplier", required = false) String searchSupplier,

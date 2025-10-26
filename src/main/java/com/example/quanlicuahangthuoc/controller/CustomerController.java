@@ -28,14 +28,29 @@ public class CustomerController {
             @RequestParam(value = "customerType", required = false) String customerType,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
+            @RequestParam(value = "sortBy", defaultValue = "name") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
             Model model,
             Authentication authentication) {
         try {
+            // Chỉ cho phép sắp xếp theo "name" hoặc "rewardPoints"
+            if (!sortBy.equals("name") && !sortBy.equals("rewardPoints")) {
+                sortBy = "name";
+            }
+            
+            // Trim và loại bỏ khoảng trắng thừa từ keyword và phone
+            String cleanKeyword = null;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                cleanKeyword = keyword.trim().replaceAll("\\s+", " ");
+            }
+            String cleanPhone = null;
+            if (phone != null && !phone.trim().isEmpty()) {
+                cleanPhone = phone.trim().replaceAll("\\s+", " ");
+            }
+            
             Page<Customer> customerPage;
-            if (keyword != null || phone != null || customerType != null) {
-                customerPage = customerService.searchWithPagingAndSort(keyword, phone, customerType, page, size, sortBy, sortDirection);
+            if (cleanKeyword != null || cleanPhone != null || customerType != null) {
+                customerPage = customerService.searchWithPagingAndSort(cleanKeyword, cleanPhone, customerType, page, size, sortBy, sortDirection);
             } else {
                 customerPage = customerService.getAllCustomersWithPagingAndSort(page, size, sortBy, sortDirection);
             }
@@ -47,8 +62,8 @@ public class CustomerController {
             model.addAttribute("pageSize", size);
             model.addAttribute("sortBy", sortBy);
             model.addAttribute("sortDirection", sortDirection);
-            model.addAttribute("keyword", keyword);
-            model.addAttribute("phone", phone);
+            model.addAttribute("keyword", cleanKeyword);
+            model.addAttribute("phone", cleanPhone);
             model.addAttribute("customerType", customerType);
             model.addAttribute("totalItems", customerPage.getTotalElements());
             model.addAttribute("isManager", authentication.getAuthorities().stream()
@@ -83,8 +98,8 @@ public class CustomerController {
             BindingResult bindingResult,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
+            @RequestParam(value = "sortBy", defaultValue = "name") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam(value = "customerType", required = false) String customerType,
@@ -140,8 +155,8 @@ public class CustomerController {
             @PathVariable Integer id,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
+            @RequestParam(value = "sortBy", defaultValue = "name") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam(value = "customerType", required = false) String customerType,
@@ -192,8 +207,8 @@ public class CustomerController {
             BindingResult bindingResult,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
+            @RequestParam(value = "sortBy", defaultValue = "name") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam(value = "customerType", required = false) String customerType,
@@ -230,25 +245,12 @@ public class CustomerController {
             customer.setId(id);
             customerService.updateCustomer(id, customer);
 
-            // CẬP NHẬT: Quay về trang hiện tại và GIỮ filter (vì đang sửa)
-            StringBuilder redirectUrl = new StringBuilder("/customers/view-customers?page=" + page +
+            // CẬP NHẬT: Quay về trang đầu tiên (page=0), bỏ các tham số lọc
+            return "redirect:/customers/view-customers?page=0" +
                     "&size=" + size +
                     "&sortBy=" + sortBy +
                     "&sortDirection=" + sortDirection +
-                    "&updateSuccess=true");
-
-            // Giữ lại filter khi update
-            if (keyword != null && !keyword.isEmpty()) {
-                redirectUrl.append("&keyword=").append(keyword);
-            }
-            if (phone != null && !phone.isEmpty()) {
-                redirectUrl.append("&phone=").append(phone);
-            }
-            if (customerType != null && !customerType.isEmpty()) {
-                redirectUrl.append("&customerType=").append(customerType);
-            }
-
-            return "redirect:" + redirectUrl.toString();
+                    "&updateSuccess=true";
         } catch (NoSuchElementException e) {
             model.addAttribute("error", "Khách hàng không tồn tại: " + e.getMessage());
             model.addAttribute("customer", customer);
@@ -293,8 +295,8 @@ public class CustomerController {
             @PathVariable Integer id,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
+            @RequestParam(value = "sortBy", defaultValue = "name") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam(value = "customerType", required = false) String customerType,

@@ -75,36 +75,16 @@
                     <table class="table table-hover">
                         <thead>
                         <tr>
-                            <th style="white-space: nowrap;">
-                                STT
-                                <a th:href="@{/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='id', sortDirection=${sortBy == 'id' and sortDirection == 'desc' ? 'asc' : 'desc'}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}">
-                                    <i th:class="${sortBy == 'id'} ? (${sortDirection == 'desc'} ? 'bi bi-arrow-down' : 'bi bi-arrow-up') : 'bi bi-arrow-down-up'"></i>
-                                </a>
-                            </th>
+                            <th style="white-space: nowrap;">STT</th>
                             <th style="white-space: nowrap;">
                                 Tên
                                 <a th:href="@{/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='name', sortDirection=${sortBy == 'name' and sortDirection == 'asc' ? 'desc' : 'asc'}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}">
                                     <i th:class="${sortBy == 'name'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                                 </a>
                             </th>
-                            <th style="white-space: nowrap;">
-                                SĐT
-                                <a th:href="@{/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='phone', sortDirection=${sortBy == 'phone' and sortDirection == 'asc' ? 'desc' : 'asc'}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}">
-                                    <i th:class="${sortBy == 'phone'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
-                                </a>
-                            </th>
-                            <th style="white-space: nowrap;">
-                                Email
-                                <a th:href="@{/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='email', sortDirection=${sortBy == 'email' and sortDirection == 'asc' ? 'desc' : 'asc'}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}">
-                                    <i th:class="${sortBy == 'email'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
-                                </a>
-                            </th>
-                            <th style="white-space: nowrap;">
-                                Loại khách hàng
-                                <a th:href="@{/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='customerType', sortDirection=${sortBy == 'customerType' and sortDirection == 'asc' ? 'desc' : 'asc'}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}">
-                                    <i th:class="${sortBy == 'customerType'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
-                                </a>
-                            </th>
+                            <th style="white-space: nowrap;">SĐT</th>
+                            <th style="white-space: nowrap;">Email</th>
+                            <th style="white-space: nowrap;">Loại khách hàng</th>
                             <th style="white-space: nowrap;">
                                 Điểm thưởng
                                 <a th:href="@{/customers/view-customers(page=${currentPage}, size=${pageSize}, sortBy='rewardPoints', sortDirection=${sortBy == 'rewardPoints' and sortDirection == 'asc' ? 'desc' : 'asc'}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}">

@@ -39,6 +39,13 @@
                 <i class="bi bi-credit-card"></i> Thanh toán
             </a>
         </nav>
+        <div class="sidebar-footer">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-danger w-100 d-flex align-items-center justify-content-center gap-2">
+                    <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 </body>

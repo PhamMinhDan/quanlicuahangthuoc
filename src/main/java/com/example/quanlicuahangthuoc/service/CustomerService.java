@@ -113,9 +113,7 @@ public class CustomerService {
         if ("rewardPoints".equalsIgnoreCase(sortBy) || "reward_points".equalsIgnoreCase(sortBy) || "points".equalsIgnoreCase(sortBy)) {
             sortBy = "rewardPoints";
         }
-        if ("name".equalsIgnoreCase(sortBy)) {
-            sortBy = "lastName";
-        }
+        // Không cần thay đổi sortBy vì trường trong entity là "name"
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
         return customerRepository.findAll(pageable);
     }
@@ -125,18 +123,33 @@ public class CustomerService {
         if ("rewardPoints".equalsIgnoreCase(sortBy) || "reward_points".equalsIgnoreCase(sortBy) || "points".equalsIgnoreCase(sortBy)) {
             sortBy = "rewardPoints";
         }
-        if ("name".equalsIgnoreCase(sortBy)) {
-            sortBy = "lastName";
+        // Không cần thay đổi sortBy vì trường trong entity là "name"
+        
+        // Clean keyword - đã được trim ở Controller, chỉ cần kiểm tra empty
+        String cleanKeyword = null;
+        if (keyword != null && !keyword.isEmpty()) {
+            cleanKeyword = keyword;
         }
-        String cleanedPhone = phone != null ? phone.replaceAll("[^0-9]", "") : null;
+        
+        // Clean phone - loại bỏ ký tự không phải số (đã được trim ở Controller)
+        String cleanedPhone = null;
+        if (phone != null && !phone.isEmpty()) {
+            cleanedPhone = phone.replaceAll("[^0-9]", "");
+        }
+        
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-        return customerRepository.searchByNamePhoneTypeWithPaging(keyword, cleanedPhone, customerType, pageable);
+        return customerRepository.searchByNamePhoneTypeWithPaging(cleanKeyword, cleanedPhone, customerType, pageable);
     }
 
     public long getTotalCustomers(String keyword, String phone, String customerType) {
-        String cleanedPhone = phone != null ? phone.replaceAll("[^0-9]", "") : null;
-        if ((keyword != null && !keyword.trim().isEmpty()) ||
-                (cleanedPhone != null && !cleanedPhone.trim().isEmpty()) ||
+        // Clean phone - loại bỏ ký tự không phải số (đã được trim ở Controller)
+        String cleanedPhone = null;
+        if (phone != null && !phone.isEmpty()) {
+            cleanedPhone = phone.replaceAll("[^0-9]", "");
+        }
+        
+        if ((keyword != null && !keyword.isEmpty()) ||
+                (cleanedPhone != null && !cleanedPhone.isEmpty()) ||
                 (customerType != null && !customerType.trim().isEmpty())) {
             return customerRepository.countByFilters(keyword, cleanedPhone, customerType);
         } else {
