@@ -39,6 +39,13 @@ public interface MedicineRepository extends JpaRepository<Medicine, Integer> {
                                  @Param("supplier") Medicine.Supplier supplier,
                                  Pageable pageable);
 
+    @Query("SELECT COUNT(m) FROM Medicine m WHERE " +
+            "(:name IS NULL OR LOWER(m.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
+            "(:type IS NULL OR m.type = :type) AND " +
+            "(:supplier IS NULL OR m.supplier = :supplier)")
+    long countByFilters(@Param("name") String name,
+                        @Param("type") Medicine.MedicineType type,
+                        @Param("supplier") Medicine.Supplier supplier);
     // Thêm phương thức đếm tổng số thuốc
     long count();
 

@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/medicine.css}">
+    <link rel="stylesheet" th:href="@{/notification.css}">
 </head>
 <body>
 <div class="d-flex">
@@ -14,53 +15,264 @@
 
     <div class="main-content flex-grow-1 bg-light p-4">
         <div class="container-fluid">
-            <h2 class="h4 mb-4" th:text="${customer.id != null} ? 'Sửa Khách Hàng' : 'Thêm Khách Hàng Mới'"></h2>
-            <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
-            <div th:if="${message != null}" class="alert alert-success" th:text="${message}"></div>
+            <div class="mb-4">
+                <h1 class="display-6 fw-bold text-primary">
+                    <i class="bi bi-person-plus"></i>
+                    <span th:if="${customer.id == null}">THÊM KHÁCH HÀNG</span>
+                    <span th:if="${customer.id != null}">SỬA KHÁCH HÀNG</span>
+                </h1>
+            </div>
 
-            <form th:action="${customer.id != null} ? @{/customers/update/{id}(id=${customer.id})} : @{/customers/add}"
+            <form th:action="${customer.id == null} ? @{/customers/add} : @{/customers/update/{id}(id=${customer.id})}"
+                  method="post"
                   th:object="${customer}"
-                  method="post">
+                  id="customerForm">
+                <!-- Hidden fields để giữ lại tham số phân trang và lọc -->
                 <input type="hidden" name="page" th:value="${page}">
                 <input type="hidden" name="size" th:value="${size}">
                 <input type="hidden" name="sortBy" th:value="${sortBy}">
                 <input type="hidden" name="sortDirection" th:value="${sortDirection}">
                 <input type="hidden" name="keyword" th:value="${keyword}">
-                <input type="hidden" name="phone" th:value="${phone}">
-                <input type="hidden" name="customerType" th:value="${customerType}">
+                <input type="hidden" name="phoneFilter" th:value="${phone}">
+                <input type="hidden" name="customerTypeFilter" th:value="${customerType}">
 
-                <div class="mb-3">
-                    <label for="name" class="form-label">Tên khách hàng</label>
-                    <input type="text" class="form-control" id="name" th:field="*{name}" required>
+                <div class="row g-3">
+                    <!-- Tên khách hàng -->
+                    <div class="col-md-6">
+                        <label for="name" class="form-label">
+                            <i class="bi bi-person"></i> Tên khách hàng <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               id="name"
+                               th:field="*{name}"
+                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
+                               placeholder="Nhập tên khách hàng..."
+                               required>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                    </div>
+
+                    <!-- Số điện thoại -->
+                    <div class="col-md-6">
+                        <label for="phoneInput" class="form-label">
+                            <i class="bi bi-telephone"></i> Số điện thoại <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               id="phoneInput"
+                               th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid'"
+                               placeholder="Nhập số điện thoại (9-11 chữ số)..."
+                               inputmode="numeric"
+                               autocomplete="off"
+                               required>
+                        <!-- Hidden input để submit về server -->
+                        <input type="hidden" id="phone" name="phone" th:value="*{phone}">
+                        <div class="invalid-feedback" id="phoneErrorContainer">
+                            <span th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></span>
+                            <span id="customPhoneError" style="display: none;">Số điện thoại phải từ 9 đến 11 chữ số</span>
+                        </div>
+                        <small class="text-muted">Chỉ nhập số, từ 9-11 chữ số</small>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">
+                            <i class="bi bi-envelope"></i> Email <span class="text-danger">*</span>
+                        </label>
+                        <input type="email"
+                               class="form-control"
+                               id="email"
+                               th:field="*{email}"
+                               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
+                               placeholder="example@email.com"
+                               required>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                    </div>
+
+                    <!-- Loại khách hàng -->
+                    <div class="col-md-6">
+                        <label for="customerTypeSelect" class="form-label">
+                            <i class="bi bi-tag"></i> Loại khách hàng <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select"
+                                id="customerTypeSelect"
+                                th:field="*{customerType}"
+                                th:classappend="${#fields.hasErrors('customerType')} ? 'is-invalid'"
+                                required>
+                            <option value="">-- Chọn loại khách hàng --</option>
+                            <option value="vang_lai">Vãng lai</option>
+                            <option value="than_thiet">Thân thiết</option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('customerType')}" th:errors="*{customerType}"></div>
+                    </div>
+
+                    <!-- Điểm thưởng -->
+                    <div class="col-md-6">
+                        <label for="rewardPoints" class="form-label">
+                            <i class="bi bi-star"></i> Điểm thưởng
+                        </label>
+                        <input type="number"
+                               class="form-control"
+                               id="rewardPoints"
+                               th:field="*{rewardPoints}"
+                               th:classappend="${#fields.hasErrors('rewardPoints')} ? 'is-invalid'"
+                               min="0"
+                               placeholder="0">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('rewardPoints')}" th:errors="*{rewardPoints}"></div>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label for="phone" class="form-label">Số điện thoại</label>
-                    <input type="text" class="form-control" id="phone" th:field="*{phone}" required>
+
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle"></i> Lưu
+                    </button>
+                    <a th:href="@{/customers/view-customers(page=${page}, size=${size}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}"
+                       class="btn btn-secondary d-flex align-items-center gap-2">
+                        <i class="bi bi-x-circle"></i> Hủy
+                    </a>
                 </div>
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" th:field="*{email}">
-                </div>
-                <div class="mb-3">
-                    <label for="customerType" class="form-label">Loại khách hàng <span class="text-danger">*</span></label>
-                    <select class="form-select" id="customerType" th:field="*{customerType}" required>
-                        <option value="">Chọn loại khách hàng</option>
-                        <option value="vang_lai" th:selected="${customer.customerType == T(com.example.quanlicuahangthuoc.entity.Customer$CustomerType).vang_lai}">Vãng lai</option>
-                        <option value="than_thiet" th:selected="${customer.customerType == T(com.example.quanlicuahangthuoc.entity.Customer$CustomerType).than_thiet}">Thân thiết</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="rewardPoints" class="form-label">Điểm thưởng</label>
-                    <input type="number" class="form-control" id="rewardPoints" th:field="*{rewardPoints}" min="0">
-                </div>
-                <button type="submit" class="btn btn-primary">Lưu</button>
-                <a class="btn btn-secondary" th:href="@{/customers/view-customers(page=${page}, size=${size}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}">Hủy</a>
             </form>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/notification.js}"></script>
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', () => {
+        const phoneInput = document.getElementById('phoneInput');
+        const phoneHidden = document.getElementById('phone');
+        const form = document.getElementById('customerForm');
+        const customPhoneError = document.getElementById('customPhoneError');
+
+        // Lấy giá trị ban đầu từ hidden input (đã được set bởi th:value)
+        const initialPhone = phoneHidden.value;
+        if (initialPhone && initialPhone.trim() !== '') {
+            const cleanPhone = initialPhone.replace(/[^0-9]/g, '');
+            phoneInput.value = cleanPhone;
+            phoneHidden.value = cleanPhone;
+            console.log('Initial phone value:', cleanPhone);
+        }
+
+        // Hàm làm sạch số điện thoại
+        function cleanPhoneNumber(value) {
+            return value.replace(/[^0-9]/g, '');
+        }
+
+        // Xử lý input - CHỈ CHO PHÉP NHẬP SỐ
+        phoneInput.addEventListener('input', (e) => {
+            let value = e.target.value;
+            let cleanValue = cleanPhoneNumber(value);
+
+            // Giới hạn tối đa 11 số
+            if (cleanValue.length > 11) {
+                cleanValue = cleanValue.substring(0, 11);
+            }
+
+            // Cập nhật CẢ 2 input
+            phoneInput.value = cleanValue;
+            phoneHidden.value = cleanValue;
+
+            // Validate real-time
+            if (cleanValue.length >= 9 && cleanValue.length <= 11) {
+                phoneInput.classList.remove('is-invalid');
+                phoneInput.classList.add('is-valid');
+                customPhoneError.style.display = 'none';
+            } else if (cleanValue.length > 0) {
+                phoneInput.classList.remove('is-valid');
+                phoneInput.classList.add('is-invalid');
+                customPhoneError.style.display = 'block';
+            } else {
+                phoneInput.classList.remove('is-valid', 'is-invalid');
+                customPhoneError.style.display = 'none';
+            }
+        });
+
+        // Xử lý keypress - CHẶN NHẬP KÝ TỰ ĐẶC BIỆT
+        phoneInput.addEventListener('keypress', (e) => {
+            const char = String.fromCharCode(e.which);
+            if (!/[0-9]/.test(char)) {
+                e.preventDefault();
+            }
+        });
+
+        // Xử lý paste - LÀM SẠCH DỮ LIỆU PASTE
+        phoneInput.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            const cleanedText = cleanPhoneNumber(pastedText).substring(0, 11);
+
+            phoneInput.value = cleanedText;
+            phoneHidden.value = cleanedText;
+
+            // Trigger input event để validate
+            phoneInput.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+
+        // Xử lý beforeinput - BẮT TẤT CẢ THAY ĐỔI
+        phoneInput.addEventListener('beforeinput', (e) => {
+            if (e.inputType === 'insertText' && e.data) {
+                if (!/^[0-9]$/.test(e.data)) {
+                    e.preventDefault();
+                }
+            }
+        });
+
+        // Validate TRƯỚC KHI SUBMIT
+        form.addEventListener('submit', (e) => {
+            // Làm sạch lại lần cuối
+            const finalValue = cleanPhoneNumber(phoneInput.value);
+            phoneInput.value = finalValue;
+            phoneHidden.value = finalValue;
+
+            console.log('=== FORM SUBMIT ===');
+            console.log('Phone hidden value:', phoneHidden.value);
+            console.log('Phone length:', finalValue.length);
+
+            // Validate độ dài
+            if (finalValue.length < 9 || finalValue.length > 11) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                phoneInput.classList.add('is-invalid');
+                customPhoneError.style.display = 'block';
+
+                if (typeof notification !== 'undefined') {
+                    notification.showError('Số điện thoại phải từ 9 đến 11 chữ số!');
+                }
+
+                phoneInput.focus();
+                return false;
+            }
+
+            // Kiểm tra có ký tự đặc biệt không
+            if (!/^[0-9]+$/.test(finalValue)) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                phoneInput.classList.add('is-invalid');
+                customPhoneError.textContent = 'Số điện thoại chỉ được chứa chữ số';
+                customPhoneError.style.display = 'block';
+
+                if (typeof notification !== 'undefined') {
+                    notification.showError('Số điện thoại chỉ được chứa chữ số!');
+                }
+
+                phoneInput.focus();
+                return false;
+            }
+
+            console.log('Form validated successfully!');
+            console.log('Final phone value to submit:', phoneHidden.value);
+        });
+
+        // Hiển thị notification nếu có lỗi từ server
+        const errorMessage = /*[[${error}]]*/ null;
+        if (errorMessage && typeof notification !== 'undefined') {
+            notification.showError(errorMessage);
+        }
+    });
+</script>
 <div th:replace="~{footer :: footer}"></div>
 </body>
 </html>

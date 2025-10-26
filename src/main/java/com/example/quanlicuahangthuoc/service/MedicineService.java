@@ -66,14 +66,45 @@ public class MedicineService {
         Medicine existing = getMedicineById(id);
         existing.setName(medicine.getName());
         existing.setType(medicine.getType());
-        existing.setExpiryDate(medicine.getExpiryDate());
+        existing.setExpiryDate(medicine.getExpiryDate()); // Cập nhật ngày hết hạn
         existing.setPrice(medicine.getPrice());
         existing.setStockQuantity(medicine.getStockQuantity());
         existing.setSupplier(medicine.getSupplier());
-        existing.setImage(medicine.getImage());
+        existing.setUsageInstructions(medicine.getUsageInstructions()); // Thêm dòng này
+
+        // Chỉ cập nhật image nếu có image mới
+        if (medicine.getImage() != null && !medicine.getImage().isEmpty()) {
+            existing.setImage(medicine.getImage());
+        }
+
         medicineRepository.save(existing);
     }
 
+    public long getTotalMedicinesCount(String searchName, String searchType, String searchSupplier) {
+        Medicine.MedicineType type = null;
+        Medicine.Supplier supplier = null;
+
+        // Chuyển đổi searchType
+        if (searchType != null && !searchType.isEmpty()) {
+            try {
+                type = Medicine.MedicineType.valueOf(searchType);
+            } catch (IllegalArgumentException e) {
+                type = null;
+            }
+        }
+
+        // Chuyển đổi searchSupplier
+        if (searchSupplier != null && !searchSupplier.isEmpty()) {
+            try {
+                supplier = Medicine.Supplier.valueOf(searchSupplier);
+            } catch (IllegalArgumentException e) {
+                supplier = null;
+            }
+        }
+
+        // Sử dụng repository để đếm với bộ lọc
+        return medicineRepository.countByFilters(searchName, type, supplier);
+    }
     public void deleteMedicine(Integer id) {
         medicineRepository.deleteById(id);
     }

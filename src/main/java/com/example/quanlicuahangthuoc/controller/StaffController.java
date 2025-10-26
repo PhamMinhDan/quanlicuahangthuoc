@@ -2,6 +2,7 @@ package com.example.quanlicuahangthuoc.controller;
 
 import com.example.quanlicuahangthuoc.entity.Staff;
 import com.example.quanlicuahangthuoc.service.StaffService;
+import com.example.quanlicuahangthuoc.config.FileUploadConfig;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -9,8 +10,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.core.Authentication;
-
+import java.io.IOException;
 import java.util.NoSuchElementException;
 
 @Controller
@@ -20,6 +22,9 @@ public class StaffController {
     @Autowired
     private StaffService staffService;
 
+    @Autowired
+    private FileUploadConfig fileUploadConfig;
+
     @GetMapping("/view-staff")
     public String viewStaff(
             @RequestParam(value = "name", required = false) String name,
@@ -27,7 +32,7 @@ public class StaffController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             Model model, Authentication authentication) {
         try {
             Page<Staff> staffPage;
@@ -64,8 +69,22 @@ public class StaffController {
     }
 
     @GetMapping("/add")
-    public String showAddStaffForm(Model model, Authentication authentication) {
+    public String showAddStaffForm(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "role", required = false) String role,
+            Model model,
+            Authentication authentication) {
         model.addAttribute("staff", new Staff());
+        model.addAttribute("page", page);
+        model.addAttribute("size", size);
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("sortDirection", sortDirection);
+        model.addAttribute("name", name);
+        model.addAttribute("role", role);
         model.addAttribute("isManager", authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
         model.addAttribute("activeNav", "staff");
@@ -79,31 +98,41 @@ public class StaffController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "role", required = false) String role,
-            Model model) {
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+            Model model) throws IOException {
         if (bindingResult.hasErrors()) {
+            model.addAttribute("staff", staff);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("name", name);
+            model.addAttribute("role", role);
+            model.addAttribute("activeNav", "staff");
             model.addAttribute("error", bindingResult.getAllErrors().stream()
                     .map(error -> error.getDefaultMessage())
                     .reduce((e1, e2) -> e1 + "; " + e2)
                     .orElse("Lỗi nhập liệu"));
-            model.addAttribute("staff", staff);
-            model.addAttribute("page", page);
-            model.addAttribute("size", size);
-            model.addAttribute("sortBy", sortBy);
-            model.addAttribute("sortDirection", sortDirection);
-            model.addAttribute("name", name);
-            model.addAttribute("role", role);
-            model.addAttribute("activeNav", "staff");
             return "staff-form";
         }
         try {
+            if (imageFile != null && !imageFile.isEmpty()) {
+                String imagePath = fileUploadConfig.storeFile(imageFile);
+                if (imagePath != null) {
+                    staff.setImage(imagePath);
+                }
+            }
             staffService.addStaff(staff);
-            model.addAttribute("message", "Thêm nhân viên thành công");
-            return "redirect:/api/staff/view-staff";
+            // Chuyển hướng về trang đầu tiên (page=0), bỏ các tham số lọc
+            return "redirect:/api/staff/view-staff?page=0" +
+                    "&size=" + size +
+                    "&sortBy=" + sortBy +
+                    "&sortDirection=" + sortDirection +
+                    "&addSuccess=true";
         } catch (IllegalStateException e) {
-            model.addAttribute("error", e.getMessage());
             model.addAttribute("staff", staff);
             model.addAttribute("page", page);
             model.addAttribute("size", size);
@@ -112,6 +141,18 @@ public class StaffController {
             model.addAttribute("name", name);
             model.addAttribute("role", role);
             model.addAttribute("activeNav", "staff");
+            model.addAttribute("error", "Lỗi trạng thái: " + e.getMessage());
+            return "staff-form";
+        } catch (Exception e) {
+            model.addAttribute("staff", staff);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("name", name);
+            model.addAttribute("role", role);
+            model.addAttribute("activeNav", "staff");
+            model.addAttribute("error", "Lỗi khi upload ảnh hoặc xử lý: " + e.getMessage());
             return "staff-form";
         }
     }
@@ -122,7 +163,7 @@ public class StaffController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "role", required = false) String role,
             Model model, Authentication authentication) {
@@ -155,9 +196,10 @@ public class StaffController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "role", required = false) String role,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("error", bindingResult.getAllErrors().stream()
@@ -175,12 +217,34 @@ public class StaffController {
             return "staff-form";
         }
         try {
-            staff.setId(id); // Đảm bảo ID được gán
+            staff.setId(id);
+            if (imageFile != null && !imageFile.isEmpty()) {
+                String imagePath = fileUploadConfig.storeFile(imageFile);
+                if (imagePath != null) {
+                    staff.setImage(imagePath);
+                }
+            }
             staffService.updateStaff(staff);
-            model.addAttribute("message", "Cập nhật nhân viên thành công");
-            return "redirect:/api/staff/view-staff";
+            return "redirect:/api/staff/view-staff?page=" + page +
+                    "&size=" + size +
+                    "&sortBy=" + sortBy +
+                    "&sortDirection=" + sortDirection +
+                    (name != null ? "&name=" + name : "") +
+                    (role != null ? "&role=" + role : "") +
+                    "&updateSuccess=true";
         } catch (IllegalStateException | NoSuchElementException e) {
             model.addAttribute("error", e.getMessage());
+            model.addAttribute("staff", staff);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("name", name);
+            model.addAttribute("role", role);
+            model.addAttribute("activeNav", "staff");
+            return "staff-form";
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi khi upload ảnh: " + e.getMessage());
             model.addAttribute("staff", staff);
             model.addAttribute("page", page);
             model.addAttribute("size", size);
@@ -199,18 +263,42 @@ public class StaffController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "role", required = false) String role,
-            Model model) {
+            Model model,
+            Authentication authentication) {
+        if (!authentication.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly"))) {
+            model.addAttribute("error", "Bạn không có quyền xóa nhân viên.");
+            return "redirect:/api/staff/view-staff?page=" + page + "&size=" + size + "&sortBy=" + sortBy + "&sortDirection=" + sortDirection +
+                    (name != null ? "&name=" + name : "") +
+                    (role != null ? "&role=" + role : "");
+        }
+
         try {
             staffService.deleteStaff(id);
-            model.addAttribute("message", "Xóa nhân viên thành công");
+
+            long totalItems = staffService.getTotalStaff(name, role);
+            int totalPages = (int) Math.ceil((double) totalItems / size);
+
+            int adjustedPage = page;
+            if (page >= totalPages && totalPages > 0) {
+                adjustedPage = totalPages - 1;
+            } else if (totalPages == 0) {
+                adjustedPage = 0;
+            }
+
+            return "redirect:/api/staff/view-staff?page=" + adjustedPage + "&size=" + size + "&sortBy=" + sortBy + "&sortDirection=" + sortDirection +
+                    (name != null ? "&name=" + name : "") +
+                    (role != null ? "&role=" + role : "") +
+                    "&deleteSuccess=true";
         } catch (NoSuchElementException e) {
             model.addAttribute("error", "Nhân viên không tồn tại: " + e.getMessage());
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi server: " + e.getMessage());
         }
-        return "redirect:/api/staff/view-staff";
+        return "redirect:/api/staff/view-staff?page=" + page + "&size=" + size + "&sortBy=" + sortBy + "&sortDirection=" + sortDirection +
+                (name != null ? "&name=" + name : "") +
+                (role != null ? "&role=" + role : "");
     }
 }

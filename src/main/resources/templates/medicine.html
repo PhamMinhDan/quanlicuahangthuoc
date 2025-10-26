@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/medicine.css}">
+    <link rel="stylesheet" th:href="@{/notification.css}"> <!-- Thêm CSS thông báo -->
 </head>
 <body>
 <div class="d-flex">
@@ -14,8 +15,9 @@
 
     <div class="main-content flex-grow-1 bg-light p-4">
         <div class="container-fluid">
-            <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
-            <div th:if="${message != null}" class="alert alert-success" th:text="${message}"></div>
+            <!-- Loại bỏ alert cũ vì đã dùng notification -->
+            <!-- <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
+            <div th:if="${message != null}" class="alert alert-success" th:text="${message}"></div> -->
 
             <!-- Tiêu đề trang -->
             <div class="mb-4">
@@ -61,7 +63,7 @@
                             <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
                                 <i class="bi bi-search"></i> Lọc
                             </button>
-                            <button th:if="${searchName != null and searchName != '' or searchType != null and searchType != '' or searchSupplier != null and searchSupplier != ''}" 
+                            <button th:if="${searchName != null and searchName != '' or searchType != null and searchType != '' or searchSupplier != null and searchSupplier != ''}"
                                     class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
                                 <i class="bi bi-x"></i> Xóa Lọc
                             </button>
@@ -87,16 +89,36 @@
                     <table class="table table-hover">
                         <thead>
                         <tr>
-                            <th style="white-space: nowrap;">STT</th>
-                            <th style="white-space: nowrap;">Ảnh</th>
                             <th style="white-space: nowrap;">
-                                Tên thuốc
+                                STT
+                                <a th:href="@{/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='id', sortDirection=${sortBy == 'id' and sortDirection == 'desc' ? 'asc' : 'desc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">
+                                    <i th:class="${sortBy == 'id'} ? (${sortDirection == 'desc'} ? 'bi bi-arrow-down' : 'bi bi-arrow-up') : 'bi bi-arrow-down-up'"></i>
+                                </a>
+                            </th>
+                            <th style="white-space: nowrap;">
+                                Tên
                                 <a th:href="@{/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='name', sortDirection=${sortBy == 'name' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">
                                     <i th:class="${sortBy == 'name'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                                 </a>
                             </th>
-                            <th style="white-space: nowrap;">Loại thuốc</th>
-                            <th style="white-space: nowrap;">HSD</th>
+                            <th style="white-space: nowrap;">
+                                Loại
+                                <a th:href="@{/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='type', sortDirection=${sortBy == 'type' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">
+                                    <i th:class="${sortBy == 'type'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
+                                </a>
+                            </th>
+                            <th style="white-space: nowrap;">
+                                Nhà cung cấp
+                                <a th:href="@{/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='supplier', sortDirection=${sortBy == 'supplier' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">
+                                    <i th:class="${sortBy == 'supplier'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
+                                </a>
+                            </th>
+                            <th style="white-space: nowrap;">
+                                Số lượng
+                                <a th:href="@{/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='stockQuantity', sortDirection=${sortBy == 'stockQuantity' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">
+                                    <i th:class="${sortBy == 'stockQuantity'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
+                                </a>
+                            </th>
                             <th style="white-space: nowrap;">
                                 Giá
                                 <a th:href="@{/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy='price', sortDirection=${sortBy == 'price' and sortDirection == 'asc' ? 'desc' : 'asc'}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">
@@ -123,14 +145,25 @@
                             <td class="text-center" style="white-space: nowrap;" th:text="${medicine.stockQuantity != null ? medicine.stockQuantity : '0'}"></td>
                             <td class="text-center" style="white-space: nowrap;" th:text="${medicine.supplier != null ? medicine.supplier.displayName : 'N/A'}"></td>
                             <td style="max-width: 250px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">
-                                <span th:if="${medicine.usageInstructions != null and !#strings.isEmpty(medicine.usageInstructions)}" 
+                                <span th:if="${medicine.usageInstructions != null and !#strings.isEmpty(medicine.usageInstructions)}"
                                       th:text="${medicine.usageInstructions}"></span>
                                 <span th:if="${medicine.usageInstructions == null or #strings.isEmpty(medicine.usageInstructions)}" class="text-muted">Chưa có</span>
                             </td>
                             <td style="white-space: nowrap;">
                                 <div class="d-flex gap-2">
                                     <a th:if="${isManager}" class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/medicines/edit/{id}(id=${medicine.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}"><i class="bi bi-pencil"></i></a>
-                                    <button th:if="${isManager}" class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deleteMedicine(' + ${medicine.id} + ')'"><i class="bi bi-trash"></i></button>
+                                    <button th:if="${isManager}" type="button" class="btn btn-danger btn-sm btn-action-delete text-white" th:attr="data-bs-toggle='modal', data-bs-target='#deleteConfirmModal'+${medicine.id}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    <form th:action="@{/medicines/delete/{id}(id=${medicine.id})}" method="post" th:id="'deleteForm'+${medicine.id}" style="display:none;">
+                                        <input type="hidden" name="page" th:value="${currentPage}">
+                                        <input type="hidden" name="size" th:value="${pageSize}">
+                                        <input type="hidden" name="sortBy" th:value="${sortBy}">
+                                        <input type="hidden" name="sortDirection" th:value="${sortDirection}">
+                                        <input type="hidden" name="searchName" th:value="${searchName}">
+                                        <input type="hidden" name="searchType" th:value="${searchType}">
+                                        <input type="hidden" name="searchSupplier" th:value="${searchSupplier}">
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -149,61 +182,37 @@
                                     <span aria-hidden="true">&laquo;&laquo;</span>
                                 </a>
                             </li>
-                            
+
                             <!-- Previous button (circular: nếu ở trang đầu thì về trang cuối) -->
                             <li class="page-item">
                                 <a class="page-link text-dark" th:href="@{/medicines/view-medicine(page=${currentPage == 0 ? totalPages - 1 : currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}" aria-label="Previous">
                                     <span aria-hidden="true">&laquo;</span>
                                 </a>
                             </li>
-                            
-                            <!-- Trang 1 -->
-                            <li class="page-item" th:classappend="${currentPage == 0} ? 'active'">
-                                <a class="page-link text-dark" th:href="@{/medicines/view-medicine(page=0, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">1</a>
-                            </li>
-                            
-                            <!-- Trang 2 (nếu không phải trang cuối) -->
-                            <li class="page-item" th:if="${totalPages > 2}" th:classappend="${currentPage == 1} ? 'active'">
-                                <a class="page-link text-dark" th:href="@{/medicines/view-medicine(page=1, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}">2</a>
-                            </li>
-                            
-                            <!-- Dấu ... sau trang 2 -->
-                            <li class="page-item disabled" th:if="${currentPage > 3 and totalPages > 4}">
-                                <span class="page-link text-dark">...</span>
-                            </li>
-                            
-                            <!-- Trang currentPage-1 (nếu > 2) -->
-                            <li class="page-item" th:if="${currentPage > 2 and currentPage < totalPages - 1}">
-                                <a class="page-link text-dark" th:href="@{/medicines/view-medicine(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}" th:text="${currentPage}"></a>
-                            </li>
-                            
-                            <!-- Trang hiện tại (nếu không phải trang 1, 2 hoặc cuối) -->
-                            <li class="page-item active" th:if="${currentPage > 1 and currentPage < totalPages - 1}">
-                                <a class="page-link text-dark" th:href="@{/medicines/view-medicine(page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}" th:text="${currentPage + 1}"></a>
-                            </li>
-                            
-                            <!-- Trang currentPage+1 (nếu < totalPages-1) -->
-                            <li class="page-item" th:if="${currentPage >= 1 and currentPage < totalPages - 2}">
-                                <a class="page-link text-dark" th:href="@{/medicines/view-medicine(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}" th:text="${currentPage + 2}"></a>
-                            </li>
-                            
-                            <!-- Dấu ... trước trang cuối -->
-                            <li class="page-item disabled" th:if="${currentPage < totalPages - 4 and totalPages > 4}">
-                                <span class="page-link text-dark">...</span>
-                            </li>
-                            
-                            <!-- Trang cuối -->
-                            <li class="page-item" th:if="${totalPages > 2}" th:classappend="${currentPage == totalPages - 1} ? 'active'">
-                                <a class="page-link text-dark" th:href="@{/medicines/view-medicine(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}" th:text="${totalPages}"></a>
-                            </li>
-                            
+
+                            <!-- Hiển thị các trang (tối đa 5 trang gần currentPage) -->
+                            <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                                <th:block th:if="${i == 0 or i == totalPages - 1 or (i >= currentPage - 2 and i <= currentPage + 2)}">
+                                    <li class="page-item" th:classappend="${currentPage == i} ? 'active'">
+                                        <a class="page-link text-dark" th:href="@{/medicines/view-medicine(page=${i}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}" th:text="${i + 1}"></a>
+                                    </li>
+                                </th:block>
+                                <!-- Thêm dấu ... nếu có khoảng cách -->
+                                <th:block th:if="${i == currentPage - 3 and currentPage > 3}">
+                                    <li class="page-item disabled"><span class="page-link text-dark">...</span></li>
+                                </th:block>
+                                <th:block th:if="${i == currentPage + 3 and currentPage < totalPages - 4}">
+                                    <li class="page-item disabled"><span class="page-link text-dark">...</span></li>
+                                </th:block>
+                            </th:block>
+
                             <!-- Next button (circular: nếu ở trang cuối thì về trang đầu) -->
                             <li class="page-item">
                                 <a class="page-link text-dark" th:href="@{/medicines/view-medicine(page=${currentPage == totalPages - 1 ? 0 : currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}" aria-label="Next">
                                     <span aria-hidden="true">&raquo;</span>
                                 </a>
                             </li>
-                            
+
                             <!-- Last page button -->
                             <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
                                 <a class="page-link text-dark" th:href="@{/medicines/view-medicine(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}" aria-label="Last">
@@ -214,11 +223,51 @@
                     </nav>
                 </div>
             </div>
+
+            <!-- Modal for delete confirmation -->
+            <div th:each="medicine : ${medicines}">
+                <div class="modal fade" th:id="'deleteConfirmModal'+${medicine.id}" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deleteConfirmModalLabel">Xác nhận xóa thuốc</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Bạn có chắc muốn xóa thuốc <span th:text="${medicine.name}"></span> không?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                <button type="button" class="btn btn-danger" th:onclick="'document.getElementById(\'deleteForm\' + ' + ${medicine.id} + ').submit();'">Xóa</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal for delete success (có thể loại bỏ nếu dùng notification) -->
+            <div class="modal fade" id="deleteSuccessModal" tabindex="-1" aria-labelledby="deleteSuccessModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteSuccessModalLabel">Xóa thuốc</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Thuốc đã được xóa thành công!
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đóng</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/notification.js}"></script> <!-- Thêm JS thông báo -->
 <script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', () => {
         const navLinks = document.querySelectorAll('.nav-link');
@@ -231,47 +280,44 @@
             });
         });
 
-        document.getElementById('clearFilters').addEventListener('click', () => {
-            document.getElementById('searchName').value = '';
-            document.getElementById('searchType').value = '';
-            document.getElementById('searchSupplier').value = '';
-            window.location.href = '/medicines/view-medicine';
-        });
+        // Sửa lỗi: Kiểm tra xem nút clearFilters có tồn tại không
+        const clearFiltersBtn = document.getElementById('clearFilters');
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', () => {
+                document.getElementById('searchName').value = '';
+                document.getElementById('searchType').value = '';
+                document.getElementById('searchSupplier').value = '';
+                window.location.href = '/medicines/view-medicine';
+            });
+        }
 
-        // Nhúng các giá trị từ Thymeleaf vào JavaScript
-        const currentPage = [[${currentPage}]];
-        const pageSize = [[${pageSize}]];
-        const sortBy = [[${sortBy}]];
-        const sortDirection = [[${sortDirection}]];
-        const searchName = [[${searchName}]] || '';
-        const searchType = [[${searchType}]] || '';
-        const searchSupplier = [[${searchSupplier}]] || '';
+        // Kiểm tra và hiển thị thông báo
+        const urlParams = new URLSearchParams(window.location.search);
 
-        window.deleteMedicine = function(id) {
-            if (confirm('Bạn có chắc muốn xóa thuốc này?')) {
-                fetch(`/medicines/delete/${id}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({
-                        page: currentPage,
-                        size: pageSize,
-                        sortBy: sortBy,
-                        sortDirection: sortDirection,
-                        searchName: searchName,
-                        searchType: searchType,
-                        searchSupplier: searchSupplier
-                    })
-                })
-                    .then(response => {
-                        if (response.ok) {
-                            window.location.reload();
-                        } else {
-                            response.text().then(text => alert('Xóa thất bại: ' + (text || 'Lỗi không xác định')));
-                        }
-                    })
-                    .catch(error => alert('Lỗi khi xóa thuốc: ' + error.message));
+        if (urlParams.get('deleteSuccess') === 'true') {
+            if (typeof notification !== 'undefined') {
+                notification.showSuccess('Thuốc đã được xóa thành công!');
             }
-        };
+            // Xóa parameter khỏi URL
+            const newUrl = window.location.pathname + window.location.search.replace(/[?&]deleteSuccess=true/, '').replace(/^&/, '?');
+            window.history.replaceState({}, document.title, newUrl);
+        }
+
+        if (urlParams.get('addSuccess') === 'true') {
+            if (typeof notification !== 'undefined') {
+                notification.showSuccess('Thuốc đã được thêm thành công!');
+            }
+            const newUrl = window.location.pathname + window.location.search.replace(/[?&]addSuccess=true/, '').replace(/^&/, '?');
+            window.history.replaceState({}, document.title, newUrl);
+        }
+
+        if (urlParams.get('updateSuccess') === 'true') {
+            if (typeof notification !== 'undefined') {
+                notification.showSuccess('Thuốc đã được cập nhật thành công!');
+            }
+            const newUrl = window.location.pathname + window.location.search.replace(/[?&]updateSuccess=true/, '').replace(/^&/, '?');
+            window.history.replaceState({}, document.title, newUrl);
+        }
     });
 </script>
 <div th:replace="~{footer :: footer}"></div>

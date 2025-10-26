@@ -120,5 +120,14 @@ public class PaymentService {
         }
         return revenueByMonth;
     }
-
+    public long getTotalPaymentsWithFilters(Integer orderId, LocalDate fromDate, LocalDate toDate) {
+        if (orderId != null || fromDate != null || toDate != null) {
+            // Sử dụng Pageable giả lập để lấy tổng số bản ghi với bộ lọc
+            Pageable pageable = PageRequest.of(0, 1); // Chỉ cần 1 bản ghi để lấy tổng
+            Page<Payment> page = paymentRepository.findByDateRange(orderId, fromDate, toDate, pageable);
+            return page.getTotalElements();
+        } else {
+            return paymentRepository.countPayments();
+        }
+    }
 }

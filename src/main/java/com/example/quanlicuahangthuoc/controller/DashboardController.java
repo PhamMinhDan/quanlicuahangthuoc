@@ -9,7 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-
+import org.springframework.security.core.Authentication;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -31,7 +31,16 @@ public class DashboardController {
     private CustomerService customerService;
 
     @GetMapping
-    public String showDashboard(Model model) {
+    public String showDashboard(Model model, Authentication authentication) {
+        if (!authentication.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly"))) {
+            if (authentication.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_nhan_vien"))) {
+                return "redirect:/medicines/view-medicine";
+            } else {
+                return "redirect:/access-denied";
+            }
+        }
+
+        model.addAttribute("isManager", true); // Đảm bảo isManager luôn true cho ROLE_quan_ly
         try {
             LocalDate now = LocalDate.now();
             LocalDate startOfMonth = now.withDayOfMonth(1);

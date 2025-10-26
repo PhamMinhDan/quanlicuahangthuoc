@@ -3,23 +3,23 @@ package com.example.quanlicuahangthuoc.controller;
 import com.example.quanlicuahangthuoc.entity.Customer;
 import com.example.quanlicuahangthuoc.service.CustomerService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
+
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Controller
 @RequestMapping("/customers")
 public class CustomerController {
 
-    private final CustomerService customerService;
-
-    public CustomerController(CustomerService customerService) {
-        this.customerService = customerService;
-    }
+    @Autowired
+    private CustomerService customerService;
 
     @GetMapping("/view-customers")
     public String viewCustomers(
@@ -29,21 +29,20 @@ public class CustomerController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             Model model,
             Authentication authentication) {
         try {
             Page<Customer> customerPage;
-            if ((keyword != null && !keyword.trim().isEmpty()) ||
-                    (phone != null && !phone.trim().isEmpty()) ||
-                    (customerType != null && !customerType.trim().isEmpty())) {
+            if (keyword != null || phone != null || customerType != null) {
                 customerPage = customerService.searchWithPagingAndSort(keyword, phone, customerType, page, size, sortBy, sortDirection);
             } else {
                 customerPage = customerService.getAllCustomersWithPagingAndSort(page, size, sortBy, sortDirection);
             }
 
-            model.addAttribute("customers", customerPage.getContent());
-            model.addAttribute("currentPage", customerPage.getNumber());
+            List<Customer> customers = customerPage.getContent();
+            model.addAttribute("customers", customers);
+            model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", customerPage.getTotalPages());
             model.addAttribute("pageSize", size);
             model.addAttribute("sortBy", sortBy);
@@ -51,15 +50,20 @@ public class CustomerController {
             model.addAttribute("keyword", keyword);
             model.addAttribute("phone", phone);
             model.addAttribute("customerType", customerType);
-            model.addAttribute("totalCustomers", customerService.getTotalCustomers());
+            model.addAttribute("totalItems", customerPage.getTotalElements());
             model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
             model.addAttribute("activeNav", "customers");
             return "customers";
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi khi tải danh sách khách hàng: " + e.getMessage());
             model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
+            model.addAttribute("activeNav", "customers");
             return "customers";
         }
     }
@@ -86,23 +90,46 @@ public class CustomerController {
             @RequestParam(value = "customerType", required = false) String customerType,
             Model model) {
         if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getAllErrors().stream()
-                    .map(error -> error.getDefaultMessage())
-                    .reduce((e1, e2) -> e1 + "; " + e2)
-                    .orElse("Lỗi nhập liệu");
-            model.addAttribute("error", errorMessage);
-            model.addAttribute("customer", customer);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("phone", phone);
+            model.addAttribute("customerType", customerType);
             model.addAttribute("activeNav", "customers");
             return "customer-form";
         }
 
         try {
             customerService.createCustomer(customer);
-            model.addAttribute("message", "Thêm khách hàng thành công");
-             return "redirect:/customers/view-customers?page=0&size=10&sortBy=id&sortDirection=desc";
+
+            // THÊM MỚI: Quay về trang đầu tiên, KHÔNG GIỮ filter
+            return "redirect:/customers/view-customers?page=0" +
+                    "&size=" + size +
+                    "&sortBy=" + sortBy +
+                    "&sortDirection=" + sortDirection +
+                    "&addSuccess=true";
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", "Lỗi: " + e.getMessage());
-            model.addAttribute("customer", customer);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("phone", phone);
+            model.addAttribute("customerType", customerType);
+            model.addAttribute("activeNav", "customers");
+            return "customer-form";
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi server: " + e.getMessage());
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("phone", phone);
+            model.addAttribute("customerType", customerType);
             model.addAttribute("activeNav", "customers");
             return "customer-form";
         }
@@ -114,15 +141,22 @@ public class CustomerController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam(value = "customerType", required = false) String customerType,
             Model model,
             Authentication authentication) {
-        // Kiểm tra vai trò quan_ly
         if (!authentication.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly"))) {
             model.addAttribute("error", "Bạn không có quyền chỉnh sửa khách hàng.");
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("phone", phone);
+            model.addAttribute("customerType", customerType);
+            model.addAttribute("isManager", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
+            model.addAttribute("activeNav", "customers");
             return viewCustomers(keyword, phone, customerType, page, size, sortBy, sortDirection, model, authentication);
         }
 
@@ -144,6 +178,9 @@ public class CustomerController {
             model.addAttribute("error", "Khách hàng không tồn tại: " + e.getMessage());
             model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
+            model.addAttribute("activeNav", "customers");
             return viewCustomers(keyword, phone, customerType, page, size, sortBy, sortDirection, model, authentication);
         }
     }
@@ -162,7 +199,6 @@ public class CustomerController {
             @RequestParam(value = "customerType", required = false) String customerType,
             Model model,
             Authentication authentication) {
-        // Kiểm tra vai trò quan_ly
         if (!authentication.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly"))) {
             model.addAttribute("error", "Bạn không có quyền chỉnh sửa khách hàng.");
             model.addAttribute("customer", customer);
@@ -178,11 +214,6 @@ public class CustomerController {
         }
 
         if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getAllErrors().stream()
-                    .map(error -> error.getDefaultMessage())
-                    .reduce((e1, e2) -> e1 + "; " + e2)
-                    .orElse("Lỗi nhập liệu");
-            model.addAttribute("error", errorMessage);
             model.addAttribute("customer", customer);
             model.addAttribute("page", page);
             model.addAttribute("size", size);
@@ -196,12 +227,28 @@ public class CustomerController {
         }
 
         try {
+            customer.setId(id);
             customerService.updateCustomer(id, customer);
-            model.addAttribute("message", "Cập nhật khách hàng thành công");
-            return "redirect:/customers/view-customers?page=" + page + "&size=" + size + "&sortBy=" + sortBy + "&sortDirection=" + sortDirection +
-                    (keyword != null ? "&keyword=" + keyword : "") +
-                    (phone != null ? "&phone=" + phone : "") +
-                    (customerType != null ? "&customerType=" + customerType : "");
+
+            // CẬP NHẬT: Quay về trang hiện tại và GIỮ filter (vì đang sửa)
+            StringBuilder redirectUrl = new StringBuilder("/customers/view-customers?page=" + page +
+                    "&size=" + size +
+                    "&sortBy=" + sortBy +
+                    "&sortDirection=" + sortDirection +
+                    "&updateSuccess=true");
+
+            // Giữ lại filter khi update
+            if (keyword != null && !keyword.isEmpty()) {
+                redirectUrl.append("&keyword=").append(keyword);
+            }
+            if (phone != null && !phone.isEmpty()) {
+                redirectUrl.append("&phone=").append(phone);
+            }
+            if (customerType != null && !customerType.isEmpty()) {
+                redirectUrl.append("&customerType=").append(customerType);
+            }
+
+            return "redirect:" + redirectUrl.toString();
         } catch (NoSuchElementException e) {
             model.addAttribute("error", "Khách hàng không tồn tại: " + e.getMessage());
             model.addAttribute("customer", customer);
@@ -216,6 +263,18 @@ public class CustomerController {
             return "customer-form";
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", "Lỗi: " + e.getMessage());
+            model.addAttribute("customer", customer);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("phone", phone);
+            model.addAttribute("customerType", customerType);
+            model.addAttribute("activeNav", "customers");
+            return "customer-form";
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi server: " + e.getMessage());
             model.addAttribute("customer", customer);
             model.addAttribute("page", page);
             model.addAttribute("size", size);
@@ -241,26 +300,81 @@ public class CustomerController {
             @RequestParam(value = "customerType", required = false) String customerType,
             Model model,
             Authentication authentication) {
-        // Kiểm tra vai trò quan_ly
         if (!authentication.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly"))) {
             model.addAttribute("error", "Bạn không có quyền xóa khách hàng.");
-            return "redirect:/customers/view-customers?page=" + page + "&size=" + size + "&sortBy=" + sortBy + "&sortDirection=" + sortDirection +
-                    (keyword != null ? "&keyword=" + keyword : "") +
-                    (phone != null ? "&phone=" + phone : "") +
-                    (customerType != null ? "&customerType=" + customerType : "");
+            StringBuilder redirectUrl = new StringBuilder("/customers/view-customers?page=" + page +
+                    "&size=" + size +
+                    "&sortBy=" + sortBy +
+                    "&sortDirection=" + sortDirection);
+            if (keyword != null && !keyword.isEmpty()) {
+                redirectUrl.append("&keyword=").append(keyword);
+            }
+            if (phone != null && !phone.isEmpty()) {
+                redirectUrl.append("&phone=").append(phone);
+            }
+            if (customerType != null && !customerType.isEmpty()) {
+                redirectUrl.append("&customerType=").append(customerType);
+            }
+            return "redirect:" + redirectUrl.toString();
         }
 
         try {
+            Page<Customer> customerPage = customerService.searchWithPagingAndSort(keyword, phone, customerType, page, size, sortBy, sortDirection);
+            int totalItemsOnPage = customerPage.getNumberOfElements();
             customerService.deleteCustomer(id);
-            model.addAttribute("message", "Xóa khách hàng thành công");
+            customerPage = customerService.searchWithPagingAndSort(keyword, phone, customerType, page, size, sortBy, sortDirection);
+            int newTotalItemsOnPage = customerPage.getNumberOfElements();
+            int newPage = page;
+            if (totalItemsOnPage == 1 && newTotalItemsOnPage == 0 && page > 0) {
+                newPage = page - 1;
+            }
+            StringBuilder redirectUrl = new StringBuilder("/customers/view-customers?page=" + newPage +
+                    "&size=" + size +
+                    "&sortBy=" + sortBy +
+                    "&sortDirection=" + sortDirection +
+                    "&deleteSuccess=true");
+            if (keyword != null && !keyword.isEmpty()) {
+                redirectUrl.append("&keyword=").append(keyword);
+            }
+            if (phone != null && !phone.isEmpty()) {
+                redirectUrl.append("&phone=").append(phone);
+            }
+            if (customerType != null && !customerType.isEmpty()) {
+                redirectUrl.append("&customerType=").append(customerType);
+            }
+            return "redirect:" + redirectUrl.toString();
         } catch (NoSuchElementException e) {
             model.addAttribute("error", "Khách hàng không tồn tại: " + e.getMessage());
+            StringBuilder redirectUrl = new StringBuilder("/customers/view-customers?page=" + page +
+                    "&size=" + size +
+                    "&sortBy=" + sortBy +
+                    "&sortDirection=" + sortDirection);
+            if (keyword != null && !keyword.isEmpty()) {
+                redirectUrl.append("&keyword=").append(keyword);
+            }
+            if (phone != null && !phone.isEmpty()) {
+                redirectUrl.append("&phone=").append(phone);
+            }
+            if (customerType != null && !customerType.isEmpty()) {
+                redirectUrl.append("&customerType=").append(customerType);
+            }
+            return "redirect:" + redirectUrl.toString();
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi server: " + e.getMessage());
+            StringBuilder redirectUrl = new StringBuilder("/customers/view-customers?page=" + page +
+                    "&size=" + size +
+                    "&sortBy=" + sortBy +
+                    "&sortDirection=" + sortDirection);
+            if (keyword != null && !keyword.isEmpty()) {
+                redirectUrl.append("&keyword=").append(keyword);
+            }
+            if (phone != null && !phone.isEmpty()) {
+                redirectUrl.append("&phone=").append(phone);
+            }
+            if (customerType != null && !customerType.isEmpty()) {
+                redirectUrl.append("&customerType=").append(customerType);
+            }
+            return "redirect:" + redirectUrl.toString();
         }
-        return "redirect:/customers/view-customers?page=" + page + "&size=" + size + "&sortBy=" + sortBy + "&sortDirection=" + sortDirection +
-                (keyword != null ? "&keyword=" + keyword : "") +
-                (phone != null ? "&phone=" + phone : "") +
-                (customerType != null ? "&customerType=" + customerType : "");
     }
 }

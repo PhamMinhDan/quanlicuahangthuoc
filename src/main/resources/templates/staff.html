@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/medicine.css}">
+    <link rel="stylesheet" th:href="@{/notification.css}"> <!-- Thêm CSS thông báo -->
 </head>
 <body>
 <div class="d-flex">
@@ -14,8 +15,9 @@
 
     <div class="main-content flex-grow-1 bg-light p-4">
         <div class="container-fluid">
-            <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
-            <div th:if="${message != null}" class="alert alert-success" th:text="${message}"></div>
+            <!-- Loại bỏ alert cũ vì đã dùng notification -->
+            <!-- <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
+            <div th:if="${message != null}" class="alert alert-success" th:text="${message}"></div> -->
 
             <!-- Tiêu đề trang -->
             <div class="mb-4">
@@ -47,7 +49,7 @@
                             <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
                                 <i class="bi bi-search"></i> Lọc
                             </button>
-                            <button th:if="${name != null and name != '' or role != null and role != ''}" 
+                            <button th:if="${name != null and name != '' or role != null and role != ''}"
                                     class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
                                 <i class="bi bi-x"></i> Xóa Lọc
                             </button>
@@ -65,8 +67,8 @@
                         <span class="fw-bold" th:text="${totalItems}">0</span>
                         <span>nhân viên</span>
                     </div>
-                    <a class="btn btn-success d-flex align-items-center gap-2" th:href="@{/api/staff/add}">
-                        <i th:if="${isManager}" class="bi bi-plus"></i> Thêm nhân viên mới
+                    <a th:if="${isManager}" class="btn btn-success d-flex align-items-center gap-2" th:href="@{/api/staff/add}">
+                        <i class="bi bi-plus"></i> Thêm nhân viên mới
                     </a>
                 </div>
                 <div class="table-responsive">
@@ -74,6 +76,7 @@
                         <thead>
                         <tr>
                             <th style="white-space: nowrap;">STT</th>
+                            <th style="white-space: nowrap;">Ảnh</th> <!-- Thêm cột ảnh -->
                             <th style="white-space: nowrap;">
                                 Tên
                                 <a th:href="@{/api/staff/view-staff(page=${currentPage}, size=${pageSize}, sortBy='name', sortDirection=${sortBy == 'name' and sortDirection == 'asc' ? 'desc' : 'asc'}, name=${name}, role=${role})}">
@@ -96,21 +99,35 @@
                         <tbody>
                         <tr th:each="staff, iterStat : ${staffs}">
                             <td style="white-space: nowrap;" th:text="${currentPage * pageSize + iterStat.index + 1}"></td>
+                            <td style="white-space: nowrap;">
+                                <img th:if="${staff.image}" th:src="${staff.image}" alt="Ảnh nhân viên" class="img-thumbnail" style="max-width: 50px; max-height: 50px;">
+                                <span th:unless="${staff.image}" class="text-muted">Không có ảnh</span>
+                            </td> <!-- Thêm cột ảnh -->
                             <td style="white-space: nowrap;" th:text="${staff.name}"></td>
                             <td style="white-space: nowrap;" th:text="${staff.email}"></td>
                             <td style="white-space: nowrap;" th:text="${staff.phone}"></td>
                             <td style="white-space: nowrap;" th:text="${staff.role != null ? staff.role.displayName : 'N/A'}"></td>
                             <td style="white-space: nowrap;" th:text="${staff.workShift != null ? staff.workShift.displayName : 'N/A'}"></td>
                             <td style="white-space: nowrap;" th:text="${staff.salary != null ? #numbers.formatDecimal(staff.salary, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
-                            <td style="white-space: nowrap;">
+                            <td th:if="${isManager}" style="white-space: nowrap;">
                                 <div class="d-flex gap-2">
                                     <a th:if="${isManager}" class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/api/staff/edit/{id}(id=${staff.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}"><i class="bi bi-pencil"></i></a>
-                                    <button th:if="${isManager}" class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deleteStaff(' + ${staff.id} + ')'"><i class="bi bi-trash"></i></button>
+                                    <button th:if="${isManager}" type="button" class="btn btn-danger btn-sm btn-action-delete text-white" th:attr="data-bs-toggle='modal', data-bs-target='#deleteConfirmModal'+${staff.id}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    <form th:action="@{/api/staff/delete/{id}(id=${staff.id})}" method="post" th:id="'deleteForm'+${staff.id}" style="display:none;">
+                                        <input type="hidden" name="page" th:value="${currentPage}">
+                                        <input type="hidden" name="size" th:value="${pageSize}">
+                                        <input type="hidden" name="sortBy" th:value="${sortBy}">
+                                        <input type="hidden" name="sortDirection" th:value="${sortDirection}">
+                                        <input type="hidden" name="name" th:value="${name}">
+                                        <input type="hidden" name="role" th:value="${role}">
+                                    </form>
                                 </div>
                             </td>
                         </tr>
                         <tr th:if="${staffs == null or staffs.isEmpty()}">
-                            <td colspan="8" class="text-center">Không tìm thấy dữ liệu nhân viên nào.</td>
+                            <td colspan="9" class="text-center">Không tìm thấy dữ liệu nhân viên nào.</td> <!-- Cập nhật colspan từ 8 thành 9 -->
                         </tr>
                         </tbody>
                     </table>
@@ -124,61 +141,61 @@
                                     <span aria-hidden="true">&laquo;&laquo;</span>
                                 </a>
                             </li>
-                            
+
                             <!-- Previous button (circular) -->
                             <li class="page-item">
                                 <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${currentPage == 0 ? totalPages - 1 : currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" aria-label="Previous">
                                     <span aria-hidden="true">&laquo;</span>
                                 </a>
                             </li>
-                            
+
                             <!-- Trang 1 -->
                             <li class="page-item" th:classappend="${currentPage == 0} ? 'active'">
                                 <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=0, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}">1</a>
                             </li>
-                            
+
                             <!-- Trang 2 -->
                             <li class="page-item" th:if="${totalPages > 2}" th:classappend="${currentPage == 1} ? 'active'">
                                 <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=1, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}">2</a>
                             </li>
-                            
+
                             <!-- Dấu ... sau trang 2 -->
                             <li class="page-item disabled" th:if="${currentPage > 3 and totalPages > 4}">
                                 <span class="page-link text-dark">...</span>
                             </li>
-                            
+
                             <!-- Trang currentPage-1 -->
                             <li class="page-item" th:if="${currentPage > 2 and currentPage < totalPages - 1}">
                                 <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" th:text="${currentPage}"></a>
                             </li>
-                            
+
                             <!-- Trang hiện tại -->
                             <li class="page-item active" th:if="${currentPage > 1 and currentPage < totalPages - 1}">
                                 <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" th:text="${currentPage + 1}"></a>
                             </li>
-                            
+
                             <!-- Trang currentPage+1 -->
                             <li class="page-item" th:if="${currentPage >= 1 and currentPage < totalPages - 2}">
                                 <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" th:text="${currentPage + 2}"></a>
                             </li>
-                            
+
                             <!-- Dấu ... trước trang cuối -->
                             <li class="page-item disabled" th:if="${currentPage < totalPages - 4 and totalPages > 4}">
                                 <span class="page-link text-dark">...</span>
                             </li>
-                            
+
                             <!-- Trang cuối -->
                             <li class="page-item" th:if="${totalPages > 1}" th:classappend="${currentPage == totalPages - 1} ? 'active'">
                                 <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" th:text="${totalPages}"></a>
                             </li>
-                            
+
                             <!-- Next button (circular) -->
                             <li class="page-item">
                                 <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${currentPage == totalPages - 1 ? 0 : currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" aria-label="Next">
                                     <span aria-hidden="true">&raquo;</span>
                                 </a>
                             </li>
-                            
+
                             <!-- Last page button -->
                             <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
                                 <a class="page-link text-dark" th:href="@{/api/staff/view-staff(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}" aria-label="Last">
@@ -193,7 +210,29 @@
     </div>
 </div>
 
+<!-- Modal for delete confirmation -->
+<div th:each="staff : ${staffs}">
+    <div class="modal fade" th:id="'deleteConfirmModal'+${staff.id}" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteConfirmModalLabel">Xác nhận xóa nhân viên</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Bạn có chắc muốn xóa nhân viên <span th:text="${staff.name}"></span> không?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-danger" th:onclick="'document.getElementById(\'deleteForm\' + ' + ${staff.id} + ').submit();'">Xóa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/notification.js}"></script> <!-- Thêm JS thông báo -->
 <script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', () => {
         const navLinks = document.querySelectorAll('.nav-link');
@@ -206,43 +245,42 @@
             });
         });
 
-        document.getElementById('clearFilters').addEventListener('click', () => {
-            document.getElementById('searchName').value = '';
-            document.getElementById('searchRole').value = '';
-            window.location.href = '/api/staff/view-staff';
-        });
+        // Sửa lỗi: Kiểm tra xem nút clearFilters có tồn tại không
+        const clearFiltersBtn = document.getElementById('clearFilters');
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', () => {
+                document.getElementById('searchName').value = '';
+                document.getElementById('searchRole').value = '';
+                window.location.href = '/api/staff/view-staff';
+            });
+        }
 
-        const currentPage = [[${currentPage}]];
-        const pageSize = [[${pageSize}]];
-        const sortBy = [[${sortBy}]];
-        const sortDirection = [[${sortDirection}]];
-        const name = [[${name}]] || '';
-        const role = [[${role}]] || '';
+        // Kiểm tra và hiển thị thông báo
+        const urlParams = new URLSearchParams(window.location.search);
 
-        window.deleteStaff = function(id) {
-            if (confirm('Bạn có chắc muốn xóa nhân viên này?')) {
-                fetch(`/api/staff/delete/${id}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({
-                        page: currentPage,
-                        size: pageSize,
-                        sortBy: sortBy,
-                        sortDirection: sortDirection,
-                        name: name,
-                        role: role
-                    })
-                })
-                    .then(response => {
-                        if (response.ok) {
-                            window.location.reload();
-                        } else {
-                            response.text().then(text => alert('Xóa thất bại: ' + (text || 'Lỗi không xác định')));
-                        }
-                    })
-                    .catch(error => alert('Lỗi khi xóa nhân viên: ' + error.message));
+        if (urlParams.get('deleteSuccess') === 'true') {
+            if (typeof notification !== 'undefined') {
+                notification.showSuccess('Nhân viên đã được xóa thành công!');
             }
-        };
+            const newUrl = window.location.pathname + window.location.search.replace(/[?&]deleteSuccess=true/, '').replace(/^&/, '?');
+            window.history.replaceState({}, document.title, newUrl);
+        }
+
+        if (urlParams.get('addSuccess') === 'true') {
+            if (typeof notification !== 'undefined') {
+                notification.showSuccess('Nhân viên đã được thêm thành công!');
+            }
+            const newUrl = window.location.pathname + window.location.search.replace(/[?&]addSuccess=true/, '').replace(/^&/, '?');
+            window.history.replaceState({}, document.title, newUrl);
+        }
+
+        if (urlParams.get('updateSuccess') === 'true') {
+            if (typeof notification !== 'undefined') {
+                notification.showSuccess('Nhân viên đã được cập nhật thành công!');
+            }
+            const newUrl = window.location.pathname + window.location.search.replace(/[?&]updateSuccess=true/, '').replace(/^&/, '?');
+            window.history.replaceState({}, document.title, newUrl);
+        }
     });
 </script>
 <div th:replace="~{footer :: footer}"></div>

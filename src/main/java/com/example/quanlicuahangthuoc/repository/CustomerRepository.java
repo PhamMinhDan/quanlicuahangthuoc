@@ -22,6 +22,13 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
 
     Optional<Customer> findByPhone(String phone);
 
+    @Query("SELECT COUNT(c) FROM Customer c WHERE " +
+            "(:keyword IS NULL OR :keyword = '' OR LOWER(c.lastName) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+            "(:phone IS NULL OR :phone = '' OR c.phone LIKE CONCAT('%', :phone, '%')) AND " +
+            "(:customerType IS NULL OR :customerType = '' OR CAST(c.customerType AS string) = :customerType)")
+    long countByFilters(@Param("keyword") String keyword,
+                        @Param("phone") String phone,
+                        @Param("customerType") String customerType);
     @Query("SELECT c FROM Customer c WHERE " +
            "(:keyword IS NULL OR :keyword = '' OR LOWER(c.lastName) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:phone IS NULL OR :phone = '' OR c.phone LIKE CONCAT('%', :phone, '%')) AND " +

@@ -8,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,6 +17,8 @@ import java.util.NoSuchElementException;
 
 @Service
 public class CustomerService {
+
+    private static final Logger logger = LoggerFactory.getLogger(CustomerService.class);
 
     private final CustomerRepository customerRepository;
 
@@ -33,6 +37,7 @@ public class CustomerService {
 
     @Transactional
     public Customer createCustomer(Customer customer) {
+        logger.info("Tạo khách hàng với số điện thoại gốc: {}", customer.getPhone());
         if (customer.getName() == null || customer.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Tên khách hàng không được để trống");
         }
@@ -45,52 +50,54 @@ public class CustomerService {
         if (customerRepository.existsByEmail(customer.getEmail())) {
             throw new IllegalArgumentException("Email đã tồn tại: " + customer.getEmail());
         }
-        if (customerRepository.findByPhone(customer.getPhone()).isPresent()) {
-            throw new IllegalArgumentException("Số điện thoại đã tồn tại: " + customer.getPhone());
+        // Làm sạch số điện thoại
+        String cleanedPhone = customer.getPhone().replaceAll("[^0-9]", "");
+        logger.info("Số điện thoại sau khi làm sạch: {}", cleanedPhone);
+        if (customerRepository.findByPhone(cleanedPhone).isPresent()) {
+            throw new IllegalArgumentException("Số điện thoại đã tồn tại: " + cleanedPhone);
         }
-        // Loại bỏ dấu phẩy hoặc ký tự không mong muốn khỏi số điện thoại
-        String cleanedPhone = customer.getPhone().replaceAll("[^0-9]", ""); // Chỉ giữ số
-        if (cleanedPhone.length() > 11 || cleanedPhone.length() < 9) {
+        if (cleanedPhone.length() < 9 || cleanedPhone.length() > 11) {
             throw new IllegalArgumentException("Số điện thoại phải từ 9 đến 11 chữ số");
         }
         customer.setPhone(cleanedPhone);
-        // Đặt giá trị mặc định cho customerType nếu null
         if (customer.getCustomerType() == null) {
-            customer.setCustomerType(Customer.CustomerType.vang_lai); // Mặc định là "Vãng lai"
+            customer.setCustomerType(Customer.CustomerType.vang_lai);
         }
-        return customerRepository.saveAndFlush(customer);
+        Customer savedCustomer = customerRepository.saveAndFlush(customer);
+        logger.info("Đã lưu khách hàng với số điện thoại: {}", savedCustomer.getPhone());
+        return savedCustomer;
     }
 
     @Transactional
     public void updateCustomer(Integer id, Customer customerDetails) {
+        logger.info("Cập nhật khách hàng ID {} với số điện thoại gốc: {}", id, customerDetails.getPhone());
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Không tìm thấy khách hàng với ID: " + id));
         if (!customer.getEmail().equals(customerDetails.getEmail()) &&
                 customerRepository.existsByEmail(customerDetails.getEmail())) {
             throw new IllegalArgumentException("Email đã tồn tại: " + customerDetails.getEmail());
         }
-        if (!customer.getPhone().equals(customerDetails.getPhone()) &&
-                customerRepository.findByPhone(customerDetails.getPhone()).isPresent()) {
-            throw new IllegalArgumentException("Số điện thoại đã tồn tại: " + customerDetails.getPhone());
+        // Làm sạch số điện thoại
+        String cleanedPhone = customerDetails.getPhone().replaceAll("[^0-9]", "");
+        logger.info("Số điện thoại sau khi làm sạch: {}", cleanedPhone);
+        if (!customer.getPhone().equals(cleanedPhone) &&
+                customerRepository.findByPhone(cleanedPhone).isPresent()) {
+            throw new IllegalArgumentException("Số điện thoại đã tồn tại: " + cleanedPhone);
         }
-
-        customer.setName(customerDetails.getName());
-        // Loại bỏ dấu phẩy hoặc ký tự không mong muốn khỏi số điện thoại
-        String cleanedPhone = customerDetails.getPhone().replaceAll("[^0-9]", ""); // Chỉ giữ số
-        if (cleanedPhone.length() > 11 || cleanedPhone.length() < 9) {
+        if (cleanedPhone.length() < 9 || cleanedPhone.length() > 11) {
             throw new IllegalArgumentException("Số điện thoại phải từ 9 đến 11 chữ số");
         }
+        customer.setName(customerDetails.getName());
         customer.setPhone(cleanedPhone);
         customer.setEmail(customerDetails.getEmail());
-        // Đặt giá trị mặc định cho customerType nếu null
         if (customerDetails.getCustomerType() == null) {
-            customer.setCustomerType(Customer.CustomerType.vang_lai); // Mặc định là "Vãng lai"
+            customer.setCustomerType(Customer.CustomerType.vang_lai);
         } else {
             customer.setCustomerType(customerDetails.getCustomerType());
         }
-        // Giữ nguyên rewardPoints từ customerDetails, không reset về 0
         customer.setRewardPoints(customerDetails.getRewardPoints());
-        customerRepository.save(customer);
+        Customer savedCustomer = customerRepository.save(customer);
+        logger.info("Đã cập nhật khách hàng với số điện thoại: {}", savedCustomer.getPhone());
     }
 
     @Transactional
@@ -106,7 +113,6 @@ public class CustomerService {
         if ("rewardPoints".equalsIgnoreCase(sortBy) || "reward_points".equalsIgnoreCase(sortBy) || "points".equalsIgnoreCase(sortBy)) {
             sortBy = "rewardPoints";
         }
-        // Sắp xếp theo tên cuối (tên riêng) thay vì toàn bộ họ tên
         if ("name".equalsIgnoreCase(sortBy)) {
             sortBy = "lastName";
         }
@@ -119,17 +125,29 @@ public class CustomerService {
         if ("rewardPoints".equalsIgnoreCase(sortBy) || "reward_points".equalsIgnoreCase(sortBy) || "points".equalsIgnoreCase(sortBy)) {
             sortBy = "rewardPoints";
         }
-        // Sắp xếp theo tên cuối (tên riêng) thay vì toàn bộ họ tên
         if ("name".equalsIgnoreCase(sortBy)) {
             sortBy = "lastName";
         }
+        String cleanedPhone = phone != null ? phone.replaceAll("[^0-9]", "") : null;
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-        return customerRepository.searchByNamePhoneTypeWithPaging(keyword, phone, customerType, pageable);
+        return customerRepository.searchByNamePhoneTypeWithPaging(keyword, cleanedPhone, customerType, pageable);
+    }
+
+    public long getTotalCustomers(String keyword, String phone, String customerType) {
+        String cleanedPhone = phone != null ? phone.replaceAll("[^0-9]", "") : null;
+        if ((keyword != null && !keyword.trim().isEmpty()) ||
+                (cleanedPhone != null && !cleanedPhone.trim().isEmpty()) ||
+                (customerType != null && !customerType.trim().isEmpty())) {
+            return customerRepository.countByFilters(keyword, cleanedPhone, customerType);
+        } else {
+            return customerRepository.count();
+        }
     }
 
     public long getTotalCustomers() {
         return customerRepository.count();
     }
+
     @Transactional(readOnly = true)
     public long getCustomersThisMonth() {
         LocalDate now = LocalDate.now();

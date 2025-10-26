@@ -1,0 +1,86 @@
+/* notification.css */
+.notification-container {
+    max-width: 350px;
+    z-index: 1050;
+}
+
+.notification {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: opacity 0.5s ease-in-out;
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding: 12px 16px 12px 32px !important;
+    min-height: 50px;
+    border: none !important;
+}
+
+/* Container cho progress circle */
+.notification::before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    flex-shrink: 0;
+}
+
+/* SVG progress circle */
+.notification-progress {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+}
+
+.notification-progress circle {
+    fill: none;
+    stroke-width: 2;
+    transform: rotate(-90deg);
+    transform-origin: center;
+}
+
+/* Background circle */
+.notification-progress .bg-circle {
+    stroke: rgba(0, 0, 0, 0.1);
+}
+
+/* Progress circle - sẽ được set màu trong JS */
+.notification-progress .progress-circle {
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.1s linear;
+}
+
+/* Màu cho các loại notification */
+.notification.alert-success .progress-circle {
+    stroke: #28a745;
+}
+
+.notification.alert-danger .progress-circle {
+    stroke: #dc3545;
+}
+
+.notification.alert-info .progress-circle {
+    stroke: #17a2b8;
+}
+
+.notification.alert-warning .progress-circle {
+    stroke: #ffc107;
+}
+
+.notification span {
+    flex: 1;
+    word-wrap: break-word;
+    line-height: 1.5;
+    font-size: 14px;
+}
+
+/* Loại bỏ margin mặc định của Bootstrap alert */
+.notification {
+    margin-bottom: 10px !important;
+}

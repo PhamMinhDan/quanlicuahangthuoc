@@ -1,24 +1,14 @@
 package com.example.quanlicuahangthuoc.entity;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "customer")
 public class Customer {
@@ -28,23 +18,24 @@ public class Customer {
     private Integer id;
 
     @Column(nullable = false)
-    @NotBlank(message = "Name cannot be empty")
-    @Size(max = 255, message = "The name must not exceed 255 characters")
+    @NotBlank(message = "Tên không được để trống")
+    @Size(max = 255, message = "Tên không được vượt quá 255 ký tự")
     private String name;
-    
+
     @Column(name = "last_name")
-    private String lastName; // Tên riêng để sắp xếp
+    private String lastName;
 
     @Column(nullable = false)
-    @NotBlank(message = "Phone cannot be empty")
-    @Size(max = 11, message = "The phone must not exceed 11 characters")
+    @NotBlank(message = "Số điện thoại không được để trống")
+    @Size(min = 9, max = 11, message = "Số điện thoại phải từ 9 đến 11 chữ số")
+    @Pattern(regexp = "^[0-9]+$", message = "Số điện thoại chỉ được chứa chữ số")
     private String phone;
 
-    @NotBlank(message = "Email cannot be empty")
-    @Size(max = 255, message = "Email must not exceed 255 characters")
+    @NotBlank(message = "Email không được để trống")
+    @Size(max = 255, message = "Email không được vượt quá 255 ký tự")
     @Pattern(
             regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$",
-            message = "Email format is invalid"
+            message = "Định dạng email không hợp lệ"
     )
     @Column(nullable = false, unique = true)
     private String email;
@@ -60,25 +51,26 @@ public class Customer {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<Order> orders = new HashSet<>();
 
+    public enum CustomerType {
+        vang_lai("Vãng lai"),
+        than_thiet("Thân thiết");
+
+        private final String displayName;
+
+        CustomerType(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+
     // Constructor
     public Customer() {
     }
 
-     public enum CustomerType {
-    vang_lai("Vãng lai"),
-    than_thiet("Thân thiết");
-
-    private final String displayName;
-
-    CustomerType(String displayName) {
-        this.displayName = displayName;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-}
-    // Getter/Setter thủ công
+    // Getter/Setter
     public Integer getId() {
         return id;
     }
@@ -93,17 +85,16 @@ public class Customer {
 
     public void setName(String name) {
         this.name = name;
-        // Tự động tách tên cuối (tên riêng)
         if (name != null && !name.trim().isEmpty()) {
             String[] parts = name.trim().split("\\s+");
-            this.lastName = parts[parts.length - 1]; // Lấy phần tên cuối
+            this.lastName = parts[parts.length - 1];
         }
     }
-    
+
     public String getLastName() {
         return lastName;
     }
-    
+
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
@@ -139,7 +130,7 @@ public class Customer {
     public void setRewardPoints(Integer rewardPoints) {
         this.rewardPoints = rewardPoints;
     }
-    
+
     public Set<Order> getOrders() {
         return orders;
     }
@@ -147,7 +138,7 @@ public class Customer {
     public void setOrders(Set<Order> orders) {
         this.orders = orders;
     }
-    
+
     public void addOrder(Order order) {
         orders.add(order);
         order.setCustomer(this);
@@ -157,5 +148,4 @@ public class Customer {
         orders.remove(order);
         order.setCustomer(null);
     }
-    
 }

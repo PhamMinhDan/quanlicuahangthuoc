@@ -106,9 +106,18 @@
                   <a th:if="${isManager}" class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/payments/edit/{id}(id=${payment.id}, page=${currentPage}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, paymentDate=${paymentDate})}">
                     <i class="bi bi-pencil"></i>
                   </a>
-                  <button th:if="${isManager}" class="btn btn-danger btn-sm btn-action-delete text-white" th:onclick="'deletePayment(' + ${payment.id} + ')'">
-                    <i class="bi bi-trash"></i>
-                  </button>
+                  <form th:action="@{/payments/delete/{id}(id=${payment.id})}" method="post" style="display:inline;">
+                    <input type="hidden" name="page" th:value="${currentPage}">
+                    <input type="hidden" name="size" th:value="${pageSize}">
+                    <input type="hidden" name="sortField" th:value="${sortField}">
+                    <input type="hidden" name="sortDir" th:value="${sortDir}">
+                    <input type="hidden" name="orderId" th:value="${orderId}">
+                    <input type="hidden" name="fromDate" th:value="${fromDate}">
+                    <input type="hidden" name="toDate" th:value="${toDate}">
+                    <button th:if="${isManager}" type="submit" class="btn btn-danger btn-sm btn-action-delete text-white" onclick="return confirm('Bạn có chắc muốn xóa thanh toán này?')">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
                 </div>
               </td>
             </tr>
@@ -207,7 +216,7 @@
       locale: "vn",
       allowInput: true
     });
-    
+
     flatpickr("#toDate", {
       dateFormat: "d/m/Y",
       locale: "vn",
@@ -226,40 +235,6 @@
     document.getElementById('clearFilters').addEventListener('click', () => {
       window.location.href = '/payments/view-payments';
     });
-
-    const currentPage = [[${currentPage}]];
-    const pageSize = [[${pageSize}]];
-    const sortField = [[${sortField}]];
-    const sortDir = [[${sortDir}]];
-    const orderId = [[${orderId}]] || '';
-    const fromDate = [[${fromDate}]] || '';
-    const toDate = [[${toDate}]] || '';
-
-    window.deletePayment = function(id) {
-      if (confirm('Bạn có chắc muốn xóa thanh toán này?')) {
-        fetch(`/payments/delete/${id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            page: currentPage,
-            size: pageSize,
-            sortField: sortField,
-            sortDir: sortDir,
-            orderId: orderId,
-            fromDate: fromDate,
-            toDate: toDate
-          })
-        })
-                .then(response => {
-                  if (response.ok) {
-                    window.location.reload();
-                  } else {
-                    response.text().then(text => alert('Xóa thất bại: ' + (text || 'Lỗi không xác định')));
-                  }
-                })
-                .catch(error => alert('Lỗi khi xóa thanh toán: ' + error.message));
-      }
-    };
   });
 </script>
 <div th:replace="~{footer :: footer}"></div>

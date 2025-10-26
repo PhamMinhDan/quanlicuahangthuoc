@@ -33,7 +33,7 @@ public class MedicineController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection, // Đổi từ "asc" thành "desc"
             @RequestParam(value = "searchName", required = false) String searchName,
             @RequestParam(value = "searchType", required = false) String searchType,
             @RequestParam(value = "searchSupplier", required = false) String searchSupplier,
@@ -49,16 +49,13 @@ public class MedicineController {
             model.addAttribute("medicines", medicines);
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", medicinePage.getTotalPages());
-            model.addAttribute("totalItems", medicinePage.getTotalElements());
             model.addAttribute("pageSize", size);
             model.addAttribute("sortBy", sortBy);
             model.addAttribute("sortDirection", sortDirection);
             model.addAttribute("searchName", searchName);
             model.addAttribute("searchType", searchType);
             model.addAttribute("searchSupplier", searchSupplier);
-            model.addAttribute("totalMedicines", medicineService.getTotalMedicinesCount());
-            model.addAttribute("totalSuppliers", medicineService.getTotalSuppliersCount());
-            model.addAttribute("totalStock", medicineService.getTotalStockQuantity());
+            model.addAttribute("totalItems", medicinePage.getTotalElements());
             model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("activeNav", "medicines");
@@ -67,6 +64,7 @@ public class MedicineController {
             model.addAttribute("error", "Lỗi khi tải danh sách thuốc: " + e.getMessage());
             model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("activeNav", "medicines");
             return "medicine";
         }
     }
@@ -88,7 +86,7 @@ public class MedicineController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             @RequestParam(value = "searchName", required = false) String searchName,
             @RequestParam(value = "searchType", required = false) String searchType,
             @RequestParam(value = "searchSupplier", required = false) String searchSupplier,
@@ -109,14 +107,14 @@ public class MedicineController {
             medicine.setImage(imagePath);
         }
         medicineService.createMedicine(medicine);
-        model.addAttribute("message", "Thêm thuốc thành công");
         return "redirect:/medicines/view-medicine?page=" + page +
                 "&size=" + size +
                 "&sortBy=" + sortBy +
                 "&sortDirection=" + sortDirection +
                 (searchName != null ? "&searchName=" + searchName : "") +
                 (searchType != null ? "&searchType=" + searchType : "") +
-                (searchSupplier != null ? "&searchSupplier=" + searchSupplier : "");
+                (searchSupplier != null ? "&searchSupplier=" + searchSupplier : "") +
+                "&addSuccess=true";
     }
 
     @GetMapping("/edit/{id}")
@@ -169,12 +167,13 @@ public class MedicineController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             @RequestParam(value = "searchName", required = false) String searchName,
             @RequestParam(value = "searchType", required = false) String searchType,
             @RequestParam(value = "searchSupplier", required = false) String searchSupplier,
             Model model) throws IOException {
         if (bindingResult.hasErrors()) {
+            model.addAttribute("medicine", medicine);
             model.addAttribute("page", page);
             model.addAttribute("size", size);
             model.addAttribute("sortBy", sortBy);
@@ -185,13 +184,23 @@ public class MedicineController {
             model.addAttribute("activeNav", "medicines");
             return "medicine-form";
         }
+
         if (imageFile != null && !imageFile.isEmpty()) {
             String imagePath = fileUploadConfig.storeFile(imageFile);
             medicine.setImage(imagePath);
         }
+
         try {
-            medicineService.updateMedicine(id, medicine);
-            model.addAttribute("message", "Cập nhật thuốc thành công");
+            medicine.setId(id); // Đặt ID để khớp với tham số
+            medicineService.updateMedicine(id, medicine); // Truyền cả id và medicine
+            return "redirect:/medicines/view-medicine?page=" + page +
+                    "&size=" + size +
+                    "&sortBy=" + sortBy +
+                    "&sortDirection=" + sortDirection +
+                    (searchName != null ? "&searchName=" + searchName : "") +
+                    (searchType != null ? "&searchType=" + searchType : "") +
+                    (searchSupplier != null ? "&searchSupplier=" + searchSupplier : "") +
+                    "&updateSuccess=true";
         } catch (NoSuchElementException e) {
             model.addAttribute("error", "Thuốc không tồn tại: " + e.getMessage());
             model.addAttribute("medicine", medicine);
@@ -229,13 +238,6 @@ public class MedicineController {
             model.addAttribute("activeNav", "medicines");
             return "medicine-form";
         }
-        return "redirect:/medicines/view-medicine?page=" + page +
-                "&size=" + size +
-                "&sortBy=" + sortBy +
-                "&sortDirection=" + sortDirection +
-                (searchName != null ? "&searchName=" + searchName : "") +
-                (searchType != null ? "&searchType=" + searchType : "") +
-                (searchSupplier != null ? "&searchSupplier=" + searchSupplier : "");
     }
 
     @PostMapping("/delete/{id}")
@@ -244,14 +246,49 @@ public class MedicineController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
             @RequestParam(value = "searchName", required = false) String searchName,
             @RequestParam(value = "searchType", required = false) String searchType,
             @RequestParam(value = "searchSupplier", required = false) String searchSupplier,
-            Model model) {
+            Model model,
+            Authentication authentication) {
+        if (!authentication.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly"))) {
+            model.addAttribute("error", "Bạn không có quyền xóa thuốc.");
+            return "redirect:/medicines/view-medicine?page=" + page +
+                    "&size=" + size +
+                    "&sortBy=" + sortBy +
+                    "&sortDirection=" + sortDirection +
+                    (searchName != null ? "&searchName=" + searchName : "") +
+                    (searchType != null ? "&searchType=" + searchType : "") +
+                    (searchSupplier != null ? "&searchSupplier=" + searchSupplier : "");
+        }
+
         try {
+            // Lấy tổng số bản ghi trước khi xóa
+            Page<Medicine> medicinePage = medicineService.searchByFiltersPaginated(searchName, searchType, searchSupplier, page, size, sortBy, sortDirection);
+            int totalItemsOnPage = medicinePage.getNumberOfElements();
+
+            // Thực hiện xóa
             medicineService.deleteMedicine(id);
-            model.addAttribute("message", "Xóa thuốc thành công");
+
+            // Kiểm tra lại số lượng bản ghi sau khi xóa
+            medicinePage = medicineService.searchByFiltersPaginated(searchName, searchType, searchSupplier, page, size, sortBy, sortDirection);
+            int newTotalItemsOnPage = medicinePage.getNumberOfElements();
+
+            // Nếu trang hiện tại chỉ còn 0 bản ghi (trước đó là 1 và đã xóa), quay về trang trước
+            int newPage = page;
+            if (totalItemsOnPage == 1 && newTotalItemsOnPage == 0 && page > 0) {
+                newPage = page - 1;
+            }
+
+            return "redirect:/medicines/view-medicine?page=" + newPage +
+                    "&size=" + size +
+                    "&sortBy=" + sortBy +
+                    "&sortDirection=" + sortDirection +
+                    "&deleteSuccess=true" +
+                    (searchName != null ? "&searchName=" + searchName : "") +
+                    (searchType != null ? "&searchType=" + searchType : "") +
+                    (searchSupplier != null ? "&searchSupplier=" + searchSupplier : "");
         } catch (NoSuchElementException e) {
             model.addAttribute("error", "Thuốc không tồn tại: " + e.getMessage());
         } catch (Exception e) {

@@ -69,10 +69,13 @@ public class Staff {
     @Pattern(regexp = "^[0-9]{10,15}$", message = "Số điện thoại phải từ 10 đến 15 chữ số")
     @Column(name = "phone", nullable = false, unique = true)
     private String phone;
+
+    @Column(name = "image", length = 255) // Thêm trường image để lưu đường dẫn ảnh
+    private String image;
+
     @JsonManagedReference
     @OneToMany(mappedBy = "staff", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<Order> orders = new HashSet<>();
-
 
     public enum Role {
         quan_ly("Quản lý"),
@@ -89,7 +92,6 @@ public class Staff {
         }
     }
 
-
     public enum WorkShift {
         sang("Ca sáng"),
         chieu("Ca chiều");
@@ -104,7 +106,4 @@ public class Staff {
             return displayName;
         }
     }
-
-    
-    
 }

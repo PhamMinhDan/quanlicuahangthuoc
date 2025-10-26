@@ -67,7 +67,17 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/dashboard", true)
+                        .successHandler((request, response, authentication) -> {
+                            if (authentication.getAuthorities().stream()
+                                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly"))) {
+                                response.sendRedirect("/dashboard");
+                            } else if (authentication.getAuthorities().stream()
+                                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_nhan_vien"))) {
+                                response.sendRedirect("/medicines/view-medicine");
+                            } else {
+                                response.sendRedirect("/access-denied");
+                            }
+                        })
                         .permitAll()
                 )
                 .logout(logout -> logout

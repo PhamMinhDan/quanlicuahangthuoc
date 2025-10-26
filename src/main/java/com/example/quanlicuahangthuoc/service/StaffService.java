@@ -121,4 +121,19 @@ public class StaffService {
     public long getTotalManagers() {
         return staffRepository.countByRole(Staff.Role.quan_ly);
     }
+    public long getTotalStaff(String name, String role) {
+        if ((name != null && !name.trim().isEmpty()) || (role != null && !role.trim().isEmpty())) {
+            Staff.Role roleEnum = null;
+            try {
+                if (role != null && !role.isEmpty()) {
+                    roleEnum = Staff.Role.valueOf(role);
+                }
+            } catch (IllegalArgumentException e) {
+                roleEnum = null; // Bỏ qua nếu role không hợp lệ
+            }
+            return staffRepository.countByFilters(name, roleEnum);
+        } else {
+            return staffRepository.count();
+        }
+    }
 }

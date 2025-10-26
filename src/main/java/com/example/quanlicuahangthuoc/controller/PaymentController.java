@@ -175,11 +175,49 @@ public class PaymentController {
             @RequestParam(value = "sortField", defaultValue = "id") String sortField,
             @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir,
             @RequestParam(value = "orderId", required = false) Integer orderId,
-            @RequestParam(value = "paymentDate", required = false) LocalDate paymentDate,
-            RedirectAttributes redirectAttributes) {
+            @RequestParam(value = "fromDate", required = false) String fromDateStr,
+            @RequestParam(value = "toDate", required = false) String toDateStr,
+            RedirectAttributes redirectAttributes,
+            Authentication authentication) {
+        // Kiểm tra vai trò quan_ly
+        if (!authentication.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly"))) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xóa thanh toán.");
+            return "redirect:/payments/view-payments?page=" + page +
+                    "&size=" + size +
+                    "&sortField=" + sortField +
+                    "&sortDir=" + sortDir +
+                    (orderId != null ? "&orderId=" + orderId : "") +
+                    (fromDateStr != null ? "&fromDate=" + fromDateStr : "") +
+                    (toDateStr != null ? "&toDate=" + toDateStr : "");
+        }
+
         try {
             paymentService.deletePayment(id);
             redirectAttributes.addFlashAttribute("message", "Xóa thanh toán thành công");
+
+            // Parse dates from dd/MM/yyyy format
+            LocalDate fromDate = paymentService.parseDate(fromDateStr);
+            LocalDate toDate = paymentService.parseDate(toDateStr);
+
+            // Tính tổng số thanh toán sau khi xóa với bộ lọc
+            long totalItems = paymentService.getTotalPaymentsWithFilters(orderId, fromDate, toDate);
+            int totalPages = (int) Math.ceil((double) totalItems / size);
+
+            // Điều chỉnh page nếu trang hiện tại lớn hơn hoặc bằng tổng số trang
+            int adjustedPage = page;
+            if (page >= totalPages && totalPages > 0) {
+                adjustedPage = totalPages - 1;
+            } else if (totalPages == 0) {
+                adjustedPage = 0;
+            }
+
+            return "redirect:/payments/view-payments?page=" + adjustedPage +
+                    "&size=" + size +
+                    "&sortField=" + sortField +
+                    "&sortDir=" + sortDir +
+                    (orderId != null ? "&orderId=" + orderId : "") +
+                    (fromDateStr != null ? "&fromDate=" + fromDateStr : "") +
+                    (toDateStr != null ? "&toDate=" + toDateStr : "");
         } catch (NoSuchElementException e) {
             redirectAttributes.addFlashAttribute("error", "Thanh toán không tồn tại: " + e.getMessage());
         } catch (Exception e) {
@@ -190,6 +228,7 @@ public class PaymentController {
                 "&sortField=" + sortField +
                 "&sortDir=" + sortDir +
                 (orderId != null ? "&orderId=" + orderId : "") +
-                (paymentDate != null ? "&paymentDate=" + paymentDate : "");
+                (fromDateStr != null ? "&fromDate=" + fromDateStr : "") +
+                (toDateStr != null ? "&toDate=" + toDateStr : "");
     }
 }
