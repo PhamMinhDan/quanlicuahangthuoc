@@ -53,6 +53,8 @@ public class PaymentController {
             model.addAttribute("totalTransferPayments", paymentService.getTotalTransferPayments());
             model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
             model.addAttribute("activeNav", "payments");
             return "payment";
         } catch (Exception e) {
@@ -72,6 +74,9 @@ public class PaymentController {
         model.addAttribute("payment", new Payment());
         model.addAttribute("isManager", authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+        model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
+
         model.addAttribute("activeNav", "payments");
         return "payment-add";
     }
@@ -92,9 +97,8 @@ public class PaymentController {
         }
         try {
             paymentService.savePayment(payment);
-            model.addAttribute("message", "Thêm thanh toán thành công");
-            // Quay về trang đầu tiên với sortDir=desc
-            return "redirect:/payments/view-payments?page=0&size=10&sortField=id&sortDir=desc";
+            // THÊM addSuccess=true
+            return "redirect:/payments/view-payments?page=0&size=10&sortField=id&sortDir=desc&addSuccess=true";
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi khi thêm thanh toán: " + e.getMessage());
             model.addAttribute("payment", payment);
@@ -124,6 +128,8 @@ public class PaymentController {
             model.addAttribute("paymentDate", paymentDate);
             model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("isManagerOrEmployee", authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
             model.addAttribute("activeNav", "payments");
             return "payment-edit";
         } catch (NoSuchElementException e) {
@@ -145,6 +151,13 @@ public class PaymentController {
             @PathVariable Integer id,
             @Valid @ModelAttribute Payment payment,
             BindingResult bindingResult,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortField", defaultValue = "id") String sortField,
+            @RequestParam(value = "sortDir", defaultValue = "desc") String sortDir,
+            @RequestParam(value = "orderId", required = false) Integer orderId,
+            @RequestParam(value = "fromDate", required = false) String fromDate,
+            @RequestParam(value = "toDate", required = false) String toDate,
             Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("error", bindingResult.getAllErrors().stream()
@@ -157,8 +170,8 @@ public class PaymentController {
         }
         try {
             paymentService.updatePayment(id, payment);
-            model.addAttribute("message", "Cập nhật thanh toán thành công");
-            return "redirect:/payments/view-payments";
+            // THÊM updateSuccess=true và giữ lại các parameters
+            return buildRedirectUrl(page, size, sortField, sortDir, orderId, fromDate, toDate, "updateSuccess");
         } catch (NoSuchElementException e) {
             model.addAttribute("error", "Thanh toán không tồn tại: " + e.getMessage());
             model.addAttribute("payment", payment);

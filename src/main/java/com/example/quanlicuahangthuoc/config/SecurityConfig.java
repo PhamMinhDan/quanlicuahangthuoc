@@ -52,11 +52,12 @@ public class SecurityConfig {
                         .requestMatchers("/", "/login", "/access-denied").permitAll()
                         // Thuốc - chỉ quản lý được thêm, sửa, xóa
                         .requestMatchers("/medicines/add", "/medicines/edit/**", "/medicines/delete/**").hasRole("quan_ly")
-                        // Khách hàng - chỉ quản lý
-                        .requestMatchers("/customers/add", "/customers/edit/**").hasRole("quan_ly")
-                        // Thanh toán - staff chỉ được thêm, quản lý được làm tất cả
-                        .requestMatchers("/payments/new", "/payments/save").hasAnyRole("quan_ly", "nhan_vien")
-                        .requestMatchers("/payments/edit/**", "/payments/delete/**").hasRole("quan_ly")
+                        // Khách hàng - CẢ HAI ROLE được thêm và sửa, chỉ quản lý được xóa
+                        .requestMatchers("/customers/add", "/customers/edit/**", "/customers/update/**").hasAnyRole("quan_ly", "nhan_vien")
+                        .requestMatchers("/customers/delete/**").hasRole("quan_ly")
+                        // Thanh toán - CẢ HAI ROLE được thêm và sửa, chỉ quản lý được xóa
+                        .requestMatchers("/payments/new", "/payments/save", "/payments/edit/**", "/payments/update/**").hasAnyRole("quan_ly", "nhan_vien")
+                        .requestMatchers("/payments/delete/**").hasRole("quan_ly")
                         .requestMatchers("/promotions/new", "/promotions/edit/**", "/promotions/delete/**").hasRole("quan_ly")
                         // Quản lý nhân viên - chỉ quản lý
                         .requestMatchers("/api/staff/add", "/api/staff/edit/**", "/api/staff/delete/**").hasRole("quan_ly")

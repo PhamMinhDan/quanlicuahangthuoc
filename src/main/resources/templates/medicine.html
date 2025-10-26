@@ -121,7 +121,7 @@
                             <td style="white-space: nowrap;" th:text="${medicine.name}"></td>
                             <td style="white-space: nowrap;" th:text="${medicine.type != null ? medicine.type.displayName : 'N/A'}"></td>
                             <td style="white-space: nowrap;" th:text="${medicine.expiryDate != null ? #temporals.format(medicine.expiryDate, 'dd/MM/yyyy') : 'N/A'}"></td>
-                            <td style="white-space: nowrap;" th:text="${medicine.price != null ? #numbers.formatDecimal(medicine.price, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
+                            <td style="white-space: nowrap;" th:text="${medicine.price != null ? #numbers.formatDecimal(medicine.price, 0, 0, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
                             <td class="text-center" style="white-space: nowrap;" th:text="${medicine.stockQuantity != null ? medicine.stockQuantity : '0'}"></td>
                             <td class="text-center" style="white-space: nowrap;" th:text="${medicine.supplier != null ? medicine.supplier.displayName : 'N/A'}"></td>
                             <td style="max-width: 250px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">

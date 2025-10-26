@@ -14,6 +14,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.core.Authentication;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -113,7 +114,6 @@ public class OrderController {
             return buildRedirectUrl(page, size, sortBy, sortDirection, customerId, fromDateStr, toDateStr, status);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi tải chi tiết đơn hàng: " + e.getMessage() + ". Có thể dữ liệu liên quan không tồn tại.");
-            e.printStackTrace();
             return buildRedirectUrl(page, size, sortBy, sortDirection, customerId, fromDateStr, toDateStr, status);
         }
     }
@@ -125,18 +125,10 @@ public class OrderController {
         url.append("&size=").append(size);
         url.append("&sortBy=").append(sortBy);
         url.append("&sortDirection=").append(sortDirection);
-        if (customerId != null) {
-            url.append("&customerId=").append(customerId);
-        }
-        if (fromDateStr != null && !fromDateStr.isEmpty()) {
-            url.append("&fromDate=").append(fromDateStr);
-        }
-        if (toDateStr != null && !toDateStr.isEmpty()) {
-            url.append("&toDate=").append(toDateStr);
-        }
-        if (status != null && !status.isEmpty()) {
-            url.append("&status=").append(status);
-        }
+        if (customerId != null) url.append("&customerId=").append(customerId);
+        if (fromDateStr != null && !fromDateStr.isEmpty()) url.append("&fromDate=").append(fromDateStr);
+        if (toDateStr != null && !toDateStr.isEmpty()) url.append("&toDate=").append(toDateStr);
+        if (status != null && !status.isEmpty()) url.append("&status=").append(status);
         return url.toString();
     }
 
@@ -257,7 +249,7 @@ public class OrderController {
             order.setId(id);
             orderService.updateOrder(order);
             return "redirect:/orders/view-orders?page=0&sortDirection=desc&updateSuccess=true";
-        } catch (IllegalStateException | NoSuchElementException e) {
+        } catch (IllegalStateException | IllegalArgumentException | NoSuchElementException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("order", order);
             model.addAttribute("promotions", promotionService.getAllPromotions());
@@ -284,7 +276,7 @@ public class OrderController {
             RedirectAttributes redirectAttributes) {
         try {
             orderService.deleteOrder(id);
-            redirectAttributes.addFlashAttribute("message", "Đơn hàng đã được xóa thành công.");
+            // Thay vì flash attribute, sử dụng tham số URL để kích hoạt notification
             return buildRedirectUrl(page, size, sortBy, sortDirection, customerId, fromDate, toDate, status) + "&deleteSuccess=true";
         } catch (NoSuchElementException e) {
             redirectAttributes.addFlashAttribute("error", "Đơn hàng không tồn tại: " + e.getMessage());

@@ -108,7 +108,7 @@
                             <td style="white-space: nowrap;" th:text="${staff.phone}"></td>
                             <td style="white-space: nowrap;" th:text="${staff.role != null ? staff.role.displayName : 'N/A'}"></td>
                             <td style="white-space: nowrap;" th:text="${staff.workShift != null ? staff.workShift.displayName : 'N/A'}"></td>
-                            <td style="white-space: nowrap;" th:text="${staff.salary != null ? #numbers.formatDecimal(staff.salary, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
+                            <td style="white-space: nowrap;" th:text="${staff.salary != null ? #numbers.formatDecimal(staff.salary, 0, 0, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
                             <td th:if="${isManager}" style="white-space: nowrap;">
                                 <div class="d-flex gap-2">
                                     <a th:if="${isManager}" class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/api/staff/edit/{id}(id=${staff.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, name=${name}, role=${role})}"><i class="bi bi-pencil"></i></a>

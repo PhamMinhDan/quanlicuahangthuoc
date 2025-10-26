@@ -67,7 +67,7 @@
                         <span class="fw-bold" th:text="${totalItems}">0</span>
                         <span>khách hàng</span>
                     </div>
-                    <a th:if="${isManager}" class="btn btn-success d-flex align-items-center gap-2" th:href="@{/customers/add}">
+                    <a th:if="${isManagerOrEmployee}" class="btn btn-success d-flex align-items-center gap-2" th:href="@{/customers/add}">
                         <i class="bi bi-plus"></i> Thêm mới khách hàng
                     </a>
                 </div>
@@ -91,7 +91,7 @@
                                     <i th:class="${sortBy == 'rewardPoints'} ? (${sortDirection == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                                 </a>
                             </th>
-                            <th th:if="${isManager}" style="white-space: nowrap;">Hành động</th>
+                            <th th:if="${isManagerOrEmployee}" style="white-space: nowrap;">Hành động</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -102,10 +102,10 @@
                             <td style="white-space: nowrap;" th:text="${customer.email}"></td>
                             <td style="white-space: nowrap;" th:text="${customer.customerType != null ? customer.customerType.displayName : 'N/A'}"></td>
                             <td style="white-space: nowrap;" th:text="${customer.rewardPoints != null ? customer.rewardPoints : '0'}"></td>
-                            <td th:if="${isManager}" style="white-space: nowrap;">
+                            <td th:if="${isManagerOrEmployee}" style="white-space: nowrap;">
                                 <div class="d-flex gap-2">
                                     <a class="btn btn-primary btn-sm btn-action-edit text-white" th:href="@{/customers/edit/{id}(id=${customer.id}, page=${currentPage}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, keyword=${keyword}, phone=${phone}, customerType=${customerType})}"><i class="bi bi-pencil"></i></a>
-                                    <button class="btn btn-danger btn-sm btn-action-delete text-white" th:attr="data-bs-toggle='modal', data-bs-target='#deleteConfirmModal'+${customer.id}">
+                                    <button th:if="${isManager}" class="btn btn-danger btn-sm btn-action-delete text-white" th:attr="data-bs-toggle='modal', data-bs-target='#deleteConfirmModal'+${customer.id}">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                     <form th:action="@{/customers/delete/{id}(id=${customer.id})}" method="post" th:id="'deleteForm'+${customer.id}" style="display:none;">

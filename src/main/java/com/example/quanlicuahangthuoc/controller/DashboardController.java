@@ -40,7 +40,10 @@ public class DashboardController {
             }
         }
 
+        // THÊM DÒNG NÀY - Lấy username từ Authentication
+        model.addAttribute("userName", authentication.getName());
         model.addAttribute("isManager", true); // Đảm bảo isManager luôn true cho ROLE_quan_ly
+
         try {
             LocalDate now = LocalDate.now();
             LocalDate startOfMonth = now.withDayOfMonth(1);

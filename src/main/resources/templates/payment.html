@@ -64,7 +64,7 @@
             <span class="fw-bold" th:text="${totalItems}">0</span>
             <span>thanh toán</span>
           </div>
-          <a th:if="${isManager}" class="btn btn-success d-flex align-items-center gap-2" th:href="@{/payments/new}">
+          <a th:if="${isManagerOrEmployee}" class="btn btn-success d-flex align-items-center gap-2" th:href="@{/payments/new}">
             <i class="bi bi-plus"></i> Thêm mới thanh toán
           </a>
         </div>
@@ -88,7 +88,7 @@
                   <i th:class="${sortField == 'paymentDate'} ? (${sortDir == 'asc'} ? 'bi bi-arrow-up' : 'bi bi-arrow-down') : 'bi bi-arrow-down-up'"></i>
                 </a>
               </th>
-              <th th:if="${isManager}" style="white-space: nowrap;">Hành động</th>
+              <th th:if="${isManagerOrEmployee}" style="white-space: nowrap;">Hành động</th>
             </tr>
             </thead>
             <tbody>
@@ -96,16 +96,17 @@
               <td style="white-space: nowrap;" th:text="${currentPage * pageSize + iterStat.index + 1}"></td>
               <td style="white-space: nowrap;" th:text="${payment.order != null ? payment.order.id : 'N/A'}"></td>
               <td style="white-space: nowrap;" th:text="${payment.paymentMethod != null ? payment.paymentMethod.displayName : 'N/A'}"></td>
-              <td style="white-space: nowrap;" th:text="${payment.amount != null ? #numbers.formatDecimal(payment.amount, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
-              <td style="white-space: nowrap;" th:text="${payment.change != null ? #numbers.formatDecimal(payment.change, 0, 2, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
+              <td style="white-space: nowrap;" th:text="${payment.amount != null ? #numbers.formatDecimal(payment.amount, 0, 0, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
+              <td style="white-space: nowrap;" th:text="${payment.change != null ? #numbers.formatDecimal(payment.change, 0, 0, 'COMMA') + ' VNĐ' : 'N/A'}"></td>
               <td style="white-space: nowrap;" th:text="${payment.paymentDate != null ? #temporals.format(payment.paymentDate, 'dd/MM/yyyy') : 'N/A'}"></td>
-              <td th:if="${isManager}" style="white-space: nowrap;">
+              <td th:if="${isManagerOrEmployee}" style="white-space: nowrap;">
                 <div class="d-flex gap-2">
                   <a class="btn btn-primary btn-sm btn-action-edit text-white"
                      th:href="@{/payments/edit/{id}(id=${payment.id}, page=${currentPage}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}">
                     <i class="bi bi-pencil"></i>
                   </a>
-                  <button type="button"
+                  <button th:if="${isManager}"
+                          type="button"
                           class="btn btn-danger btn-sm btn-action-delete text-white"
                           data-bs-toggle="modal"
                           data-bs-target="#deleteModal"
@@ -219,43 +220,7 @@
       allowInput: true
     });
 
-    // Xử lý modal xóa
-    const deleteModal = document.getElementById('deleteModal');
-    const deleteForm = document.getElementById('deleteForm');
-    const paymentOrderIdSpan = document.getElementById('paymentOrderId');
-    const paymentAmountSpan = document.getElementById('paymentAmount');
-
-    deleteModal.addEventListener('show.bs.modal', function (event) {
-      const button = event.relatedTarget;
-
-      // Lấy data attributes
-      const paymentId = button.getAttribute('data-id');
-      const orderId = button.getAttribute('data-order');
-      const amount = button.getAttribute('data-amount');
-
-      // Cập nhật nội dung modal
-      paymentOrderIdSpan.textContent = orderId;
-      paymentAmountSpan.textContent = amount;
-
-      // Cập nhật action của form
-      deleteForm.action = '/payments/delete/' + paymentId;
-
-      console.log('Delete form action:', deleteForm.action);
-      console.log('Payment ID:', paymentId);
-    });
-
-    // Nav links
-    const navLinks = document.querySelectorAll('.nav-link');
-    navLinks.forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        navLinks.forEach(l => l.classList.remove('active'));
-        link.classList.add('active');
-        window.location.href = link.getAttribute('href');
-      });
-    });
-
-    // Clear filters
+    // Xử lý nút xóa lọc
     const clearFiltersBtn = document.getElementById('clearFilters');
     if (clearFiltersBtn) {
       clearFiltersBtn.addEventListener('click', () => {
@@ -263,20 +228,101 @@
       });
     }
 
-    // Hiển thị notification
+    // Xử lý modal xóa
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+      deleteModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const paymentId = button.getAttribute('data-id');
+        const orderId = button.getAttribute('data-order');
+        const amount = button.getAttribute('data-amount');
+
+        document.getElementById('paymentOrderId').textContent = orderId;
+        document.getElementById('paymentAmount').textContent = amount;
+
+        const deleteForm = document.getElementById('deleteForm');
+        deleteForm.action = '/payments/delete/' + paymentId;
+      });
+    }
+
+    // THÊM: Kiểm tra và hiển thị notification
     const urlParams = new URLSearchParams(window.location.search);
 
-    const errorMessage = /*[[${error}]]*/ null;
-    const successMessage = /*[[${message}]]*/ null;
+    if (urlParams.get('deleteSuccess') === 'true') {
+      if (typeof notification !== 'undefined') {
+        notification.showSuccess('Xóa thanh toán thành công!');
+      }
+      // Xóa parameter khỏi URL
+      const newUrl = window.location.pathname + window.location.search.replace(/[?&]deleteSuccess=true/, '').replace(/^&/, '?');
+      window.history.replaceState({}, document.title, newUrl);
+    }
 
+    if (urlParams.get('addSuccess') === 'true') {
+      if (typeof notification !== 'undefined') {
+        notification.showSuccess('Thêm thanh toán thành công!');
+      }
+      const newUrl = window.location.pathname + window.location.search.replace(/[?&]addSuccess=true/, '').replace(/^&/, '?');
+      window.history.replaceState({}, document.title, newUrl);
+    }
+
+    if (urlParams.get('updateSuccess') === 'true') {
+      if (typeof notification !== 'undefined') {
+        notification.showSuccess('Cập nhật thanh toán thành công!');
+      }
+      const newUrl = window.location.pathname + window.location.search.replace(/[?&]updateSuccess=true/, '').replace(/^&/, '?');
+      window.history.replaceState({}, document.title, newUrl);
+    }
+
+    // Hiển thị error từ redirectAttributes nếu có
+    const errorMessage = /*[[${error}]]*/ null;
     if (errorMessage && typeof notification !== 'undefined') {
       notification.showError(errorMessage);
     }
-
-    if (successMessage && typeof notification !== 'undefined') {
-      notification.showSuccess(successMessage);
-    }
   });
+
+  // Fallback notification nếu notification.js chưa load
+  if (typeof notification === 'undefined') {
+    window.notification = {
+      showSuccess: function(message) {
+        const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+        const toast = document.createElement('div');
+        toast.className = 'alert alert-success alert-dismissible fade show';
+        toast.style.cssText = 'position: relative; margin-bottom: 10px;';
+        toast.innerHTML = `
+          <i class="bi bi-check-circle-fill"></i> ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        toastContainer.appendChild(toast);
+        setTimeout(() => {
+          toast.classList.remove('show');
+          setTimeout(() => toast.remove(), 150);
+        }, 3000);
+      },
+      showError: function(message) {
+        const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+        const toast = document.createElement('div');
+        toast.className = 'alert alert-danger alert-dismissible fade show';
+        toast.style.cssText = 'position: relative; margin-bottom: 10px;';
+        toast.innerHTML = `
+          <i class="bi bi-exclamation-circle-fill"></i> ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        toastContainer.appendChild(toast);
+        setTimeout(() => {
+          toast.classList.remove('show');
+          setTimeout(() => toast.remove(), 150);
+        }, 3000);
+      }
+    };
+
+    function createToastContainer() {
+      const container = document.createElement('div');
+      container.id = 'toastContainer';
+      container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+      document.body.appendChild(container);
+      return container;
+    }
+  }
 </script>
 <div th:replace="~{footer :: footer}"></div>
 </body>

@@ -39,8 +39,6 @@ public class Order {
 
     // THÊM MỚI: Trường phone để tìm customer
     @Transient // Không lưu vào database, chỉ dùng để tìm customer
-    @NotBlank(message = "Số điện thoại không được để trống")
-    @Pattern(regexp = "^[0-9]{9,11}$", message = "Số điện thoại phải từ 9 đến 11 chữ số")
     private String customerPhone;
 
     @JsonBackReference(value = "staff-order")

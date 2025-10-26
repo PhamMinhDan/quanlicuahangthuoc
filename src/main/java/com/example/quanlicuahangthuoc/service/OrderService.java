@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -52,28 +53,19 @@ public class OrderService {
 
     public Page<Order> getOrderPage(Integer customerId, LocalDate fromDate, LocalDate toDate, Order.OrderStatus status, int page, int size, String sortBy, String sortDirection) {
         Sort.Direction direction = "desc".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        // Mặc định sắp xếp theo id giảm dần nếu không có sortBy hợp lệ
         if (sortBy == null || sortBy.trim().isEmpty()) {
             sortBy = "id";
-            direction = Sort.Direction.DESC; // Ưu tiên sắp xếp giảm dần theo ID
+            direction = Sort.Direction.DESC;
         }
 
         Sort sort;
-        if ("orderDate".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(direction, "orderDate");
-        } else if ("totalAmount".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(direction, "totalAmount");
-        } else if ("customer.id".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(direction, "customer.id");
-        } else if ("staff.id".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(direction, "staff.id");
-        } else if ("status".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(direction, "status");
-        } else if ("promotion.id".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(direction, "promotion.id");
-        } else {
-            sort = Sort.by(direction, "id"); // Mặc định theo id
-        }
+        if ("orderDate".equalsIgnoreCase(sortBy)) sort = Sort.by(direction, "orderDate");
+        else if ("totalAmount".equalsIgnoreCase(sortBy)) sort = Sort.by(direction, "totalAmount");
+        else if ("customer.id".equalsIgnoreCase(sortBy)) sort = Sort.by(direction, "customer.id");
+        else if ("staff.id".equalsIgnoreCase(sortBy)) sort = Sort.by(direction, "staff.id");
+        else if ("status".equalsIgnoreCase(sortBy)) sort = Sort.by(direction, "status");
+        else if ("promotion.id".equalsIgnoreCase(sortBy)) sort = Sort.by(direction, "promotion.id");
+        else sort = Sort.by(direction, "id");
 
         Pageable pageable = PageRequest.of(page, size, sort);
         return orderRepository.findOrdersByDateRange(customerId, fromDate, toDate, status, pageable);
@@ -85,21 +77,49 @@ public class OrderService {
 
     @Transactional
     public Order addOrder(Order order) {
+        return processOrder(order);
+    }
+
+    @Transactional
+    public Order updateOrder(Order order) {
+        if (!orderRepository.existsById(order.getId())) {
+            throw new NoSuchElementException("Không tìm thấy đơn hàng với ID: " + order.getId());
+        }
+        return processOrder(order);
+    }
+
+    private Order processOrder(Order order) {
+        // Xử lý customerPhone để tìm kiếm khách hàng
         if (order.getCustomerPhone() != null && !order.getCustomerPhone().trim().isEmpty()) {
-            Customer customer = customerRepository.findByPhone(order.getCustomerPhone())
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Không tìm thấy khách hàng với số điện thoại: " + order.getCustomerPhone()));
+            String cleanedPhone = order.getCustomerPhone().replaceAll("[^0-9]", "");
+            if (cleanedPhone.length() < 9 || cleanedPhone.length() > 11) {
+                throw new IllegalArgumentException("Số điện thoại phải từ 9 đến 11 chữ số");
+            }
+            Customer customer = customerRepository.findByPhone(cleanedPhone)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khách hàng với số điện thoại: " + cleanedPhone));
             order.setCustomer(customer);
         } else if (order.getCustomer() == null || order.getCustomer().getId() == null) {
-            throw new IllegalArgumentException("Vui lòng nhập số điện thoại khách hàng");
+            throw new IllegalArgumentException("Vui lòng nhập số điện thoại khách hàng hoặc chọn khách hàng");
         }
 
+        // Xử lý promotionName để tìm kiếm khuyến mãi, xử lý khi có nhiều kết quả
         if (order.getPromotionName() != null && !order.getPromotionName().trim().isEmpty()) {
-            Promotion promotion = promotionRepository.findByName(order.getPromotionName())
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Không tìm thấy khuyến mãi: " + order.getPromotionName()));
-            order.setPromotion(promotion);
+            List<Promotion> promotions = promotionRepository.findByNameContainingIgnoreCase(order.getPromotionName());
+            if (promotions.isEmpty()) {
+                throw new IllegalArgumentException("Không tìm thấy khuyến mãi: " + order.getPromotionName());
+            } else if (promotions.size() > 1) {
+                // Chọn khuyến mãi có id lớn nhất (mới nhất)
+                Promotion promotion = promotions.stream()
+                        .max((p1, p2) -> p1.getId().compareTo(p2.getId()))
+                        .orElseThrow(() -> new IllegalArgumentException("Nhiều khuyến mãi với tên '" + order.getPromotionName() + "', không thể xác định duy nhất."));
+                order.setPromotion(promotion);
+            } else {
+                order.setPromotion(promotions.get(0));
+            }
         }
+
+        // Đặt customerPhone về null trước khi lưu
+        order.setCustomerPhone(null);
 
         return orderRepository.save(order);
     }
@@ -110,29 +130,6 @@ public class OrderService {
             throw new NoSuchElementException("Không tìm thấy đơn hàng với ID: " + id + " để xóa.");
         }
         orderRepository.deleteById(id);
-    }
-
-    @Transactional
-    public Order updateOrder(Order order) {
-        if (!orderRepository.existsById(order.getId())) {
-            throw new NoSuchElementException("Không tìm thấy đơn hàng với ID: " + order.getId());
-        }
-
-        if (order.getCustomerPhone() != null && !order.getCustomerPhone().trim().isEmpty()) {
-            Customer customer = customerRepository.findByPhone(order.getCustomerPhone())
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Không tìm thấy khách hàng với số điện thoại: " + order.getCustomerPhone()));
-            order.setCustomer(customer);
-        }
-
-        if (order.getPromotionName() != null && !order.getPromotionName().trim().isEmpty()) {
-            Promotion promotion = promotionRepository.findByName(order.getPromotionName())
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Không tìm thấy khuyến mãi: " + order.getPromotionName()));
-            order.setPromotion(promotion);
-        }
-
-        return orderRepository.save(order);
     }
 
     @Transactional(readOnly = true)
