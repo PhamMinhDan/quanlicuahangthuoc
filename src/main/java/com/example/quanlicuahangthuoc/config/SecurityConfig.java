@@ -46,21 +46,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Tắt CSRF cho đơn giản (cân nhắc bật lại nếu cần bảo mật cao)
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
-                        // Cho phép truy cập công khai vào trang đăng nhập, từ chối truy cập và dashboard
+                        // Cho phép truy cập công khai
                         .requestMatchers("/", "/login", "/access-denied").permitAll()
-                        // Chỉ quản lý mới được thêm, sửa, xóa trên các trang quản lý (trừ đơn hàng)
+                        // Thuốc - chỉ quản lý được thêm, sửa, xóa
                         .requestMatchers("/medicines/add", "/medicines/edit/**", "/medicines/delete/**").hasRole("quan_ly")
-                        .requestMatchers("/customers/add", "/customers/edit/**").hasAnyRole("quan_ly", "nhan_vien")
-                        .requestMatchers("/medicines/delete/**").hasRole("quan_ly")
-                        .requestMatchers("/payments/new", "/payments/edit/**", "/payments/delete/**").hasRole("quan_ly")
+                        // Khách hàng - chỉ quản lý
+                        .requestMatchers("/customers/add", "/customers/edit/**").hasRole("quan_ly")
+                        // Thanh toán - staff chỉ được thêm, quản lý được làm tất cả
+                        .requestMatchers("/payments/new", "/payments/save").hasAnyRole("quan_ly", "nhan_vien")
+                        .requestMatchers("/payments/edit/**", "/payments/delete/**").hasRole("quan_ly")
                         .requestMatchers("/promotions/new", "/promotions/edit/**", "/promotions/delete/**").hasRole("quan_ly")
+                        // Quản lý nhân viên - chỉ quản lý
                         .requestMatchers("/api/staff/add", "/api/staff/edit/**", "/api/staff/delete/**").hasRole("quan_ly")
-                        // Chỉ quản lý mới được xóa đơn hàng
+                        // Đơn hàng - chỉ quản lý được xóa
                         .requestMatchers("/orders/delete/**").hasRole("quan_ly")
+                        // Dashboard - chỉ quản lý
                         .requestMatchers("/dashboard").hasRole("quan_ly")
-                        // Cả quản lý và nhân viên được xem, tìm kiếm, thêm và sửa đơn hàng
+                        // Xem danh sách - cả hai role
                         .requestMatchers("/orders/**", "/medicines/**", "/customers/**", "/payments/**", "/promotions/**").hasAnyRole("quan_ly", "nhan_vien")
                         // Các yêu cầu khác cần xác thực
                         .anyRequest().authenticated()
