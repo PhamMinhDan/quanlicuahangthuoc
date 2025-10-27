@@ -27,6 +27,7 @@
                   enctype="multipart/form-data"
                   class="needs-validation"
                   novalidate
+                  id="medicineForm"
                   th:if="${medicine != null}">
 
                 <!-- Hidden fields để giữ lại tham số phân trang và lọc -->
@@ -154,13 +155,15 @@
                         <!-- Hình ảnh -->
                         <div class="mb-3">
                             <label for="imageFile" class="form-label">
-                                <i class="bi bi-image"></i> Hình ảnh
+                                <i class="bi bi-image"></i> Hình ảnh <span class="text-danger">*</span>
                             </label>
                             <input type="file"
                                    class="form-control"
                                    id="imageFile"
                                    name="imageFile"
-                                   accept="image/*">
+                                   accept="image/*"
+                                   th:classappend="${#fields.hasErrors('image')} ? 'is-invalid'"
+                                   required>
                             <small class="text-muted">Định dạng: JPG, PNG, GIF (tối đa 5MB)</small>
 
                             <!-- Hiển thị ảnh hiện tại nếu có -->
@@ -172,6 +175,7 @@
                                      class="img-thumbnail"
                                      style="width: 150px; height: 150px; object-fit: cover;">
                             </div>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('image')}" th:errors="*{image}"></div>
                         </div>
                     </div>
                 </div>
@@ -179,13 +183,15 @@
                 <!-- Hướng dẫn sử dụng -->
                 <div class="mb-3">
                     <label for="usageInstructions" class="form-label">
-                        <i class="bi bi-journal-text"></i> Hướng dẫn sử dụng
+                        <i class="bi bi-journal-text"></i> Hướng dẫn sử dụng <span class="text-danger">*</span>
                     </label>
                     <textarea class="form-control"
                               id="usageInstructions"
                               th:field="*{usageInstructions}"
                               rows="4"
-                              placeholder="Nhập hướng dẫn sử dụng thuốc..."></textarea>
+                              placeholder="Nhập hướng dẫn sử dụng thuốc..."
+                              th:classappend="${#fields.hasErrors('usageInstructions')} ? 'is-invalid'"
+                              required></textarea>
                     <div class="invalid-feedback" th:if="${#fields.hasErrors('usageInstructions')}" th:errors="*{usageInstructions}"></div>
                 </div>
 
@@ -213,6 +219,14 @@
     document.addEventListener('DOMContentLoaded', function() {
         const expiryDateDisplay = document.getElementById('expiryDateDisplay');
         const expiryDateHidden = document.getElementById('expiryDate');
+        const nameInput = document.getElementById('name');
+        const typeSelect = document.getElementById('type');
+        const priceInput = document.getElementById('price');
+        const stockQuantityInput = document.getElementById('stockQuantity');
+        const supplierSelect = document.getElementById('supplier');
+        const imageFileInput = document.getElementById('imageFile');
+        const usageInstructionsTextarea = document.getElementById('usageInstructions');
+        const form = document.getElementById('medicineForm');
 
         const isEditMode = /*[[${medicine.id != null}]]*/ false;
         const existingDateStr = /*[[${medicine.expiryDate != null ? #temporals.format(medicine.expiryDate, 'yyyy-MM-dd') : ''}]]*/ '';
@@ -231,11 +245,6 @@
                 const [year, month, day] = existingDateStr.split('-');
                 defaultDate = new Date(year, month - 1, day);
             }
-
-            console.log('isEditMode:', isEditMode);
-            console.log('existingDateStr:', existingDateStr);
-            console.log('defaultDate:', defaultDate);
-            console.log('minDate:', minDate);
 
             const fp = flatpickr(expiryDateDisplay, {
                 dateFormat: "d/m/Y",
@@ -261,26 +270,105 @@
                     console.log('Hidden input value:', expiryDateHidden.value);
                 }
             });
-
-            const form = expiryDateDisplay.closest('form');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    let isValid = true;
-                    if (!expiryDateHidden.value || expiryDateHidden.value.trim() === '') {
-                        expiryDateDisplay.classList.add('is-invalid');
-                        isValid = false;
-                        if (typeof notification !== 'undefined') {
-                            notification.showError('Vui lòng chọn ngày hết hạn!');
-                        }
-                    }
-                    if (!isValid) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                });
-            }
         }
+
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+
+            // Kiểm tra Tên thuốc
+            if (!nameInput.value || nameInput.value.trim() === '') {
+                nameInput.classList.add('is-invalid');
+                isValid = false;
+                if (typeof notification !== 'undefined') {
+                    notification.showError('Vui lòng nhập tên thuốc!');
+                }
+            } else {
+                nameInput.classList.remove('is-invalid');
+            }
+
+            // Kiểm tra Loại thuốc
+            if (!typeSelect.value || typeSelect.value === '') {
+                typeSelect.classList.add('is-invalid');
+                isValid = false;
+                if (typeof notification !== 'undefined') {
+                    notification.showError('Vui lòng chọn loại thuốc!');
+                }
+            } else {
+                typeSelect.classList.remove('is-invalid');
+            }
+
+            // Kiểm tra Ngày hết hạn
+            if (!expiryDateHidden.value || expiryDateHidden.value.trim() === '') {
+                expiryDateDisplay.classList.add('is-invalid');
+                isValid = false;
+                if (typeof notification !== 'undefined') {
+                    notification.showError('Vui lòng chọn ngày hết hạn!');
+                }
+            } else {
+                expiryDateDisplay.classList.remove('is-invalid');
+            }
+
+            // Kiểm tra Giá
+            if (!priceInput.value || priceInput.value <= 0) {
+                priceInput.classList.add('is-invalid');
+                isValid = false;
+                if (typeof notification !== 'undefined') {
+                    notification.showError('Vui lòng nhập giá lớn hơn 0!');
+                }
+            } else {
+                priceInput.classList.remove('is-invalid');
+            }
+
+            // Kiểm tra Số lượng tồn kho
+            if (!stockQuantityInput.value || stockQuantityInput.value < 0) {
+                stockQuantityInput.classList.add('is-invalid');
+                isValid = false;
+                if (typeof notification !== 'undefined') {
+                    notification.showError('Vui lòng nhập số lượng lớn hơn hoặc bằng 0!');
+                }
+            } else {
+                stockQuantityInput.classList.remove('is-invalid');
+            }
+
+            // Kiểm tra Nhà cung cấp
+            if (!supplierSelect.value || supplierSelect.value === '') {
+                supplierSelect.classList.add('is-invalid');
+                isValid = false;
+                if (typeof notification !== 'undefined') {
+                    notification.showError('Vui lòng chọn nhà cung cấp!');
+                }
+            } else {
+                supplierSelect.classList.remove('is-invalid');
+            }
+
+            // Kiểm tra Hình ảnh (chỉ khi thêm mới)
+            if (!isEditMode && (!imageFileInput.files || imageFileInput.files.length === 0)) {
+                imageFileInput.classList.add('is-invalid');
+                isValid = false;
+                if (typeof notification !== 'undefined') {
+                    notification.showError('Vui lòng tải lên hình ảnh!');
+                }
+            } else {
+                imageFileInput.classList.remove('is-invalid');
+            }
+
+            // Kiểm tra Hướng dẫn sử dụng
+            if (!usageInstructionsTextarea.value || usageInstructionsTextarea.value.trim() === '') {
+                usageInstructionsTextarea.classList.add('is-invalid');
+                isValid = false;
+                if (typeof notification !== 'undefined') {
+                    notification.showError('Vui lòng nhập hướng dẫn sử dụng!');
+                }
+            } else {
+                usageInstructionsTextarea.classList.remove('is-invalid');
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
 
         const errorMessage = /*[[${error}]]*/ null;
         const successMessage = /*[[${message}]]*/ null;

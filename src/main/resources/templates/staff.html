@@ -49,8 +49,11 @@
                             <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
                                 <i class="bi bi-search"></i> Lọc
                             </button>
-                            <button th:if="${name != null and name != '' or role != null and role != ''}"
-                                    class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
+                            <!-- Hiển thị luôn, disable khi chưa có filter -->
+                            <button class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                                    type="button"
+                                    id="clearFilters"
+                                    th:disabled="${(name == null or name == '') and (role == null or role == '')}">
                                 <i class="bi bi-x"></i> Xóa Lọc
                             </button>
                         </div>

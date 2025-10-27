@@ -60,9 +60,12 @@
                             <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
                                 <i class="bi bi-search"></i> Lọc
                             </button>
-                            <!-- NÚT XÓA LỌC ĐÃ ĐƯỢC THÊM LẠI -->
-                            <button th:if="${customerId != null or (fromDate != null and fromDate != '') or (toDate != null and toDate != '') or (status != null and status != '')}"
-                                    class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
+                            <!-- Hiển thị luôn, disable khi chưa có filter -->
+                            <button class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                                    type="button"
+                                    id="clearFilters"
+                                    th:disabled="${(customerId == null or customerId == '') and (fromDate == null or fromDate == '') and (toDate == null or toDate == '') and (status == null or status == '')}"
+                                    onclick="document.getElementById('filterForm').reset(); document.getElementById('filterForm').submit();">
                                 <i class="bi bi-x-circle"></i> Xóa Lọc
                             </button>
                         </div>

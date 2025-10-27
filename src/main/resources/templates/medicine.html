@@ -63,8 +63,11 @@
                             <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
                                 <i class="bi bi-search"></i> Lọc
                             </button>
-                            <button th:if="${searchName != null and searchName != '' or searchType != null and searchType != '' or searchSupplier != null and searchSupplier != ''}"
-                                    class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
+                            <!-- HIỂN THỊ LUÔN, nhưng disable khi chưa có filter -->
+                            <button class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                                    type="button"
+                                    id="clearFilters"
+                                    th:disabled="${(searchName == null or searchName == '') and (searchType == null or searchType == '') and (searchSupplier == null or searchSupplier == '')}">
                                 <i class="bi bi-x"></i> Xóa Lọc
                             </button>
                         </div>
@@ -154,18 +157,18 @@
                     </table>
                 </div>
                 <div class="p-3 d-flex justify-content-center border-top" th:if="${totalPages > 1}">
-                    <nav aria-label="Phân trang danh sách thanh toán">
+                    <nav aria-label="Phân trang danh sách thuốc">
                         <ul class="pagination mb-0">
                             <!-- First page button -->
                             <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=0, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}" aria-label="First">
+                                <a class="page-link text-dark" th:href="@{/medicines/view-medicine(page=0, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}" aria-label="First">
                                     <span aria-hidden="true">&laquo;&laquo;</span>
                                 </a>
                             </li>
 
                             <!-- Previous button (circular: nếu ở trang đầu thì về trang cuối) -->
                             <li class="page-item">
-                                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${currentPage == 0 ? totalPages - 1 : currentPage - 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}" aria-label="Previous">
+                                <a class="page-link text-dark" th:href="@{/medicines/view-medicine(page=${currentPage == 0 ? totalPages - 1 : currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}" aria-label="Previous">
                                     <span aria-hidden="true">&laquo;</span>
                                 </a>
                             </li>
@@ -174,7 +177,7 @@
                             <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
                                 <th:block th:if="${i == 0 or i == totalPages - 1 or (i >= currentPage - 2 and i <= currentPage + 2)}">
                                     <li class="page-item" th:classappend="${currentPage == i} ? 'active'">
-                                        <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${i}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}" th:text="${i + 1}"></a>
+                                        <a class="page-link text-dark" th:href="@{/medicines/view-medicine(page=${i}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}" th:text="${i + 1}"></a>
                                     </li>
                                 </th:block>
                                 <!-- Thêm dấu ... nếu có khoảng cách -->
@@ -188,14 +191,14 @@
 
                             <!-- Next button (circular: nếu ở trang cuối thì về trang đầu) -->
                             <li class="page-item">
-                                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${currentPage == totalPages - 1 ? 0 : currentPage + 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}" aria-label="Next">
+                                <a class="page-link text-dark" th:href="@{/medicines/view-medicine(page=${currentPage == totalPages - 1 ? 0 : currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}" aria-label="Next">
                                     <span aria-hidden="true">&raquo;</span>
                                 </a>
                             </li>
 
                             <!-- Last page button -->
                             <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
-                                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${totalPages - 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}" aria-label="Last">
+                                <a class="page-link text-dark" th:href="@{/medicines/view-medicine(page=${totalPages - 1}, size=${pageSize}, sortBy=${sortBy}, sortDirection=${sortDirection}, searchName=${searchName}, searchType=${searchType}, searchSupplier=${searchSupplier})}" aria-label="Last">
                                     <span aria-hidden="true">&raquo;&raquo;</span>
                                 </a>
                             </li>

@@ -49,8 +49,11 @@
                             <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
                                 <i class="bi bi-search"></i> Lọc
                             </button>
-                            <button th:if="${keyword != null and keyword != '' or phone != null and phone != '' or customerType != null and customerType != ''}"
-                                    class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
+                            <!-- HIỂN THỊ LUÔN, nhưng disable khi chưa có filter -->
+                            <button class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                                    type="button"
+                                    id="clearFilters"
+                                    th:disabled="${(keyword == null or keyword == '') and (phone == null or phone == '') and (customerType == null or customerType == '')}">
                                 <i class="bi bi-x"></i> Xóa Lọc
                             </button>
                         </div>

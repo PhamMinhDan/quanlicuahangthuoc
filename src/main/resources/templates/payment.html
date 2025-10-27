@@ -23,37 +23,40 @@
         </h1>
       </div>
 
-      <div class="filter-panel mb-4">
-        <div class="d-flex align-items-center gap-3 mb-4">
-          <i class="bi bi-funnel-fill text-secondary" style="font-size: 20px;"></i>
-          <h2 class="h5 mb-0">Bộ lọc</h2>
+        <div class="filter-panel mb-4">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <i class="bi bi-funnel-fill text-secondary" style="font-size: 20px;"></i>
+                <h2 class="h5 mb-0">Bộ lọc</h2>
+            </div>
+            <form th:action="@{/payments/view-payments}" method="get">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Mã đơn</label>
+                        <input type="number" class="form-control" id="orderId" name="orderId" th:value="${orderId}" placeholder="Mã đơn" min="1">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Từ ngày</label>
+                        <input type="text" class="form-control" id="fromDate" name="fromDate" th:value="${fromDate}" placeholder="dd/MM/yyyy">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Đến ngày</label>
+                        <input type="text" class="form-control" id="toDate" name="toDate" th:value="${toDate}" placeholder="dd/MM/yyyy">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end gap-2">
+                        <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
+                            <i class="bi bi-search"></i> Lọc
+                        </button>
+                        <!-- Hiển thị luôn, disable khi chưa có filter -->
+                        <button class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                                type="button"
+                                id="clearFilters"
+                                th:disabled="${(orderId == null or orderId == '') and (fromDate == null or fromDate == '') and (toDate == null or toDate == '')}">
+                            <i class="bi bi-x"></i> Xóa Lọc
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
-        <form th:action="@{/payments/view-payments}" method="get">
-          <div class="row g-3">
-            <div class="col-md-3">
-              <label class="form-label">Mã đơn</label>
-              <input type="number" class="form-control" id="orderId" name="orderId" th:value="${orderId}" placeholder="Mã đơn" min="1">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Từ ngày</label>
-              <input type="text" class="form-control" id="fromDate" name="fromDate" th:value="${fromDate}" placeholder="dd/MM/yyyy">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Đến ngày</label>
-              <input type="text" class="form-control" id="toDate" name="toDate" th:value="${toDate}" placeholder="dd/MM/yyyy">
-            </div>
-            <div class="col-md-3 d-flex align-items-end gap-2">
-              <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="submit" id="filterButton">
-                <i class="bi bi-search"></i> Lọc
-              </button>
-              <button th:if="${orderId != null or (fromDate != null and fromDate != '') or (toDate != null and toDate != '')}"
-                      class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2" type="button" id="clearFilters">
-                <i class="bi bi-x"></i> Xóa Lọc
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
 
       <div class="table-container">
         <div class="p-2 d-flex justify-content-between align-items-center border-bottom">

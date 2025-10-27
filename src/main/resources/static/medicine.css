@@ -456,3 +456,13 @@ body {
 .bi-arrow-down-up {
     color: black;
 }
+#clearFilters:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#clearFilters:disabled:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    transform: none;
+}
