@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.core.Authentication;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Controller
@@ -170,11 +171,24 @@ public class PromotionController {
             @Valid @ModelAttribute("promotion") Promotion promotion,
             BindingResult result,
             RedirectAttributes redirectAttributes,
-            Model model) {
+            Model model,
+            Authentication authentication) {
+        model.addAttribute("isManager", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+        model.addAttribute("activeNav", "promotions");
+
         if (result.hasErrors()) {
+            if (promotion.getExpiredDate() == null) {
+                model.addAttribute("error", "Vui lòng chọn ngày hết hạn hợp lệ!");
+            }
             return "promotion/edit";
         }
+
         try {
+            if (promotion.getExpiredDate() == null || promotion.getExpiredDate().isBefore(LocalDate.now().plusDays(1))) {
+                model.addAttribute("error", "Ngày hết hạn phải từ ngày mai trở đi!");
+                return "promotion/edit";
+            }
             promotionService.updatePromotion(id, promotion);
             redirectAttributes.addFlashAttribute("message", "Cập nhật khuyến mãi thành công!");
             return "redirect:/promotions";
@@ -201,13 +215,26 @@ public class PromotionController {
             @Valid @ModelAttribute("promotion") Promotion promotion,
             BindingResult result,
             RedirectAttributes redirectAttributes,
-            Model model) {
+            Model model,
+            Authentication authentication) {
+        model.addAttribute("isManager", authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+        model.addAttribute("activeNav", "promotions");
+
         if (result.hasErrors()) {
+            // Kiểm tra lỗi cụ thể cho expiredDate
+            if (promotion.getExpiredDate() == null) {
+                model.addAttribute("error", "Vui lòng chọn ngày hết hạn hợp lệ!");
+            }
             return "promotion/add";
         }
+
         try {
+            if (promotion.getExpiredDate() == null || promotion.getExpiredDate().isBefore(LocalDate.now().plusDays(1))) {
+                model.addAttribute("error", "Ngày hết hạn phải từ ngày mai trở đi!");
+                return "promotion/add";
+            }
             promotionService.addPromotion(promotion);
-            // Quay về trang đầu tiên và sắp xếp giảm dần
             return "redirect:/promotions?page=0&size=10&sortBy=id&sortOrder=desc&addSuccess=true";
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());

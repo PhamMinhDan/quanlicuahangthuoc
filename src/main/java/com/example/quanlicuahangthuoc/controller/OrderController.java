@@ -95,7 +95,8 @@ public class OrderController {
             @RequestParam(value = "toDate", required = false) String toDateStr,
             @RequestParam(value = "status", required = false) String status,
             RedirectAttributes redirectAttributes,
-            Model model) {
+            Model model,
+            Authentication authentication) { // Thêm Authentication
         try {
             Order order = orderService.getOrderById(id);
             model.addAttribute("order", order);
@@ -108,6 +109,11 @@ public class OrderController {
             model.addAttribute("fromDateStr", fromDateStr);
             model.addAttribute("toDateStr", toDateStr);
             model.addAttribute("status", status);
+            // Thêm isManager và isManagerOrEmployee
+            model.addAttribute("isManager", authentication != null && authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
+            model.addAttribute("isManagerOrEmployee", authentication != null && authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly") || auth.getAuthority().equals("ROLE_nhan_vien")));
             return "order-detail";
         } catch (NoSuchElementException e) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy đơn hàng với ID: " + id);

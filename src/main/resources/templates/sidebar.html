@@ -49,8 +49,8 @@
                     </div>
                     <div class="user-info">
                         <div class="user-role">
-                            <span th:if="${isManager}" class="badge bg-danger">Admin</span>
-                            <span th:if="${!isManager}" class="badge bg-info">Nhân viên</span>
+                            <span th:if="${isManager != null and isManager}" class="badge bg-danger">Admin</span>
+                            <span th:if="${isManager == null or !isManager}" class="badge bg-info">Nhân viên</span>
                         </div>
                     </div>
                 </a>

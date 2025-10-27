@@ -50,13 +50,13 @@
                                 <div class="col-md-6">
                                     <label class="fw-bold text-secondary">Trạng Thái:</label>
                                     <p class="mb-0">
-                                        <span class="badge" 
-                                              th:classappend="${order.status != null and order.status.name() == 'cho_xu_ly'} ? 'bg-warning text-dark' : 
-                                                              (${order.status != null and order.status.name() == 'dang_giao'} ? 'bg-info' : 
-                                                              (${order.status != null and order.status.name() == 'hoan_thanh'} ? 'bg-success' : 'bg-danger'))"
+                                        <span class="badge"
+                                              th:classappend="${order.status != null and order.status.name() == 'da_thanh_toan'} ? 'bg-warning text-dark' :
+                      (${order.status != null and order.status.name() == 'chua_thanh_toan'} ? 'bg-info' :
+                      (${order.status != null and order.status.name() == 'da_huy'} ? 'bg-success' : 'bg-danger'))"
                                               th:text="${order.status != null ? order.status.displayName : 'N/A'}">
-                                            Chờ xử lý
-                                        </span>
+    Chờ xử lý
+</span>
                                     </p>
                                 </div>
                                 <div class="col-md-6">

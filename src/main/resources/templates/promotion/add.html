@@ -93,6 +93,10 @@
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
 
+        const expiredDateDisplay = document.getElementById('expiredDateDisplay');
+        const expiredDateHidden = document.getElementById('expiredDate');
+        const form = document.getElementById('promotionForm');
+
         flatpickr("#expiredDateDisplay", {
             dateFormat: "d/m/Y",
             locale: "vn",
@@ -105,10 +109,33 @@
                     const yyyy = date.getFullYear();
                     const mm = String(date.getMonth() + 1).padStart(2, '0');
                     const dd = String(date.getDate()).padStart(2, '0');
-                    document.getElementById('expiredDate').value = yyyy + '-' + mm + '-' + dd;
+                    expiredDateHidden.value = `${yyyy}-${mm}-${dd}`;
+                    expiredDateDisplay.classList.remove('is-invalid');
                 }
             }
         });
+
+        // Validate trước khi submit
+        form.addEventListener('submit', (e) => {
+            if (!expiredDateHidden.value || expiredDateHidden.value.trim() === '') {
+                e.preventDefault();
+                expiredDateDisplay.classList.add('is-invalid');
+                if (typeof notification !== 'undefined') {
+                    notification.showError('Vui lòng chọn ngày hết hạn!');
+                } else {
+                    alert('Vui lòng chọn ngày hết hạn!');
+                }
+                expiredDateDisplay.focus();
+                return false;
+            }
+            console.log('Form submitting with date:', expiredDateHidden.value);
+        });
+
+        // Hiển thị notification nếu có lỗi từ server
+        const errorMessage = /*[[${error}]]*/ null;
+        if (errorMessage && typeof notification !== 'undefined') {
+            notification.showError(errorMessage);
+        }
     });
 </script>
 <div th:replace="~{footer :: footer}"></div>

@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.core.Authentication;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.NoSuchElementException;
 
 @Controller
@@ -40,7 +42,7 @@ public class StaffController {
             if (name != null && !name.trim().isEmpty()) {
                 cleanName = name.trim().replaceAll("\\s+", " ");
             }
-            
+
             Page<Staff> staffPage;
             if (cleanName != null && role != null && !role.trim().isEmpty()) {
                 staffPage = staffService.searchStaffByNameAndRole(cleanName, Staff.Role.valueOf(role), page, size, sortBy, sortDirection);
@@ -50,6 +52,18 @@ public class StaffController {
                 staffPage = staffService.getStaffByRole(Staff.Role.valueOf(role), page, size, sortBy, sortDirection);
             } else {
                 staffPage = staffService.getStaffPage(page, size, sortBy, sortDirection);
+            }
+
+            // Tính tổng số nhân viên dựa trên bộ lọc
+            long totalItems = 0;
+            if (cleanName != null && role != null && !role.trim().isEmpty()) {
+                totalItems = staffService.countStaffByNameAndRole(cleanName, Staff.Role.valueOf(role));
+            } else if (cleanName != null) {
+                totalItems = staffService.countStaffByName(cleanName);
+            } else if (role != null && !role.trim().isEmpty()) {
+                totalItems = staffService.countStaffByRole(Staff.Role.valueOf(role));
+            } else {
+                totalItems = staffService.getTotalStaff();
             }
 
             model.addAttribute("totalStaff", staffService.getTotalStaff());
@@ -65,6 +79,7 @@ public class StaffController {
             model.addAttribute("isManager", authentication.getAuthorities().stream()
                     .anyMatch(auth -> auth.getAuthority().equals("ROLE_quan_ly")));
             model.addAttribute("activeNav", "staff");
+            model.addAttribute("totalItems", totalItems); // Thêm totalItems vào model
             return "staff";
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi khi tải danh sách nhân viên: " + e.getMessage());
@@ -223,20 +238,33 @@ public class StaffController {
             return "staff-form";
         }
         try {
-            staff.setId(id);
-            if (imageFile != null && !imageFile.isEmpty()) {
+            // Lấy thông tin nhân viên hiện tại từ cơ sở dữ liệu
+            Staff existingStaff = staffService.getStaffById(id);
+            if (existingStaff == null) {
+                throw new NoSuchElementException("Nhân viên không tồn tại");
+            }
+
+            // Giữ ảnh cũ nếu không tải ảnh mới
+            if (imageFile == null || imageFile.isEmpty()) {
+                staff.setImage(existingStaff.getImage()); // Giữ ảnh cũ
+            } else {
                 String imagePath = fileUploadConfig.storeFile(imageFile);
                 if (imagePath != null) {
-                    staff.setImage(imagePath);
+                    staff.setImage(imagePath); // Cập nhật ảnh mới
                 }
             }
+
+            staff.setId(id); // Đảm bảo ID được giữ nguyên
             staffService.updateStaff(staff);
+            // Redirect về đúng nơi vừa sửa, giữ nguyên các tham số tìm kiếm và phân trang
+            String encodedName = name != null && !name.isEmpty() ? URLEncoder.encode(name, StandardCharsets.UTF_8.toString()) : null;
+            String encodedRole = role != null && !role.isEmpty() ? URLEncoder.encode(role, StandardCharsets.UTF_8.toString()) : null;
             return "redirect:/api/staff/view-staff?page=" + page +
                     "&size=" + size +
                     "&sortBy=" + sortBy +
                     "&sortDirection=" + sortDirection +
-                    (name != null ? "&name=" + name : "") +
-                    (role != null ? "&role=" + role : "") +
+                    (encodedName != null ? "&name=" + encodedName : "") +
+                    (encodedRole != null ? "&role=" + encodedRole : "") +
                     "&updateSuccess=true";
         } catch (IllegalStateException | NoSuchElementException e) {
             model.addAttribute("error", e.getMessage());

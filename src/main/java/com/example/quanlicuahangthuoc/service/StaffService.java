@@ -26,6 +26,17 @@ public class StaffService {
                 .orElseThrow(() -> new NoSuchElementException("Không tìm thấy nhân viên với ID: " + id));
     }
 
+    public long countStaffByName(String name) {
+        return staffRepository.countByNameContainingIgnoreCase(name);
+    }
+
+    public long countStaffByRole(Staff.Role role) {
+        return staffRepository.countByRole(role);
+    }
+
+    public long countStaffByNameAndRole(String name, Staff.Role role) {
+        return staffRepository.countByNameContainingIgnoreCaseAndRole(name, role);
+    }
     // Phân trang với sắp xếp theo name hoặc salary
     public Page<Staff> getStaffPage(int page, int size, String sortBy, String sortDirection) {
         Sort.Direction direction = "desc".equalsIgnoreCase(sortDirection) ?

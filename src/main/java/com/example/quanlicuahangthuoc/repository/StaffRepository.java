@@ -33,4 +33,9 @@ public interface StaffRepository extends JpaRepository<Staff, Integer> {
     Optional<Staff> findByPhone(String phone);
   long countByWorkShift(Staff.WorkShift workShift);
   long countByRole(Staff.Role role);
+  long countByNameContainingIgnoreCase(String name);
+
+
+  @Query("SELECT COUNT(s) FROM Staff s WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :name, '%')) AND s.role = :role")
+  long countByNameContainingIgnoreCaseAndRole(String name, Staff.Role role);
 }
