@@ -37,7 +37,7 @@
                     <div class="summary-card summary-card-1">
                         <div class="position-relative z-10 text-center">
                             <div class="text-sm opacity-80 mb-2">Tổng Doanh Thu Tháng Này</div>
-                            <div class="text-3xl font-bold" th:text="${totalRevenueThisMonth != null ? #numbers.formatDecimal(totalRevenueThisMonth, 0, 2, 'COMMA') + ' VNĐ' : '0 VNĐ'}"></div>
+                            <div class="text-3xl font-bold" th:text="${totalRevenueThisMonth != null ? #numbers.formatDecimal(totalRevenueThisMonth, 0, 0, 'COMMA') + ' VNĐ' : '0 VNĐ'}"></div>
                         </div>
                         <i class="bi bi-currency-exchange position-absolute bottom-0 end-0 me-3 mb-3 opacity-50" style="font-size: 48px;"></i>
                     </div>

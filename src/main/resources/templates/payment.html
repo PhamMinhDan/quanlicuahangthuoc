@@ -126,44 +126,81 @@
         </div>
 
         <!-- Pagination (giữ nguyên như code cũ) -->
-        <div class="p-3 d-flex justify-content-center border-top" th:if="${totalPages > 1}">
-          <nav aria-label="Phân trang danh sách thanh toán">
-            <ul class="pagination mb-0">
-              <!-- First page button -->
-              <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=0, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}" aria-label="First">
-                  <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-              </li>
+          <div class="p-3 d-flex justify-content-center border-top" th:if="${totalPages > 1}">
+              <nav aria-label="Phân trang danh sách thanh toán">
+                  <ul class="pagination mb-0">
+                      <!-- Nút trang đầu -->
+                      <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                          <a class="page-link text-dark"
+                             th:href="@{/payments/view-payments(page=0, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}"
+                             aria-label="Trang đầu">
+                              <span aria-hidden="true">&laquo;&laquo;</span>
+                          </a>
+                      </li>
 
-              <!-- Previous button (circular) -->
-              <li class="page-item">
-                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${currentPage == 0 ? totalPages - 1 : currentPage - 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}" aria-label="Previous">
-                  <span aria-hidden="true">&laquo;</span>
-                </a>
-              </li>
+                      <!-- Nút Previous -->
+                      <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                          <a class="page-link text-dark"
+                             th:href="@{/payments/view-payments(page=${currentPage - 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}"
+                             aria-label="Trang trước" th:unless="${currentPage == 0}">
+                              <span aria-hidden="true">&laquo;</span>
+                          </a>
+                          <span class="page-link text-dark" th:if="${currentPage == 0}" aria-hidden="true">&laquo;</span>
+                      </li>
 
-              <!-- Các trang... (giữ nguyên logic phân trang) -->
-              <li class="page-item" th:classappend="${currentPage == 0} ? 'active'">
-                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=0, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}">1</a>
-              </li>
+                      <!-- Trang đầu tiên -->
+                      <li class="page-item" th:classappend="${currentPage == 0} ? 'active'">
+                          <a class="page-link text-dark"
+                             th:href="@{/payments/view-payments(page=0, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}">1</a>
+                      </li>
 
-              <!-- Next button (circular) -->
-              <li class="page-item">
-                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${currentPage == totalPages - 1 ? 0 : currentPage + 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}" aria-label="Next">
-                  <span aria-hidden="true">&raquo;</span>
-                </a>
-              </li>
+                      <!-- Dấu chấm lửng nếu cần (sau trang 1) -->
+                      <li class="page-item disabled" th:if="${currentPage - 2 > 1}">
+                          <span class="page-link text-dark">...</span>
+                      </li>
 
-              <!-- Last page button -->
-              <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
-                <a class="page-link text-dark" th:href="@{/payments/view-payments(page=${totalPages - 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}" aria-label="Last">
-                  <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </div>
+                      <!-- Các trang xung quanh trang hiện tại -->
+                      <li th:each="i : ${#numbers.sequence(currentPage - 2 > 1 ? currentPage - 2 : 1, currentPage + 2 < totalPages - 1 ? currentPage + 2 : totalPages - 1)}"
+                          th:classappend="${currentPage == i} ? 'active'"
+                          class="page-item" th:if="${i > 0 and i < totalPages - 1}">
+                          <a class="page-link text-dark"
+                             th:href="@{/payments/view-payments(page=${i}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}"
+                             th:text="${i + 1}"></a>
+                      </li>
+
+                      <!-- Dấu chấm lửng nếu cần (trước trang cuối) -->
+                      <li class="page-item disabled" th:if="${currentPage + 2 < totalPages - 1}">
+                          <span class="page-link text-dark">...</span>
+                      </li>
+
+                      <!-- Trang cuối (nếu totalPages > 1) -->
+                      <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'active'" th:if="${totalPages > 1}">
+                          <a class="page-link text-dark"
+                             th:href="@{/payments/view-payments(page=${totalPages - 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}"
+                             th:text="${totalPages}"></a>
+                      </li>
+
+                      <!-- Nút Next -->
+                      <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                          <a class="page-link text-dark"
+                             th:href="@{/payments/view-payments(page=${currentPage + 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}"
+                             aria-label="Trang sau" th:unless="${currentPage == totalPages - 1}">
+                              <span aria-hidden="true">&raquo;</span>
+                          </a>
+                          <span class="page-link text-dark" th:if="${currentPage == totalPages - 1}" aria-hidden="true">&raquo;</span>
+                      </li>
+
+                      <!-- Nút trang cuối -->
+                      <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                          <a class="page-link text-dark"
+                             th:href="@{/payments/view-payments(page=${totalPages - 1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, orderId=${orderId}, fromDate=${fromDate}, toDate=${toDate})}"
+                             aria-label="Trang cuối">
+                              <span aria-hidden="true">&raquo;&raquo;</span>
+                          </a>
+                      </li>
+                  </ul>
+              </nav>
+          </div>
       </div>
     </div>
   </div>

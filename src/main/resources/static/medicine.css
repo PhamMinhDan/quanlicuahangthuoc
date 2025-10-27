@@ -1,5 +1,5 @@
 :root {
-    --primary-color: #33CCFF; /* Xanh dương nhạt */
+    --primary-color: #4faff6; /* Xanh dương nhạt */
     --secondary-color: #80df6a; /* Xanh Lá Tươi (Teal/Emerald) */
     --accent-orange: #f58536; /* Cam Cảnh báo */
     --accent-yellow: #FFC107; /* Vàng cho Thanh Toán Chuyển Khoản */
@@ -450,4 +450,9 @@ body {
         height: 40px;
         font-size: 18px;
     }
+}
+.bi-arrow-up,
+.bi-arrow-down,
+.bi-arrow-down-up {
+    color: black;
 }
